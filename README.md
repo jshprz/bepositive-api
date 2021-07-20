@@ -7,6 +7,7 @@ This serves as the back-end for the Bepositive application, a social media appli
 
 ## Project structure
 
+```
 <root>
   - packages
     - comment
@@ -25,6 +26,7 @@ This serves as the back-end for the Bepositive application, a social media appli
       - index.ts
   - kill_ports.js
   - lerna.json
+```
 
 ## Setup Locally
 
