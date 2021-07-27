@@ -1,6 +1,8 @@
 import { Service } from "typedi";
-import Test from '../models/Test';
 
+interface Test {
+  name: string;
+}
 @Service()
 class TestRepository {
   private readonly users: Test[] = [
