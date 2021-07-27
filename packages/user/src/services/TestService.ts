@@ -1,7 +1,9 @@
 import { Service } from "typedi";
-import Test from '../models/Test';
 import TestRepository from '../repositories/TestRepository';
 
+interface Test {
+  name: string;
+}
 @Service()
 class TestService {
   constructor(private readonly testRepository: TestRepository) {}

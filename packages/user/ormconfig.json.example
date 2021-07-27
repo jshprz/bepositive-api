@@ -1,0 +1,24 @@
+{
+   "type": "<DB Type>",
+   "host": "<DB Host>",
+   "port": 5432,
+   "username": "<PostgreSQL DB Username>",
+   "password": "<PostgreSQL DB Password>",
+   "database": "<PostgreSQL DB Name>",
+   "synchronize": true,
+   "logging": false,
+   "entities": [
+      "./dist/src/database/models/**/*.js"
+   ],
+   "migrations": [
+      "./dist/src/database/migration/**/*.js"
+   ],
+   "subscribers": [
+      "./dist/src/database/subscriber/**/*.js"
+   ],
+   "cli": {
+      "entitiesDir": "./dist/src/database/models",
+      "migrationsDir": "./dist/src/database/migration",
+      "subscribersDir": "./dist/src/database/subscriber"
+   }
+}

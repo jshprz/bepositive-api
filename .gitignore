@@ -122,3 +122,6 @@ packages/post/dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Databse configuration
+packages/user/ormconfig.json
