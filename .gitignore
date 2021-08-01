@@ -41,8 +41,6 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
-packages/user/node_modules
-packages/post/node_modules
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
@@ -75,8 +73,6 @@ web_modules/
 .env
 .env.test
 .env.production
-packages/user/.env
-packages/post/.env
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -89,8 +85,6 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
-packages/user/dist
-packages/post/dist
 
 # Gatsby files
 .cache/
@@ -124,4 +118,4 @@ packages/post/dist
 .pnp.*
 
 # Databse configuration
-packages/user/ormconfig.json
+ormconfig.json
