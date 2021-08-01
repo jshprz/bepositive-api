@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Service } from 'typedi';
-import TestService from '../services/TestService';
-import TestRepository from '../repositories/TestRepository';
+import TestService from '../domain/user/service/TestService';
+import TestRepository from '../domain/user/repository/TestRepository';
 
 @Service()
 class TestController {

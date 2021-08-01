@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import TestRepository from '../repositories/TestRepository';
+import TestRepository from '../repository/TestRepository';
 
 interface Test {
   name: string;
