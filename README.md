@@ -10,35 +10,23 @@ This serves as the back-end for the Bepositive application, a social media appli
 ```
 <root>
   - src
-    - controllers
+    - app
+     - authentication
+     - comment
+     - feed
+     - media
+     - post
+     - search
+     - user
+    - config
     - database
       - migration
       - models
-    - domain
-      - comment
-        - repository
-        - service
-        - service_implementation
-      - feed
-        - repository
-        - service
-        - service_implementation
-      - media_file
-        - repository
-        - service
-        - service_implementation
-      - post
-        - repository
-        - service
-        - service_implementation
-      - search
-        - repository
-        - service
-        - service_implementation
-      - user
-        - repository
-        - service
-        - service_implementation
+    - infra
+      - repositories
+      - utils
+    - interface
+      - repositories
     - routes
     - tests
 - index.ts
@@ -54,13 +42,11 @@ This serves as the back-end for the Bepositive application, a social media appli
 1. From the root directory, run this command: npm install.
 2. Create an ormconfig.json file in the root directory of the project.
 3. Copy the content of the ormconfig.json.example, then paste it to ormconfig.json. Kindly input custom values within the line that includes "<>" inside ormconfig.json
-4. Build the package by running: npm run build
-5. Start the application: npm run start
+4. Build and start the application: npm run start
 
 ## Running a test
 
 1. Run this command to run the test: npm run test
-
 
 ## Branching Strategy
 - master: this is the head of our development. We perform a merge request to this branch from our * task branch *, which means our changes are ready to be tested on our staging environment(release-candidate).
@@ -81,7 +67,7 @@ Branching sequence: * task branch * > master > release-candidate > release
 
 1. Typescript: https://www.typescriptlang.org/
 2. TypeORM: https://typeorm.io/#/
-3. Package by component: http://www.codingthearchitecture.com/2015/03/08/package_by_component_and_architecturally_aligned_testing.html | https://www.youtube.com/watch?v=5OjqD-ow8GE | https://blog.ttulka.com/package-by-component-with-clean-modules-in-java
-4. Dependency Injection: https://levelup.gitconnected.com/dependency-injection-in-typescript-2f66912d143c | https://alexnault.dev/dependency-inversion-principle-in-functional-typescript | https://www.youtube.com/watch?v=nk3wUKxVDAg
-6. Unit Testing: https://www.youtube.com/watch?v=NPp2pvhGbkM
-7. Jest: https://jestjs.io/docs/mock-functions | https://jestjs.io/docs/getting-started | https://medium.com/nerd-for-tech/testing-typescript-with-jest-290eaee9479d | https://dev.to/muhajirdev/unit-testing-with-typescript-and-jest-2gln
+3. Dependency Injection: https://levelup.gitconnected.com/dependency-injection-in-typescript-2f66912d143c | https://alexnault.dev/dependency-inversion-principle-in-functional-typescript | https://www.youtube.com/watch?v=nk3wUKxVDAg
+4. TypeDI: https://docs.typestack.community/typedi/v/develop/01-getting-started
+5. Unit Testing: https://www.youtube.com/watch?v=NPp2pvhGbkM
+6. Jest: https://jestjs.io/docs/mock-functions | https://jestjs.io/docs/getting-started | https://medium.com/nerd-for-tech/testing-typescript-with-jest-290eaee9479d | https://dev.to/muhajirdev/unit-testing-with-typescript-and-jest-2gln

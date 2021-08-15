@@ -1,20 +1,17 @@
-import 'reflect-metadata';
-
 import express from 'express';
-import Container from 'typedi';
-import TestController from './src/controllers/TestController';
 import { createConnection } from 'typeorm';
-import usersApi from './src/routes/api';
+import { apis } from './src/routes/index';
 
 const main = async () => {
   createConnection();
   const app = express();
   const port = 3000;
 
-  const testController = Container.get(TestController);
+  app.use(express.urlencoded({extended: true}));
+  app.use(express.json());
 
-  app.use('/user', usersApi);
-  app.get('/users', (req, res) => testController.getAllUsers(req, res));
+  app.use('/rest/v1/auth', apis.AuthenticationApi);
+  app.use('/rest/v1/user', apis.UserApi);
 
   app.listen(port, () => {
     // tslint:disable-next-line:no-console
