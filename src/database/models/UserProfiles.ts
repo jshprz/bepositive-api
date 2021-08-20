@@ -27,8 +27,8 @@ export class UserProfiles {
   @Column({type: "varchar", length: 50, nullable: true})
   profile_description?: string;
 
-  @Column({type: "date", nullable: false})
-  dob?: string;
+  @Column({type: "bigint", nullable: false})
+  dob?: number;
 
   @Column({type: "varchar", length: 255, nullable: true})
   about?: string;
@@ -54,12 +54,12 @@ export class UserProfiles {
   @Column({type: "char", length: 10, nullable: false})
   status?: string;
 
-  @Column({type: "timestamptz", nullable: false})
-  created_at?: Date;
+  @Column({type: "bigint", nullable: false})
+  created_at?: number;
 
-  @Column({type: "timestamptz", nullable: true})
-  updated_at?: Date;
+  @Column({type: "bigint", nullable: true})
+  updated_at?: number;
 
-  @Column({type: "timestamptz", nullable: true})
-  deleted_at?: Date;
+  @Column({type: "bigint", nullable: true})
+  deleted_at?: number;
 }
