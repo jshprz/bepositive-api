@@ -15,15 +15,21 @@ export class Users extends BaseEntity {
   @Column({type: "char", length: 10, nullable: false})
   account_status?: string;
 
-  @Column({type: "date", nullable: true})
-  verified_at?: string;
+  @Column({type: "bigint", nullable: true})
+  verified_at?: number;
 
-  @Column({type: "timestamptz", nullable: false})
-  created_at?: Date;
+  @Column({type: 'varchar', nullable: true})
+  resetToken?: string;
 
-  @Column({type: "timestamptz", nullable: true})
-  updated_at?: Date;
+  @Column({type: 'bigint', nullable: true})
+  resetTokenExpiration?: number;
 
-  @Column({type: "timestamptz", nullable: true})
-  deleted_at?: Date;
+  @Column({type: "bigint", nullable: false})
+  created_at?: number;
+
+  @Column({type: "bigint", nullable: true})
+  updated_at?: number;
+
+  @Column({type: "bigint", nullable: true})
+  deleted_at?: number;
 }

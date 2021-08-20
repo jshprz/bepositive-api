@@ -7,16 +7,16 @@ import 'reflect-metadata';
 @Service()
 class Account {
 
-  private userRepository: AccountInterface;
+  private _userRepository: AccountInterface;
 
   constructor() {
     const container = Container.of();
-    this.userRepository = container.get(repositories.UserRepository);
+    this._userRepository = container.get(repositories.UserRepository);
   }
 
   async registerUser(req: Request, res: Response) {
     try {
-      const createUser = await this.userRepository.createUser(req.body);
+      const createUser = await this._userRepository.createUser(req.body);
       if (!createUser) {
         return res.status(500).send('Internal Server Error');
       }
@@ -30,7 +30,7 @@ class Account {
 
   async updateUser(req: Request, res: Response) {
 
-      const updateUser = await this.userRepository.updateUser(req.body.id, req.body);
+      const updateUser = await this._userRepository.updateUser(req.body.id, req.body);
       if (!updateUser) {
         return res.status(500).send('Internal Server Error');
       }

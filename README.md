@@ -27,6 +27,7 @@ This serves as the back-end for the Bepositive application, a social media appli
       - utils
     - interface
       - repositories
+      - ses
     - routes
     - tests
 - index.ts
