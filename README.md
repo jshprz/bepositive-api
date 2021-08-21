@@ -49,20 +49,11 @@ This serves as the back-end for the Bepositive application, a social media appli
 
 1. Run this command to run the test: npm run test
 
+## Development Guide
+Link: https://smedia-dev-team.atlassian.net/l/c/JXaZQSRn
+
 ## Branching Strategy
-- master: this is the head of our development. We perform a merge request to this branch from our * task branch *, which means our changes are ready to be tested on our staging environment(release-candidate).
-
-- develop: this is our branch for the development environment (We only merge our * task branch * here for development testing purposes only).
-
-- release-candidate: this is our branch for the staging or UAT environment. We merge the master branch here when our * task branch * is approved and reviewed to test it along with product owners.
-
-- release: this is our branch for the production environment (We merge the release-candidate here for production releases).
-
-- task branch: this one is the branch where we do our development work. We have three types of development work: feature, bugfix, and configuration. You might name your task branch "feature/bep-1-user-login" when you are working on a feature, "bugfix/bep-2-login-failed" when you are working on a bugfix, and "config/bep-3-aws-params" when you are working on some configuration. 
-
-Note: please put a "WIP" on your commit message when you commit a change that is still a work in progress. E.g., "WIP: adding login access token."
-
-Branching sequence: * task branch * > master > release-candidate > release
+Link: https://smedia-dev-team.atlassian.net/l/c/7ZEfBJqE
 
 ## Helpful links regarding the tech stack and architecture
 
