@@ -17,9 +17,12 @@
       "cross-env": "^7.0.3",
       "dotenv": "^10.0.0",
       "express": "^4.17.1",
+      "express-jwt": "^6.1.0",
       "express-validator": "^6.12.1",
+      "jwks-rsa": "^2.0.4",
       "pg": "^8.4.0",
       "reflect-metadata": "^0.1.10",
+      "request": "^2.88.2",
       "typedi": "^0.10.0",
       "typeorm": "0.2.34"
    },
