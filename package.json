@@ -6,7 +6,7 @@
    "scripts": {
       "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
       "build": "tsc",
-      "start": "cross-env NODE_ENV=local npm run prebuild && npm run build && node .",
+      "start": "npm run prebuild && npm run build && node .",
       "test": "jest"
    },
    "keywords": [],
@@ -24,7 +24,8 @@
       "reflect-metadata": "^0.1.10",
       "request": "^2.88.2",
       "typedi": "^0.10.0",
-      "typeorm": "0.2.34"
+      "typeorm": "0.2.34",
+      "winston": "^3.3.3"
    },
    "devDependencies": {
       "@types/express": "^4.17.13",

@@ -8,7 +8,6 @@ import 'reflect-metadata';
 import crypto from 'crypto';
 import resetPasswordEmailTemplate from '../../templates/ResetPasswordEmailTemplate';
 import { validationResult } from 'express-validator';
-
 @Service()
 class ForgotPassword {
   private _userRepository: AccountInterface;
@@ -63,7 +62,6 @@ class ForgotPassword {
       });
 
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         message: 'Internal server error',
         error: 'Internal server error',
@@ -102,7 +100,6 @@ class ForgotPassword {
         status: 200
       });
     } catch (error) {
-      console.log(error)
       res.status(500).json({
         message: 'internal server error',
         error: 'internal server error',
@@ -152,7 +149,6 @@ class ForgotPassword {
         status: 200
       });
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         message: 'internal server error',
         error: 'internal server error',

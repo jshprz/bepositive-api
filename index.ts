@@ -1,8 +1,11 @@
 import express from 'express';
 import { createConnection } from 'typeorm';
 import { apis } from './src/routes/index';
+import { utils } from './src/infra/utils';
 import jwt from 'express-jwt';
 import jwks from 'jwks-rsa';
+
+const logger = new utils.Logger();
 const request = require("request");
 
 const main = async () => {
@@ -39,7 +42,10 @@ const main = async () => {
       if (error) {
       throw new Error(error);
       } else {
-        console.log(body);
+        logger.info({
+          label: 'index.js',
+          message: body
+        });
       }
   });
 
@@ -47,12 +53,16 @@ const main = async () => {
   app.use('/rest/v1/user', apis.UserApi);
 
   app.listen(port, () => {
-    // tslint:disable-next-line:no-console
-    console.log(`Server started: ${port}`);
+    logger.info({
+      label: 'index.js - listen()',
+      message: `Server started: ${port}`
+    });
   });
 }
 
 main().catch(err => {
-  // tslint:disable-next-line:no-console
-  console.error(err);
+  logger.error({
+    label: 'index.js',
+    message: err
+  });
 });
