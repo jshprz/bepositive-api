@@ -16,7 +16,14 @@ abstract class BaseRepository {
 
   }
 
-  async sendEmail(recipientEmail: any, subject: string, body: string) {
+  /**
+   * Composes an email message and immediately queues it for sending.
+   * @param recipientEmail any
+   * @param subject string
+   * @param body string
+   * @returns Promise<any>
+   */
+  async sendEmail(recipientEmail: any, subject: string, body: string): Promise<any> {
     const params = {
       Source: `${process.env.EMAIL_DEFAULT_SENDER}`,
       Destination: {
@@ -40,7 +47,14 @@ abstract class BaseRepository {
     return this._awsSes.sendEmail(params).promise();
   }
 
-  async sendTemplateEmail (recipientEmail: any, templateName: string, templateData: string) {
+  /**
+   * Composes an email message using an email template and immediately queues it for sending.
+   * @param recipientEmail any
+   * @param templateName string
+   * @param templateData string
+   * @returns Promise<any>
+   */
+  async sendTemplateEmail (recipientEmail: any, templateName: string, templateData: string): Promise<any> {
     const params = {
       Source: `${process.env.EMAIL_DEFAULT_SENDER}`,
       Template: templateName,

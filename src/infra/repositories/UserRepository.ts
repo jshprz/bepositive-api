@@ -14,28 +14,60 @@ export class UserRepository extends BaseRepository implements AccountInterface {
     super();
   }
 
-  async createUser(item: createParamsType) {
+  /**
+   * Calls a function in the BaseRepository to create a user record in the database table.
+   * @param item { email: string, password: string, account_status: string }
+   * @returns Promise<any>
+   */
+  async createUser(item: createParamsType): Promise<any> {
     return await this.create(item, this._usersEntity);
   }
 
-  async updateUser(id: string, item: {}) {
+  /**
+   * Calls a function in the BaseRepository to update a user record in the database table.
+   * @param id string
+   * @param item {}
+   * @returns Promise<any>
+   */
+  async updateUser(id: string, item: {}): Promise<any> {
     return await this.update(id, item, 'Users');
   }
 
-  async getUserById(id: string) {
+  /**
+   * Calls a function in the BaseRepository to get a user by its id in the database table.
+   * @param id string
+   * @returns Promise<any>
+   */
+  async getUserById(id: string): Promise<any> {
     return await this.getById(id, 'Users', 'users');
   }
 
-  async getUserByEmail(email: string) {
+  /**
+   * Get a user by its email in the database table.
+   * @param email string
+   * @returns Promise<any>
+   */
+  async getUserByEmail(email: string): Promise<any> {
     return await getRepository(Users)
       .findOne({email})
       .catch((err) => {
-        console.log(`\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`);
+        this._log.error({
+          label: 'UserRepository - getUserByEmail()',
+          message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
+          payload: {
+            email
+          }
+        });
         throw new Error('Database operation error');
       });
   }
 
-  async getUserByResetToken(token: string) {
+  /**
+   * Get a user by its reset token in the database table.
+   * @param token string
+   * @returns Promise<any>
+   */
+  async getUserByResetToken(token: string): Promise<any> {
     return await getRepository(Users).findOne({
       where: {
         resetToken: token,
@@ -43,7 +75,13 @@ export class UserRepository extends BaseRepository implements AccountInterface {
       }
     })
     .catch((err) => {
-      console.log(`\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`);
+      this._log.error({
+        label: 'UserRepository - getUserByResetToken()',
+        message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
+        payload: {
+          token
+        }
+      });
       throw new Error('Database operation error');
     });
   }

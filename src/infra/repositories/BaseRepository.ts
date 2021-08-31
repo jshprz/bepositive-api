@@ -1,7 +1,8 @@
 import { createParamsType } from '../../interface/repositories/AccountInterface';
 import { getConnection } from 'typeorm';
-import { Users } from '../../database/models/Users';
-import { parse } from 'querystring';
+import { Container } from 'typedi';
+import { utils } from '../utils/index';
+
 interface BaseRepositoryInterface {
   create(item: createParamsType, entity: any): Promise<boolean>;
   update(id: string, item: object, entity: any): Promise<any>;
@@ -9,7 +10,19 @@ interface BaseRepositoryInterface {
 }
 
 abstract class BaseRepository implements BaseRepositoryInterface {
-  async create(item: createParamsType, entity: any) {
+  protected _log: any;
+
+  constructor() {
+    this._log = Container.get(utils.Logger);
+  }
+
+  /**
+   * Creates user record in the database table.
+   * @param item { email: string, password: string, account_status: string }
+   * @param entity any
+   * @returns Promise<any>
+   */
+  async create(item: createParamsType, entity: any): Promise<any> {
 
     entity.email = item.email;
     entity.password = item.password;
@@ -17,12 +30,26 @@ abstract class BaseRepository implements BaseRepositoryInterface {
     entity.created_at = Number(Date.now());
 
     return await entity.save().catch((err: any) => {
-      console.log(`\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`);
+      this._log.error({
+        label: 'UserRepository - BaseRepository - create()',
+        message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
+        payload: {
+          item,
+          entity
+        }
+      });
       throw new Error('Database operation error');
     });
   }
 
-  async update(id: string, item: object, entity: string) {
+  /**
+   * Updates user record in the database table.
+   * @param id string
+   * @param item object
+   * @param entity string
+   * @returns Promise<any>
+   */
+  async update(id: string, item: object, entity: string): Promise<any> {
     const modifiedItem = {
       ...item,
       updated_at: Number(Date.now())
@@ -34,12 +61,28 @@ abstract class BaseRepository implements BaseRepositoryInterface {
       .where('id = :id', {id})
       .execute()
       .catch((err) => {
-        console.log(`\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`);
+        this._log.error({
+          label: 'UserRepository - BaseRepository - update()',
+          message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
+          payload: {
+            id,
+            item,
+            entity
+          }
+        });
+
         throw new Error('Database operation error');
       });
   }
 
-  async getById(id: string, entity: any, table: string) {
+  /**
+   * Get a user by its id in the database table.
+   * @param id string
+   * @param entity any
+   * @param table string
+   * @returns Promise<any>
+   */
+  async getById(id: string, entity: any, table: string): Promise<any> {
     return await getConnection()
     .createQueryBuilder()
     .select(table)
@@ -47,7 +90,15 @@ abstract class BaseRepository implements BaseRepositoryInterface {
     .where('id = :id', {id})
     .getOne()
     .catch((err) => {
-      console.log(`\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`);
+      this._log.error({
+        label: 'UserRepository - BaseRepository - getById()',
+        message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
+        payload: {
+          id,
+          entity,
+          table
+        }
+      });
       throw new Error('Database operation error');
     });
   }
