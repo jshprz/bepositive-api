@@ -2,11 +2,11 @@
    "name": "bepositive-api",
    "version": "1.0.0",
    "description": "",
-   "main": "./dist/index.js",
+   "main": "index.ts",
    "scripts": {
       "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
       "build": "tsc",
-      "start": "npm run prebuild && npm run build && node .",
+      "start": "npm run prebuild && npm run build && ts-node .",
       "test": "jest"
    },
    "keywords": [],
