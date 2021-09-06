@@ -7,9 +7,7 @@ abstract class BaseRepository {
   constructor() {
 
     const SES_CONFIG = {
-      region: 'ap-southeast-2',
-      accessKeyId: process.env.SES_ACCESS_KEY,
-      secretAccessKey: process.env.SES_ACCESS_KEY,
+      region: 'ap-southeast-2'
     }
 
     this._awsSes = new AWS.SES(SES_CONFIG);
