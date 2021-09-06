@@ -1,1 +1,0 @@
-{"version":3,"file":"AuthenticationApiRequest.js","sourceRoot":"","sources":["../../../src/middlewares/AuthenticationApiRequest.ts"],"names":[],"mappings":";;AAAA,uDAA0C;AAE1C,IAAM,mCAAmC,GAAG;IAC1C,yBAAK,CAAC,OAAO,CAAC,CAAC,GAAG,EAAE,CAAC,OAAO,EAAE;CAC/B,CAAC;AAEF,kBAAe,mCAAmC,CAAC"}
