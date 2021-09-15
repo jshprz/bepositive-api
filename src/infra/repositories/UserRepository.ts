@@ -4,7 +4,9 @@ import { AccountInterface, createParamsType} from '../../interface/repositories/
 import BaseRepository from './BaseRepository';
 import { Users } from '../../database/models/Users';
 import { getRepository, MoreThan } from 'typeorm';
+import path from 'path';
 
+const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 @Service()
 export class UserRepository extends BaseRepository implements AccountInterface {
 
@@ -52,7 +54,7 @@ export class UserRepository extends BaseRepository implements AccountInterface {
       .findOne({email})
       .catch((err) => {
         this._log.error({
-          label: 'UserRepository - getUserByEmail()',
+          label: `${filePath} - getUserByEmail()`,
           message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
           payload: {
             email
@@ -76,7 +78,7 @@ export class UserRepository extends BaseRepository implements AccountInterface {
     })
     .catch((err) => {
       this._log.error({
-        label: 'UserRepository - getUserByResetToken()',
+        label: `${filePath} - getUserByResetToken()`,
         message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
         payload: {
           token
