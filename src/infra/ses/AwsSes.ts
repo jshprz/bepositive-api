@@ -2,6 +2,9 @@ import { Container, Service } from 'typedi';
 import 'reflect-metadata';
 import BaseRepository from './BaseRepository';
 import { utils } from '../utils';
+import path from 'path';
+
+const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 @Service()
 export class AwsSes extends BaseRepository {
 
@@ -27,7 +30,7 @@ export class AwsSes extends BaseRepository {
     return await this.sendEmail(recipients, subject, body)
       .catch((err) => {
         this._log.error({
-          label: 'AwsSes - sendResetPasswordEmail()',
+          label: `${filePath} - sendResetPasswordEmail()`,
           message: err,
           payload: {
             recipient,

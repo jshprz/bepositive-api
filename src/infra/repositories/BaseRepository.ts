@@ -2,7 +2,9 @@ import { createParamsType } from '../../interface/repositories/AccountInterface'
 import { getConnection } from 'typeorm';
 import { Container } from 'typedi';
 import { utils } from '../utils/index';
+import path from 'path';
 
+const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 interface BaseRepositoryInterface {
   create(item: createParamsType, entity: any): Promise<boolean>;
   update(id: string, item: object, entity: any): Promise<any>;
@@ -31,7 +33,7 @@ abstract class BaseRepository implements BaseRepositoryInterface {
 
     return await entity.save().catch((err: any) => {
       this._log.error({
-        label: 'UserRepository - BaseRepository - create()',
+        label: `${filePath} - create()`,
         message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
         payload: {
           item,
@@ -62,7 +64,7 @@ abstract class BaseRepository implements BaseRepositoryInterface {
       .execute()
       .catch((err) => {
         this._log.error({
-          label: 'UserRepository - BaseRepository - update()',
+          label: `${filePath} - update()`,
           message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
           payload: {
             id,
@@ -91,7 +93,7 @@ abstract class BaseRepository implements BaseRepositoryInterface {
     .getOne()
     .catch((err) => {
       this._log.error({
-        label: 'UserRepository - BaseRepository - getById()',
+        label: `${filePath} - getById()`,
         message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
         payload: {
           id,

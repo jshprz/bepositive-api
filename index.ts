@@ -28,7 +28,7 @@ const main = async () => {
 
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());
-  app.use(jwtCheck);
+  // app.use(jwtCheck);
 
   // retrieve access token
   // TO DO: set token in authorization header for future requests
