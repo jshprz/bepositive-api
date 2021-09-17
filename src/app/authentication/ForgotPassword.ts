@@ -1,8 +1,8 @@
 import { Container, Service } from 'typedi';
 import { repositories } from '../../infra/repositories';
 import { ses } from '../../infra/ses';
-import { AccountInterface } from '../../interface/repositories/AccountInterface';
-import { AwsSesInterface } from '../../interface/ses/AwsSesInterface';
+import { UserRepository } from '../../infra/repositories/UserRepository';
+import { EmailInterface } from '../../interface/ses/EmailInterface';
 import { Request, Response } from 'express';
 import 'reflect-metadata';
 import crypto from 'crypto';
@@ -10,13 +10,13 @@ import resetPasswordEmailTemplate from '../../templates/ResetPasswordEmailTempla
 import { validationResult } from 'express-validator';
 @Service()
 class ForgotPassword {
-  private _userRepository: AccountInterface;
-  private _awsSes: AwsSesInterface;
+  private _userRepository: UserRepository;
+  private _awsSes: EmailInterface;
 
   constructor() {
     const container = Container.of();
     this._userRepository = container.get(repositories.UserRepository);
-    this._awsSes = container.get(ses.AwsSes);
+    this._awsSes = container.get(ses.Email);
   }
 
   async requestResetPasswordViaEmail(req: Request, res: Response) {

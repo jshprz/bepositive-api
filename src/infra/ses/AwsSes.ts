@@ -1,44 +1,69 @@
-import { Container, Service } from 'typedi';
-import 'reflect-metadata';
-import BaseRepository from './BaseRepository';
-import { utils } from '../utils';
-import path from 'path';
+import AWS from 'aws-sdk';
 
-const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
-@Service()
-export class AwsSes extends BaseRepository {
+abstract class AwsSes {
 
-  private _log: any;
+  private _awsSes;
 
   constructor() {
-    super();
 
-    this._log = Container.get(utils.Logger);
+    const SES_CONFIG = {
+      region: 'ap-southeast-2'
+    }
+
+    this._awsSes = new AWS.SES(SES_CONFIG);
+
   }
 
   /**
-   * Calls a function in the BaseRepository and composes an email message and immediately queues it for sending.
-   * @param recipient string
+   * Composes an email message and immediately queues it for sending.
+   * @param recipientEmail any
    * @param subject string
    * @param body string
    * @returns Promise<any>
    */
-  async sendResetPasswordEmail(recipient: string, subject: string, body: string): Promise<any> {
-    const recipients = [
-      recipient
-    ];
-    return await this.sendEmail(recipients, subject, body)
-      .catch((err) => {
-        this._log.error({
-          label: `${filePath} - sendResetPasswordEmail()`,
-          message: err,
-          payload: {
-            recipient,
-            subject,
-            body
+  async sendEmail(recipientEmail: any, subject: string, body: string): Promise<any> {
+    const params = {
+      Source: `${process.env.EMAIL_DEFAULT_SENDER}`,
+      Destination: {
+        ToAddresses: recipientEmail
+      },
+      ReplyToAddresses: [],
+      Message: {
+        Body: {
+          Html: {
+            Charset: 'UTF-8',
+            Data: body
           }
-        });
-        throw new Error('Send email was failing');
-      });
+        },
+        Subject: {
+          Charset: 'UTF-8',
+          Data: subject
+        }
+      }
+    };
+
+    return this._awsSes.sendEmail(params).promise();
+  }
+
+  /**
+   * Composes an email message using an email template and immediately queues it for sending.
+   * @param recipientEmail any
+   * @param templateName string
+   * @param templateData string
+   * @returns Promise<any>
+   */
+  async sendTemplateEmail (recipientEmail: any, templateName: string, templateData: string): Promise<any> {
+    const params = {
+      Source: `${process.env.EMAIL_DEFAULT_SENDER}`,
+      Template: templateName,
+      Destination: {
+        ToAddresses: recipientEmail
+      },
+      TemplateData: templateData
+    };
+
+    return await this._awsSes.sendTemplatedEmail(params);
   }
 }
+
+export default AwsSes;

@@ -1,6 +1,6 @@
 export type createParamsType = { email: string, password: string, account_status: string }
 
-export interface AccountInterface {
+export interface UserRepositoryInterface {
   createUser(item: createParamsType): Promise<any>;
   updateUser(id: string, item: {}): Promise<any>;
   getUserById(id: string): Promise<any>;
