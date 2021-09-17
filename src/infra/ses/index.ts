@@ -1,5 +1,5 @@
-import { AwsSes } from './AwsSes';
+import { Email } from './Email';
 
 export const ses = {
-  AwsSes
+  Email
 }

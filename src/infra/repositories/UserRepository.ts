@@ -1,6 +1,6 @@
 import { Service } from 'typedi';
 import 'reflect-metadata';
-import { AccountInterface, createParamsType} from '../../interface/repositories/AccountInterface';
+import { UserRepositoryInterface, createParamsType} from '../../interface/repositories/UserRepositoryInterface';
 import BaseRepository from './BaseRepository';
 import { Users } from '../../database/models/Users';
 import { getRepository, MoreThan } from 'typeorm';
@@ -8,7 +8,7 @@ import path from 'path';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 @Service()
-export class UserRepository extends BaseRepository implements AccountInterface {
+export class UserRepository extends BaseRepository implements UserRepositoryInterface {
 
   constructor(
     private _usersEntity = new Users()

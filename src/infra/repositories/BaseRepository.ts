@@ -1,4 +1,4 @@
-import { createParamsType } from '../../interface/repositories/AccountInterface';
+import { createParamsType } from '../../interface/repositories/UserRepositoryInterface';
 import { getConnection } from 'typeorm';
 import { Container } from 'typedi';
 import { utils } from '../utils/index';
