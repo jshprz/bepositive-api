@@ -3,14 +3,36 @@ import { Container } from 'typedi';
 import 'reflect-metadata';
 import ForgotPassword from '../app/authentication/ForgotPassword';
 import Registration from '../app/authentication/Registration';
+import Login from '../app/authentication/Login';
 import { check, param, validationResult } from 'express-validator';
 
 const router = express.Router();
 
 const forgotPassword = Container.get(ForgotPassword);
 const registration = Container.get(Registration);
+const login = Container.get(Login);
 
-router.post('/login', (req, res) => { res.end(); });
+router.post('/login', [
+  check('emailOrUsername').not().isEmpty().withMessage('emailOrUsername property is required.'),
+  check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 6 character.')
+], (req: any, res: any) => login.normalLogin(req, res));
+
+router.post('/register', [
+  check('username').not().isEmpty().withMessage('username property is required.'),
+  check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.'),
+  check('name').not().isEmpty().withMessage('name property is required.').isAlpha('en-US', { ignore: ' ' }).isLength({ max: 32 }),
+  check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 6 character.').custom((value: string, { req }) => {
+    if(value !== req.body.confirmPassword) {
+      return Promise.reject('password is not match.');
+    }
+    return Promise.resolve();
+  })
+], (req: any, res: any) => registration.register(req, res));
+
+router.post('/verify', [
+  check('username').not().isEmpty().withMessage('username property is required.'),
+  check('verifyCode').not().isEmpty().withMessage('verifyCode property is required.')
+], (req: any, res: any) => registration.verify(req, res));
 
 router.post('/register', [
   check('username').not().isEmpty().withMessage('username property is required.'),
