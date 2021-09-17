@@ -18,6 +18,23 @@ export class CognitoUserPool {
   }
 }
 
+export interface IAuthenticationCallback {
+  onSuccess: (
+    session: any,
+    userConfirmationNecessary?: boolean
+  ) => void;
+  onFailure: (err: any) => void;
+  newPasswordRequired?: (
+    userAttributes: any,
+    requiredAttributes: any
+  ) => void;
+  mfaRequired?: (challengeName: any, challengeParameters: any) => void;
+  totpRequired?: (challengeName: any, challengeParameters: any) => void;
+  customChallenge?: (challengeParameters: any) => void;
+  mfaSetup?: (challengeName: any, challengeParameters: any) => void;
+  selectMFAType?: (challengeName: any, challengeParameters: any) => void;
+}
+
 export class CognitoUser {
   constructor(data: {Username: string, Pool: CognitoUserPool, Storage?: any}) {}
 
@@ -30,6 +47,17 @@ export class CognitoUser {
 
     callback(null, 'resolved!');
   }
+
+  public authenticateUser(
+    authenticationDetails: AuthenticationDetails,
+    callback: any
+  ) {
+    callback(null, 'resolved!')
+  }
+}
+
+export class AuthenticationDetails {
+  constructor(data: { Username: string, Password: string }) {};
 }
 abstract class AwsCognito {
 
@@ -63,6 +91,12 @@ abstract class AwsCognito {
     }
 
     return new CognitoUser(userData);
+  }
+
+  getAuthenticationDetails(body: {email: string, password: string}) {
+    const authenticationData = { Username: body.email, Password: body.password };
+
+    return new AuthenticationDetails(authenticationData);
   }
 }
 

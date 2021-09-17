@@ -1,6 +1,6 @@
 import { Container } from 'typedi';
 import { utils } from '../utils';
-import { CognitoUserPool, CognitoUserAttribute, CognitoUser } from 'amazon-cognito-identity-js';
+import { CognitoUserPool, CognitoUserAttribute, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
 
 abstract class AwsCognito {
 
@@ -42,6 +42,11 @@ abstract class AwsCognito {
     ];
   }
 
+  /**
+   * Gets Cognito user via username or an email.
+   * @param email string
+   * @returns instance of CognitoUser from 'amazon-cognito-identity-js' library.
+   */
   getCognitoUser(username: string) {
     const userData = {
       Username: username,
@@ -49,6 +54,17 @@ abstract class AwsCognito {
     }
 
     return new CognitoUser(userData);
+  }
+
+  /**
+   * Gets authentication details.
+   * @param body {emailOrUsername: string, password: string}
+   * @returns instance of AuthenticationDetails from 'amazon-cognito-identity-js' library.
+   */
+  getAuthenticationDetails(body: {emailOrUsername: string, password: string}) {
+    const authenticationData = { Username: body.emailOrUsername, Password: body.password };
+
+    return new AuthenticationDetails(authenticationData);
   }
 }
 
