@@ -13,7 +13,7 @@ const registration = Container.get(appAuthentication.Registration);
 router.patch('/password/reset', [
   check('emailOrUsername').not().isEmpty().withMessage('emailOrUsername property is required.'),
   check('verifyCode').not().isEmpty().withMessage('verifyCode property is required.'),
-  check('newPassword').not().isEmpty().withMessage('newPassword property is required.').isLength({ min: 8 }).withMessage('password length atleast 6 character.')
+  check('newPassword').not().isEmpty().withMessage('newPassword property is required.').isLength({ min: 8 }).withMessage('newPassword length atleast 8 characters.')
 ], (req: any, res: any) => password.resetPassword(req, res));
 
 router.post('/password/forgot', [
