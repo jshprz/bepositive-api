@@ -1,11 +1,11 @@
 import express from 'express';
 import { createConnection } from 'typeorm';
 import { apis } from './src/routes/index';
-import { utils } from './src/infra/utils';
+import infraUtils from './src/infra/utils';
 import jwt from 'express-jwt';
 import jwks from 'jwks-rsa';
 
-const logger = new utils.Logger();
+const logger = new infraUtils.Logger();
 const request = require("request");
 
 const main = async () => {

@@ -1,7 +1,7 @@
 import { createParamsType } from '../../interface/repositories/UserRepositoryInterface';
 import { getConnection } from 'typeorm';
 import { Container } from 'typedi';
-import { utils } from '../utils/index';
+import infraUtils from '../utils/index';
 import path from 'path';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
@@ -15,7 +15,7 @@ abstract class BaseRepository implements BaseRepositoryInterface {
   protected _log: any;
 
   constructor() {
-    this._log = Container.get(utils.Logger);
+    this._log = Container.get(infraUtils.Logger);
   }
 
   /**

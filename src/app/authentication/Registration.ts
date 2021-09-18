@@ -1,4 +1,4 @@
-import { authentication } from "../../infra/authentication/index";
+import infraAuthentication from "../../infra/authentication/index";
 import { Container, Service } from 'typedi';
 import { SignUpInterface } from "../../interface/authentication/SignUpInterface";
 import { Request, Response } from 'express';
@@ -10,7 +10,7 @@ class Registration {
 
   constructor() {
     const container = Container.of();
-    this._signUp = container.get(authentication.SignUp);
+    this._signUp = container.get(infraAuthentication.SignUp);
   }
 
   async register(req: Request, res: Response) {
@@ -92,8 +92,9 @@ class Registration {
     }
 
     try {
+      const { username } = req.body;
       await this._signUp.verifyUser(req.body);
-
+      await this._signUp.updateEmailVerifiedToTrue(username);
       res.status(200).json({
         message: 'verified successfully.',
         payload: {},

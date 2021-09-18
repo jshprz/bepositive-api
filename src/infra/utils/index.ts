@@ -1,5 +1,5 @@
 import { Logger } from './Logger';
 
-export const utils = {
+export default {
   Logger,
 }

@@ -13,4 +13,5 @@ export type verifyUserParamTypes = {
 export interface SignUpInterface {
   doSignUp(body: doSignUpParamTypes): Promise<any>;
   verifyUser(body: verifyUserParamTypes): Promise<any>;
+  updateEmailVerifiedToTrue(username: string): Promise<any>;
 }

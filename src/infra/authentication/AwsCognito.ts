@@ -1,13 +1,20 @@
 import { Container } from 'typedi';
-import { utils } from '../utils';
+import infraUtils from '../utils';
+import AWS from 'aws-sdk';
 import { CognitoUserPool, CognitoUserAttribute, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
+
+const cognitoIdentityServiceProvider = AWS.CognitoIdentityServiceProvider;
 
 abstract class AwsCognito {
 
   protected _log: any;
+  protected _client: any;
 
   constructor() {
-    this._log = Container.get(utils.Logger);
+    this._log = Container.get(infraUtils.Logger);
+    this._client = new cognitoIdentityServiceProvider({
+      region: 'ap-southeast-2'
+    });
   }
 
   /**
