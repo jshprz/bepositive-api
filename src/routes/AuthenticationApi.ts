@@ -22,7 +22,7 @@ router.post('/password/forgot', [
 
 router.post('/login', [
   check('emailOrUsername').not().isEmpty().withMessage('emailOrUsername property is required.'),
-  check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 6 character.')
+  check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 8 characters.')
 ], (req: any, res: any) => login.normalLogin(req, res));
 
 
