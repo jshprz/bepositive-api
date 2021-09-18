@@ -1,16 +1,13 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Users } from "./Users";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({name: "user_profiles"})
 export class UserProfiles {
 
   @PrimaryGeneratedColumn({type: "int", unsigned: true})
-  id?: number
+  id?: number;
 
-  @ManyToOne(type => Users)
-  @JoinColumn()
-  @Column({type: "int", nullable: false, unsigned: true})
-  user?: Users;
+  @Column({type: "varchar", length: 255, nullable: false})
+  user?: string;
 
   @Column({type: "varchar", length: 50, nullable: false})
   first_name?: string;

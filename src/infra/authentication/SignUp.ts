@@ -54,4 +54,32 @@ export class SignUp extends AwsCognito implements SignUpInterface {
     })
   }
 
+  async updateEmailVerifiedToTrue(username: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this._client.adminUpdateUserAttributes({
+        UserAttributes: [{
+            Name: 'email_verified',
+            Value: 'true'
+          }
+          // other user attributes like phone_number or email themselves, etc
+        ],
+        UserPoolId: process.env.COGNITO_POOL_ID,
+        Username: username
+
+      }, (error: any) => {
+        if (error) {
+          this._log.error({
+            label: `${filePath} - updateEmailVerifiedToTrue()`,
+            message: error,
+            payload: {}
+          });
+
+          reject(error);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
+
 }

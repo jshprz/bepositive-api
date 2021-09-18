@@ -1,5 +1,5 @@
 import { UserRepository } from "./UserRepository";
 
-export const repositories = {
+export default {
   UserRepository
 }

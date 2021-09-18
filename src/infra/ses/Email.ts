@@ -1,7 +1,7 @@
 import { Container, Service } from 'typedi';
 import 'reflect-metadata';
 import AwsSes from './AwsSes';
-import { utils } from '../utils';
+import infraUtils from '../utils';
 import path from 'path';
 import { EmailInterface } from '../../interface/ses/EmailInterface';
 
@@ -14,7 +14,7 @@ export class Email extends AwsSes implements EmailInterface {
   constructor() {
     super();
 
-    this._log = Container.get(utils.Logger);
+    this._log = Container.get(infraUtils.Logger);
   }
 
   /**

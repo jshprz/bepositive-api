@@ -1,8 +1,8 @@
-import { authentication } from "../../infra/authentication";
+import infraAuthentication from "../../infra/authentication";
 import { Container, Service } from 'typedi';
 import { SignInInterface } from "../../interface/authentication/SignInInterface";
 import { Request, Response } from 'express';
-import { body, validationResult } from "express-validator";
+import { validationResult } from "express-validator";
 
 @Service()
 class Login {
@@ -11,7 +11,7 @@ class Login {
 
   constructor() {
     const container = Container.of();
-    this._signIn = container.get(authentication.SignIn);
+    this._signIn = container.get(infraAuthentication.SignIn);
   }
 
   async normalLogin(req: Request, res: Response) {
