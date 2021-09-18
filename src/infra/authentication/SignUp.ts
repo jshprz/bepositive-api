@@ -6,7 +6,7 @@ import path from 'path';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 @Service()
-export class SignUp extends AwsCognito implements SignUpInterface {
+class SignUp extends AwsCognito implements SignUpInterface {
 
   /**
    * Registers a user to AWS Cognito user pool.
@@ -54,6 +54,11 @@ export class SignUp extends AwsCognito implements SignUpInterface {
     })
   }
 
+  /**
+   * Updates email_verified attribute to true within the AWS Cognito user pool.
+   * @param username: string
+   * @returns Promise<any>
+   */
   async updateEmailVerifiedToTrue(username: string): Promise<any> {
     return new Promise((resolve, reject) => {
       this._client.adminUpdateUserAttributes({
@@ -83,3 +88,5 @@ export class SignUp extends AwsCognito implements SignUpInterface {
   }
 
 }
+
+export default SignUp;

@@ -8,7 +8,7 @@ import path from 'path';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 @Service()
-export class UserRepository extends BaseRepository implements UserRepositoryInterface {
+class UserRepository extends BaseRepository implements UserRepositoryInterface {
 
   constructor(
     private _usersEntity = new Users()
@@ -88,3 +88,5 @@ export class UserRepository extends BaseRepository implements UserRepositoryInte
     });
   }
 }
+
+export default UserRepository;

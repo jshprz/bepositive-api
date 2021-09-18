@@ -17,7 +17,7 @@ type logMessageParamType = {label: string, message: string, payload?: {}};
  */
 
 @Service()
-export class Logger {
+class Logger {
 
   private _logger: any;
 
@@ -67,3 +67,5 @@ export class Logger {
     this._logger.log(level, JSON.stringify(message));
   }
 }
+
+export default Logger;

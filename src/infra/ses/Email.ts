@@ -7,7 +7,7 @@ import { EmailInterface } from '../../interface/ses/EmailInterface';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 @Service()
-export class Email extends AwsSes implements EmailInterface {
+class Email extends AwsSes implements EmailInterface {
 
   private _log: any;
 
@@ -43,3 +43,5 @@ export class Email extends AwsSes implements EmailInterface {
       });
   }
 }
+
+export default Email;
