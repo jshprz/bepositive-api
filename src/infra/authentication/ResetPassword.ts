@@ -29,7 +29,7 @@ export class ResetPassword extends AwsCognito implements ResetPasswordInterface 
 
   async resetPassword(body: resetPasswordParamTypes): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.getCognitoUser(body.username).confirmPassword(body.verifyCode, body.newPassword, {
+      this.getCognitoUser(body.emailOrUsername).confirmPassword(body.verifyCode, body.newPassword, {
         onSuccess: (result) => resolve(result),
         onFailure: (error) => {
           this._log.error({

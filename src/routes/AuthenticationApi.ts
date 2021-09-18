@@ -10,11 +10,11 @@ const login = Container.get(appAuthentication.Login);
 const password = Container.get(appAuthentication.Password);
 const registration = Container.get(appAuthentication.Registration);
 
-router.post('/password/reset', [
-  check('username').not().isEmpty().withMessage('username property is required.'),
+router.patch('/password/reset', [
+  check('emailOrUsername').not().isEmpty().withMessage('emailOrUsername property is required.'),
   check('verifyCode').not().isEmpty().withMessage('verifyCode property is required.'),
   check('newPassword').not().isEmpty().withMessage('newPassword property is required.').isLength({ min: 8 }).withMessage('password length atleast 6 character.')
-], (req: any, res: any) => password.resetPasswordCognito(req, res));
+], (req: any, res: any) => password.resetPassword(req, res));
 
 router.post('/password/forgot', [
   check('emailOrUsername').not().isEmpty().withMessage('emailOrUsername property is required.'),
@@ -26,7 +26,7 @@ router.post('/login', [
 ], (req: any, res: any) => login.normalLogin(req, res));
 
 
-router.post('/register/verify', [
+router.patch('/register/verify', [
   check('username').not().isEmpty().withMessage('username property is required.'),
   check('verifyCode').not().isEmpty().withMessage('verifyCode property is required.')
 ], (req: any, res: any) => registration.verify(req, res));

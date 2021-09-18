@@ -1,5 +1,5 @@
 export type resetPasswordParamTypes = {
-  username: string,
+  emailOrUsername: string,
   verifyCode: string,
   newPassword: string
 }

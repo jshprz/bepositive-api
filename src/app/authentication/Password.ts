@@ -43,12 +43,12 @@ class Password {
     }
   }
 
-  async resetPasswordCognito(req: Request, res: Response) {
+  async resetPassword(req: Request, res: Response) {
     const errors = validationResult(req).mapped();
 
-    if (errors.username) {
+    if (errors.emailOrUsername) {
       return res.status(400).json({
-        message: errors.username.msg,
+        message: errors.emailOrUsername.msg,
         error: 'bad request error',
         status: 400
       });
