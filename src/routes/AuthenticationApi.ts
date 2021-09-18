@@ -34,8 +34,8 @@ router.patch('/register/verify', [
 router.post('/register', [
   check('username').not().isEmpty().withMessage('username property is required.'),
   check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.'),
-  check('name').not().isEmpty().withMessage('name property is required.').isAlpha('en-US', { ignore: ' ' }).isLength({ max: 32 }),
-  check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 6 character.').custom((value: string, { req }) => {
+  check('name').not().isEmpty().withMessage('name property is required.').isAlpha('en-US', { ignore: ' ' }).withMessage('name property is alpha.').isLength({ max: 32 }).withMessage('name property maximum length is only 32 characters.'),
+  check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 8 characters.').custom((value: string, { req }) => {
     if(value !== req.body.confirmPassword) {
       return Promise.reject('password is not match.');
     }
