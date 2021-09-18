@@ -7,9 +7,14 @@ import { ResetPasswordInterface, resetPasswordParamTypes } from '../../interface
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
 @Service()
-export class ResetPassword extends AwsCognito implements ResetPasswordInterface {
+class ResetPassword extends AwsCognito implements ResetPasswordInterface {
 
-  async forgotPassword(emailOrUsername: string) {
+  /**
+   * Sends reset password verification code through email.
+   * @param emailOrUsername: string
+   * @returns Promise<any>
+   */
+  async forgotPassword(emailOrUsername: string): Promise<any> {
     return new Promise((resolve, reject) => {
       const cognitoUser = this.getCognitoUser(emailOrUsername);
       cognitoUser.forgotPassword({
@@ -27,6 +32,11 @@ export class ResetPassword extends AwsCognito implements ResetPasswordInterface 
     });
   }
 
+  /**
+   * Resets user account password within the AWS Cognito user pool.
+   * @param body: { emailOrUsername: string, verifyCode: string, newPassword: string }
+   * @returns Promise<any>
+   */
   async resetPassword(body: resetPasswordParamTypes): Promise<any> {
     return new Promise((resolve, reject) => {
       this.getCognitoUser(body.emailOrUsername).confirmPassword(body.verifyCode, body.newPassword, {
@@ -44,3 +54,5 @@ export class ResetPassword extends AwsCognito implements ResetPasswordInterface 
     });
   }
 }
+
+export default ResetPassword;

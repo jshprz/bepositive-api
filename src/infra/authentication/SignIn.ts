@@ -7,7 +7,7 @@ import path from 'path';
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
 @Service()
-export class SignIn extends AwsCognito implements SignInInterface {
+class SignIn extends AwsCognito implements SignInInterface {
 
   /**
    * Signs in a user via AWS Cognito user pool.
@@ -34,3 +34,5 @@ export class SignIn extends AwsCognito implements SignInInterface {
   }
 
 }
+
+export default SignIn;
