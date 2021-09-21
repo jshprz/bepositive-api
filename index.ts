@@ -14,7 +14,7 @@ const main = async () => {
   app.use(express.json());
 
   app.use('/', (req, res) => {
-    const text = `<center><h2> Bepositive API </h2></center>`;
+    const text = `<center>Bepositive API</center>`;
     res.send(text);
   });
   app.use('/rest/v1/auth', apis.AuthenticationApi);
