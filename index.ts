@@ -13,10 +13,10 @@ const main = async () => {
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());
 
-  app.use('/', (req, res) => {
-    const text = `<center>Bepositive API</center>`;
-    res.send(text);
+  app.get('/', (req, res) => {
+    res.end('Bepositive API');
   });
+  
   app.use('/rest/v1/auth', apis.AuthenticationApi);
   app.use('/rest/v1/user', apis.UserApi);
 
