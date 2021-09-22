@@ -9,7 +9,7 @@
    "scripts": {
       "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
       "build": "npm run prebuild && tsc",
-      "start": "npm run build && ts-node .",
+      "start": "ts-node .",
       "test": "jest"
    },
    "keywords": [],
