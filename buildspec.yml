@@ -2,12 +2,10 @@ version: 0.2
 phases:
   install:
     commands:
-      - apt-get update
-      - apt-get upgrade -y
-      - apt-get install python3-setuptools
-      - easy_install3 pip
-      - pip -V
-      - pip install --upgrade --user awsebcli
+      - build-essential zlib1g-dev libssl-dev libncurses-dev libffi-dev libsqlite3-dev libreadline-dev libbz2-dev
+      - git clone https://github.com/aws/aws-elastic-beanstalk-cli-setup.git
+      - ./aws-elastic-beanstalk-cli-setup/scripts/bundled_installer
+      - apt-get install build-essential zlib1g-dev libssl-dev libncurses-dev libffi-dev libsqlite3-dev libreadline-dev libbz2-dev
       - eb --version
       - npm i npm@latest -g
       - npm install
