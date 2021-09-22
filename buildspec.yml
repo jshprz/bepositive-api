@@ -2,11 +2,14 @@ version: 0.2
 phases:
   install:
     commands:
+      - aws configure set aws_access_key_id AKIAY5YQZUVFC7ACDUW6; aws configure set aws_secret_access_key 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; aws configure set default.region ap-southeast-2
       - npm i npm@latest -g
       - npm install
   build:
     commands:
       - npm run build
+  test:
+    commands:
       - npm run test
   post_build:
     commands:
