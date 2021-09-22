@@ -4,7 +4,7 @@ env:
 phases:
   install:
     commands:
-      - pwd
+      - echo "${NODE_ENV}"
       - git clone https://github.com/aws/aws-elastic-beanstalk-cli-setup.git
       - ./aws-elastic-beanstalk-cli-setup/scripts/bundled_installer
       - echo 'export PATH="/root/.ebcli-virtual-env/executables:$PATH"' >> ~/.bash_profile && source ~/.bash_profile
