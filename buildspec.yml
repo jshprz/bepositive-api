@@ -24,7 +24,7 @@ phases:
       - aws configure set aws_access_key_id AKIAY5YQZUVFC7ACDUW6; aws configure set aws_secret_access_key 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; aws configure set default.region ap-southeast-2
       - aws configure list
       - eb init --region ap-southeast-2 bpdev
-        - n
+      n
       - eb use bpdev-env
       - eb setenv NODE_ENV=development PORT=80 APP_NAME=BepositiveDev SES_ACCESS_KEY=AKIAY5YQZUVFFHAWTWTQ SES_SECRET_KEY=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 EMAIL_DEFAULT_SENDER=no-reply@devmail-bepositive.email COGNITO_POOL_ID=ap-southeast-2_3SkjIt0tJ COGNITO_APP_CLIENT_ID=test
       - aws s3 cp s3://bpdev-env/ormconfig.json ormconfig.json
