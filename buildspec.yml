@@ -1,0 +1,39 @@
+version: 0.2
+env:
+  shell: bash
+phases:
+  install:
+    commands:
+      - git clone https://github.com/aws/aws-elastic-beanstalk-cli-setup.git
+      - ./aws-elastic-beanstalk-cli-setup/scripts/bundled_installer
+      - echo 'export PATH="/root/.ebcli-virtual-env/executables:$PATH"' >> ~/.bash_profile && source ~/.bash_profile
+      - echo 'export PATH="/root/.ebcli-virtual-env/executables:$PATH"' >> ~/.zshenv && source ~/.zshenv
+      - echo 'export PATH=/root/.pyenv/versions/3.7.2/bin:$PATH' >> /root/.bash_profile && source /root/.bash_profile
+      - echo 'export PATH=/root/.pyenv/versions/3.7.2/bin:$PATH' >> /root/.zshrc && source /root/.zshrc
+      - apt-get install build-essential zlib1g-dev libssl-dev libncurses-dev libffi-dev libsqlite3-dev libreadline-dev libbz2-dev -y
+      - eb --version
+      - npm i npm@latest -g
+      - npm install
+  build:
+    commands:
+      - npm run build
+      - npm run test
+  post_build:
+    commands:
+      - |
+        if [ "${NODE_ENV}" = "development" ] ; then 
+          aws configure set aws_access_key_id ${AWS_ACCESS_KEY}; aws configure set aws_secret_access_key ${AWS_SECRET_KEY}; aws configure set default.region ${REGION}
+          yes n | eb init --platform "arn:aws:elasticbeanstalk:ap-southeast-2::platform/Node.js 14 running on 64bit Amazon Linux 2/5.4.5" --region ap-southeast-2 bpdev
+          eb use bpdev-env
+          eb setenv NODE_ENV=${NODE_ENV} PORT=${PORT} APP_NAME=${APP_NAME} SES_ACCESS_KEY=${SES_ACCESS_KEY} SES_SECRET_KEY=${SES_SECRET_KEY} EMAIL_DEFAULT_SENDER=${EMAIL_DEFAULT_SENDER} COGNITO_POOL_ID=${COGNITO_POOL_ID} COGNITO_APP_CLIENT_ID=${COGNITO_APP_CLIENT_ID}
+          aws s3 cp s3://bpdev-env/ormconfig.json ormconfig.json
+        fi
+      - |
+        if [ "${NODE_ENV}" = "staging" ] ; then
+          aws configure set aws_access_key_id ${AWS_ACCESS_KEY}; aws configure set aws_secret_access_key ${AWS_SECRET_KEY}; aws configure set default.region ${REGION}
+          yes n | eb init --platform "arn:aws:elasticbeanstalk:ap-southeast-2::platform/Node.js 14 running on 64bit Amazon Linux 2/5.4.5" --region ap-southeast-2 bpstaging
+          eb use Bpstaging-env
+          eb setenv NODE_ENV=${NODE_ENV} PORT=${PORT} APP_NAME=${APP_NAME} SES_ACCESS_KEY=${SES_ACCESS_KEY} SES_SECRET_KEY=${SES_SECRET_KEY} EMAIL_DEFAULT_SENDER=${EMAIL_DEFAULT_SENDER} COGNITO_POOL_ID=${COGNITO_POOL_ID} COGNITO_APP_CLIENT_ID=${COGNITO_APP_CLIENT_ID}
+          aws s3 cp s3://bpstaging-env/ormconfig.json ormconfig.json
+        fi
+      - aws configure list
