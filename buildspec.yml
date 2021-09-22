@@ -2,9 +2,9 @@ version: 0.2
 phases:
   install:
     commands:
-      - apt update
-      - apt upgrade
-      - apt install python3-setuptools
+      - apt-get update
+      - apt-get upgrade -y
+      - apt-get install python3-setuptools
       - easy_install3 pip
       - pip -V
       - pip install --upgrade --user awsebcli
