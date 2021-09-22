@@ -2,6 +2,13 @@ version: 0.2
 phases:
   install:
     commands:
+      - sudo apt update
+      - sudo apt upgrade
+      - sudo apt install python3-setuptools
+      - sudo easy_install3 pip
+      - pip -V
+      - pip install --upgrade --user awsebcli
+      - eb --version
       - npm i npm@latest -g
       - npm install
   build:
