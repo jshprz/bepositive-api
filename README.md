@@ -23,9 +23,12 @@ This serves as the back-end for the Bepositive application, a social media appli
       - migration
       - models
     - infra
+      - authentication
       - repositories
+      - ses
       - utils
     - interface
+      - authentication
       - repositories
       - ses
     - routes
@@ -36,14 +39,15 @@ This serves as the back-end for the Bepositive application, a social media appli
 ## Setup Database
 1. PostgreSQL download: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads (Download the version 13 of PostgreSQL)
 2. pgAdmin download: https://www.pgadmin.org/download/
-3. Setup PostgreSQL locally: https://www.postgresqltutorial.com/install-postgresql/ (For Windows)
-
+3. Setup PostgreSQL locally: https://www.postgresqltutorial.com/install-postgresql/ (For Windows) | https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart (Linux)
+4. On the installed Postgresql, create a database for this application and make sure to put the right values within the environment variables file (No need to setup the tables and datas for the database because typeorm will sync the configs for it).
 ## Setup Repository Locally
 
-1. From the root directory, run this command: npm install.
-2. Create an ormconfig.json file in the root directory of the project.
-3. Copy the content of the ormconfig.json.example, then paste it to ormconfig.json. Kindly input custom values within the line that includes "<>" inside ormconfig.json
-4. Build and start the application: npm run start
+1. Create '.env' file in the root directory of this project.
+2. Copy and paste the content from '.env.example' to '.env' file, and then fill the right values for each of the variables inside that file.
+1. From the root directory, run this command: npm install
+2. Build the application: npm run build
+3. Start the application: npm run start
 
 ## Running a test
 

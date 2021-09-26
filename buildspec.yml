@@ -22,18 +22,16 @@ phases:
     commands:
       - |
         if [ "${NODE_ENV}" = "development" ] ; then 
-          aws configure set aws_access_key_id ${AWS_ACCESS_KEY}; aws configure set aws_secret_access_key ${AWS_SECRET_KEY}; aws configure set default.region ${REGION}
+          aws configure set aws_access_key_id ${AWS_ACCESS_KEY}; aws configure set aws_secret_access_key ${AWS_SECRET_KEY}; aws configure set default.region ${AWS_REGION}
           yes n | eb init --platform "arn:aws:elasticbeanstalk:ap-southeast-2::platform/Node.js 14 running on 64bit Amazon Linux 2/5.4.5" --region ap-southeast-2 bpdev
           eb use bpdev-env
-          eb setenv NODE_ENV=${NODE_ENV} PORT=${PORT} APP_NAME=${APP_NAME} SES_ACCESS_KEY=${SES_ACCESS_KEY} SES_SECRET_KEY=${SES_SECRET_KEY} EMAIL_DEFAULT_SENDER=${EMAIL_DEFAULT_SENDER} COGNITO_POOL_ID=${COGNITO_POOL_ID} COGNITO_APP_CLIENT_ID=${COGNITO_APP_CLIENT_ID}
-          aws s3 cp s3://bpdev-env/ormconfig.json ormconfig.json
+          eb setenv NODE_ENV=${NODE_ENV} APP_PORT=${APP_PORT} APP_NAME=${APP_NAME} AWS_SES_ACCESS_KEY=${AWS_SES_ACCESS_KEY} AWS_SES_SECRET_KEY=${AWS_SES_SECRET_KEY} EMAIL_DEFAULT_SENDER=${EMAIL_DEFAULT_SENDER} AWS_COGNITO_POOL_ID=${AWS_COGNITO_POOL_ID} AWS_COGNITO_APP_CLIENT_ID=${AWS_COGNITO_APP_CLIENT_ID} POSTGRES_HOST=${POSTGRES_HOST} POSTGRES_PORT=${POSTGRES_PORT} POSTGRES_USERNAME=${POSTGRES_USERNAME} POSTGRES_PASSWORD=${POSTGRES_PASSWORD} POSTGRES_DATABASE=${POSTGRES_DATABASE}
         fi
       - |
         if [ "${NODE_ENV}" = "staging" ] ; then
-          aws configure set aws_access_key_id ${AWS_ACCESS_KEY}; aws configure set aws_secret_access_key ${AWS_SECRET_KEY}; aws configure set default.region ${REGION}
+          aws configure set aws_access_key_id ${AWS_ACCESS_KEY}; aws configure set aws_secret_access_key ${AWS_SECRET_KEY}; aws configure set default.region ${AWS_REGION}
           yes n | eb init --platform "arn:aws:elasticbeanstalk:ap-southeast-2::platform/Node.js 14 running on 64bit Amazon Linux 2/5.4.5" --region ap-southeast-2 bpstaging
           eb use Bpstaging-env
-          eb setenv NODE_ENV=${NODE_ENV} PORT=${PORT} APP_NAME=${APP_NAME} SES_ACCESS_KEY=${SES_ACCESS_KEY} SES_SECRET_KEY=${SES_SECRET_KEY} EMAIL_DEFAULT_SENDER=${EMAIL_DEFAULT_SENDER} COGNITO_POOL_ID=${COGNITO_POOL_ID} COGNITO_APP_CLIENT_ID=${COGNITO_APP_CLIENT_ID}
-          aws s3 cp s3://bpstaging-env/ormconfig.json ormconfig.json
+          eb setenv NODE_ENV=${NODE_ENV} APP_PORT=${APP_PORT} APP_NAME=${APP_NAME} AWS_SES_ACCESS_KEY=${AWS_SES_ACCESS_KEY} AWS_SES_SECRET_KEY=${AWS_SES_SECRET_KEY} EMAIL_DEFAULT_SENDER=${EMAIL_DEFAULT_SENDER} AWS_COGNITO_POOL_ID=${AWS_COGNITO_POOL_ID} AWS_COGNITO_APP_CLIENT_ID=${AWS_COGNITO_APP_CLIENT_ID} POSTGRES_HOST=${POSTGRES_HOST} POSTGRES_PORT=${POSTGRES_PORT} POSTGRES_USERNAME=${POSTGRES_USERNAME} POSTGRES_PASSWORD=${POSTGRES_PASSWORD} POSTGRES_DATABASE=${POSTGRES_DATABASE}
         fi
       - aws configure list

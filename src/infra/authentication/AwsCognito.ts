@@ -23,8 +23,8 @@ abstract class AwsCognito {
    */
   userPool(): CognitoUserPool {
     const poolData: any = {
-      UserPoolId: process.env.COGNITO_POOL_ID,
-      ClientId: process.env.COGNITO_APP_CLIENT_ID
+      UserPoolId: process.env.AWS_COGNITO_POOL_ID,
+      ClientId: process.env.AWS_COGNITO_APP_CLIENT_ID
     };
 
     return new CognitoUserPool(poolData);

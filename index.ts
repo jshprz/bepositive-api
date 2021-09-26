@@ -8,7 +8,7 @@ const logger = new infraUtils.Logger();
 const main = async () => {
   createConnection();
   const app = express();
-  const port = (process.env.NODE_ENV === 'local')? 3000 : process.env.PORT;
+  const port = (process.env.NODE_ENV === 'local')? 3000 : process.env.APP_PORT;
 
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());

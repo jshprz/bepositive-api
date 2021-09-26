@@ -68,7 +68,7 @@ class SignUp extends AwsCognito implements SignUpInterface {
           }
           // other user attributes like phone_number or email themselves, etc
         ],
-        UserPoolId: process.env.COGNITO_POOL_ID,
+        UserPoolId: process.env.AWS_COGNITO_POOL_ID,
         Username: username
 
       }, (error: any) => {
