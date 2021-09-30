@@ -2,7 +2,7 @@ import { Service } from 'typedi';
 import 'reflect-metadata';
 import { UserRepositoryInterface, createParamsType} from '../../interface/repositories/UserRepositoryInterface';
 import BaseRepository from './BaseRepository';
-import { Users } from '../../database/models/Users';
+import { Users } from '../../database/postgresql/models/Users';
 import { getRepository, MoreThan } from 'typeorm';
 import path from 'path';
 

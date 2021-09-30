@@ -24,7 +24,7 @@ export class UserProfiles {
   @Column({type: "varchar", length: 50, nullable: true})
   profile_description?: string;
 
-  @Column({type: "bigint", nullable: false})
+  @Column({type: "bigint", nullable: true})
   dob?: number;
 
   @Column({type: "varchar", length: 255, nullable: true})

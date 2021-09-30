@@ -33,6 +33,42 @@ class SignIn extends AwsCognito implements SignInInterface {
     });
   }
 
+  /**
+   * Signs out a user via AWS Cognito user pool.
+   * @param session: any
+   * @returns Promise<boolean>
+   */
+  async doSignOut(session: any): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      const param = {
+        AccessToken: session.accesstoken
+      }
+      this._client.globalSignOut(param, (error, result) => {
+        if (error) {
+          this._log.error({
+            label: `${filePath} - doSignOut()`,
+            message: error,
+            payload: session
+          });
+
+          return reject(error);
+        } else {
+          session.destroy((error, result) => {
+            if (error) {
+              this._log.error({
+                label: `${filePath} - doSignOut()`,
+                message: error,
+                payload: session
+              });
+              return reject(error);
+            }
+
+            return resolve(result);
+          });
+        }
+      });
+    });
+  }
 }
 
 export default SignIn;
