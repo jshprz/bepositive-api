@@ -1,8 +1,9 @@
-import infraAuthentication from "../../infra/authentication/index";
+import infraAuthentication from "../../infra/cognito/index";
 import { Container, Service } from 'typedi';
-import { SignUpInterface } from "../../interface/authentication/SignUpInterface";
+import { SignUpInterface } from "../../interface/cognito/SignUpInterface";
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
+import 'reflect-metadata';
 
 @Service()
 class Registration {

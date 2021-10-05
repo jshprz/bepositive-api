@@ -1,6 +1,7 @@
-import infraAuthentication from "../../infra/authentication";
+import infraAuthentication from "../../infra/cognito";
 import { Container, Service } from 'typedi';
-import { SignInInterface } from "../../interface/authentication/SignInInterface";
+import 'reflect-metadata';
+import { SignInInterface } from "../../interface/cognito/SignInInterface";
 import { AccessTokenRepositoryInterface } from "../../interface/repositories/AccessTokenRepositoryInterface";
 import { Request, Response } from 'express';
 import { validationResult } from "express-validator";
