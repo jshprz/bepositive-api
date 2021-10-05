@@ -15,15 +15,8 @@ class Profile {
 
   async getUserProfile(req: Request, res: Response) {
     try {
-      if (!req.session.accesstoken) {
-        return res.status(401).json({
-          message: 'Unauthorized request',
-          error: 'Unauthorized',
-          status: 401
-        });
-      }
-
-      const profile = await this._profile.getUserProfile(req.session.accesstoken);
+      const accesstoken = req.headers.authorization?.split(' ')[1];
+      const profile = await this._profile.getUserProfile(accesstoken || '');
       return res.status(200).send(profile);
     } catch (error: any) {
 
