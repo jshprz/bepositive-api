@@ -8,17 +8,17 @@ module.exports = {
    "synchronize": true,
    "logging": false,
    "entities": [
-      "./dist/src/database/postgresql/models/**/*.js"
+      "./src/database/postgresql/models/**/*.ts"
    ],
    "migrations": [
-      "./dist/src/database/postgresql/migration/**/*.js"
+      "./src/database/postgresql/migration/**/*.ts"
    ],
    "subscribers": [
-      "./dist/src/database/postgresql/subscriber/**/*.js"
+      "./src/database/postgresql/subscriber/**/*.ts"
    ],
    "cli": {
-      "entitiesDir": "./dist/src/database/postgresql/models",
-      "migrationsDir": "./dist/src/database/postgresql/migration",
-      "subscribersDir": "./dist/src/database/postgresql/subscriber"
+      "entitiesDir": "./src/database/postgresql/models",
+      "migrationsDir": "./src/database/postgresql/migration",
+      "subscribersDir": "./src/database/postgresql/subscriber"
    }
 }
