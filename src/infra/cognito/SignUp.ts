@@ -1,5 +1,5 @@
 import AwsCognito from "./AwsCognito";
-import { SignUpInterface, doSignUpParamTypes, verifyUserParamTypes } from "../../interface/authentication/SignUpInterface";
+import { SignUpInterface, doSignUpParamTypes, verifyUserParamTypes } from "../../interface/cognito/SignUpInterface";
 import { Service } from 'typedi';
 import 'reflect-metadata';
 import path from 'path';

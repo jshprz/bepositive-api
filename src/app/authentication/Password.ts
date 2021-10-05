@@ -1,9 +1,9 @@
 import { Container, Service } from 'typedi';
-import { ResetPasswordInterface } from '../../interface/authentication/ResetPasswordInterface';
+import { ResetPasswordInterface } from '../../interface/cognito/ResetPasswordInterface';
 import { Request, Response } from 'express';
 import 'reflect-metadata';
 import { validationResult } from 'express-validator';
-import infraAuthentication from "../../infra/authentication/index";
+import infraAuthentication from "../../infra/cognito/index";
 
 @Service()
 class Password {

@@ -1,10 +1,11 @@
-import { createParamsType } from '../../interface/repositories/UserRepositoryInterface';
 import { getConnection } from 'typeorm';
 import { Container } from 'typedi';
 import infraUtils from '../utils/index';
 import path from 'path';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
+
+export type createParamsType = { email: string, password: string, account_status: string }
 interface BaseRepositoryInterface {
   create(item: createParamsType, entity: any): Promise<boolean>;
   update(id: string, item: object, entity: any): Promise<any>;

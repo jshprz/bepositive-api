@@ -2,7 +2,7 @@ import AwsCognito from './AwsCognito';
 import { Service } from 'typedi';
 import 'reflect-metadata';
 import path from 'path';
-import { ResetPasswordInterface, resetPasswordParamTypes } from '../../interface/authentication/ResetPasswordInterface';
+import { ResetPasswordInterface, resetPasswordParamTypes } from '../../interface/cognito/ResetPasswordInterface';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
