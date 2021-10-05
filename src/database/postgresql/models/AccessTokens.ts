@@ -1,7 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, BaseEntity } from "typeorm";
 
 @Entity({name: "accesstokens"})
-export class AccessTokens {
+export class AccessTokens extends BaseEntity {
   @PrimaryGeneratedColumn({type: "int", unsigned: true})
   id?: number;
 

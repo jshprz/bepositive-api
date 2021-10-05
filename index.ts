@@ -1,5 +1,5 @@
 import express from 'express';
-import { createConnection } from 'typeorm';
+import { getConnection } from './src/config/database';
 import { apis } from './src/routes/index';
 import infraUtils from './src/infra/utils';
 import session from 'express-session';
@@ -7,7 +7,7 @@ import session from 'express-session';
 const logger = new infraUtils.Logger();
 
 const main = async () => {
-  createConnection();
+  getConnection();
   const app = express();
   const port = process.env.PORT;
 
@@ -33,6 +33,7 @@ const main = async () => {
 
   app.use('/rest/v1/auth', apis.AuthenticationApi);
   app.use('/rest/v1/user', apis.UserApi);
+  app.use('/rest/v1/post', apis.PostApi);
 
   app.listen(port, () => {
     logger.info({

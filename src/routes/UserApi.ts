@@ -7,6 +7,6 @@ import authMiddleWare from '../middleware/AuthorizationMiddleware';
 const router = express.Router();
 const profile = Container.get(appUser.Profile);
 
-router.get('/profile', authMiddleWare, (req: any, res: any) => profile.getUserProfile(req, res))
+router.get('/profile', authMiddleWare, (req: any, res: any) => profile.getUserProfile(req, res));
 
 export default router;
