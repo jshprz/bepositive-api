@@ -3,6 +3,7 @@ import { getConnection } from './src/config/database';
 import { apis } from './src/routes/index';
 import infraUtils from './src/infra/utils';
 import session from 'express-session';
+import multer from 'multer';
 
 const logger = new infraUtils.Logger();
 
@@ -26,6 +27,7 @@ const main = async () => {
 
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());
+  app.use(multer().any());
 
   app.get('/', (req, res) => {
     res.end('Bepositive API');
