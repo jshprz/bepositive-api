@@ -17,9 +17,13 @@ export = async (req: any, res: any, next: any) => {
     // Check the validity of the provided accesstoken by checking existence of the access token within the accesstokens table.
     if (accesstoken.length > 0) {
       // Check the validity of the access token via aws cognito.
-      cognitoExpress.validate(token, (err: any, result: any) => {
-        if (err) {
-          res.status(401).send(err);
+      cognitoExpress.validate(token, (error: any, result: any) => {
+        if (error) {
+          res.status(401).json({
+            message: error,
+            error: 'Authorization failed',
+            status: 401
+          });
         } else {
           next();
         }

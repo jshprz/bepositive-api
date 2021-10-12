@@ -20,7 +20,7 @@ class Registration {
     if (errors.username) {
       return res.status(400).json({
         message: errors.username.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -28,7 +28,7 @@ class Registration {
     if (errors.email) {
       return res.status(400).json({
         message: errors.email.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -36,7 +36,7 @@ class Registration {
     if (errors.name) {
       return res.status(400).json({
         message: errors.name.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -44,7 +44,7 @@ class Registration {
     if (errors.password) {
       return res.status(400).json({
         message: errors.password.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -59,14 +59,14 @@ class Registration {
         password
       });
 
-      res.status(200).json({
+      return res.status(200).json({
         message: `User successfully registered. The verification code has been sent to this email: ${email}`,
         payload: {},
         status: 200
       });
     } catch (error: any) {
-      res.status((error.code && error.code === 'UsernameExistsException')? 409 : 500).json({
-        message: (error.code && error.code === 'UsernameExistsException')? error.message : 'Internal server error',
+      return res.status((error.code && error.code === 'UsernameExistsException')? 409 : 500).json({
+        message: (error.code && error.code === 'UsernameExistsException')? error.message : error,
         error: (error.code && error.code === 'UsernameExistsException')? 'Conflict' : 'Internal server error',
         status: (error.code && error.code === 'UsernameExistsException')? 409 : 500
       });
@@ -79,7 +79,7 @@ class Registration {
     if (errors.username) {
       return res.status(400).json({
         message: errors.username.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -87,7 +87,7 @@ class Registration {
     if (errors.verifyCode) {
       return res.status(400).json({
         message: errors.verifyCode.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -96,14 +96,15 @@ class Registration {
       const { username } = req.body;
       await this._signUp.verifyUser(req.body);
       await this._signUp.updateEmailVerifiedToTrue(username);
-      res.status(200).json({
-        message: 'verified successfully.',
+
+      return res.status(200).json({
+        message: 'Verified successfully.',
         payload: {},
         status: 200
       });
-    } catch (error: any) {
-      res.status(500).json({
-        message: 'Internal server error',
+    } catch (error) {
+      return res.status(500).json({
+        message: error,
         error: 'Internal server error',
         status: 500
       });

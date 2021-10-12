@@ -20,7 +20,7 @@ class Password {
     if (errors.emailOrUsername) {
       return res.status(400).json({
         message: errors.emailOrUsername.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -29,15 +29,15 @@ class Password {
       const { emailOrUsername } = req.body;
       await this._resetPassword.forgotPassword(emailOrUsername);
 
-      res.status(200).json({
-        message: 'reset password token successfully sent to the email.',
+      return res.status(200).json({
+        message: 'Reset password token successfully sent to the email',
         payload: {},
         status: 200
       });
     } catch (error) {
-      res.status(500).json({
-        message: 'internal server error',
-        error: 'internal server error',
+      return res.status(500).json({
+        message: error,
+        error: 'Internal server error',
         status: 500
       });
     }
@@ -49,7 +49,7 @@ class Password {
     if (errors.emailOrUsername) {
       return res.status(400).json({
         message: errors.emailOrUsername.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -57,7 +57,7 @@ class Password {
     if (errors.verifyCode) {
       return res.status(400).json({
         message: errors.verifyCode.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -65,7 +65,7 @@ class Password {
     if (errors.newPassword) {
       return res.status(400).json({
         message: errors.newPassword.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -73,14 +73,14 @@ class Password {
     try {
       await this._resetPassword.resetPassword(req.body);
       return res.status(200).json({
-        message: 'password reset successfully.',
+        message: 'Password reset successfully',
         payload: {},
         status: 200
       });
     } catch (error) {
-      res.status(500).json({
-        message: 'internal server error',
-        error: 'internal server error',
+      return res.status(500).json({
+        message: error,
+        error: 'Internal server error',
         status: 500
       });
     }

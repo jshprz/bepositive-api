@@ -17,12 +17,23 @@ class Profile {
     try {
       const accesstoken = req.headers.authorization?.split(' ')[1];
       const profile = await this._profile.getUserProfile(accesstoken || '');
-      return res.status(200).send(profile);
-    } catch (error: any) {
+      const userProfile = {
+        username: profile.Username,
+        user_attributes: profile.UserAttributes
+      }
+
+      return res.status(200).json({
+        message: 'User profile successfully retrieved',
+        payload: {
+          profile: userProfile
+        },
+        status: 200
+      });
+    } catch (error) {
 
       return res.status(500).json({
-        message: 'Internal server error',
-        error,
+        message: error,
+        error: 'Internal server error',
         status: 500
       });
     }

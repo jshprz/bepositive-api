@@ -3,24 +3,11 @@ import { Container, Service } from 'typedi';
 import { PostRepositoryInterface } from '../../interface/repositories/PostRepositoryInterface';
 import repositories from '../../infra/repositories';
 import { Request, Response } from 'express';
-import { ValidationError, validationResult } from 'express-validator';
+import { validationResult } from 'express-validator';
 import s3 from '../../infra/s3/index';
 import { MediaInterface } from '../../interface/s3/MediaInterface';
 import { config } from '../../config/index';
 import uniqid from 'uniqid';
-
-declare module 'express-session' {
-  interface Session {
-    accesstoken: string;
-    user: {
-      sub: string,
-      name: string,
-      email_verified: string,
-      username: string,
-      email: string
-    };
-  }
-}
 
 @Service()
 class Post {
@@ -34,12 +21,12 @@ class Post {
   }
 
   async createPost(req: Request, res: Response) {
-    const errors: Record<string, ValidationError> = validationResult(req).mapped();
+    const errors = validationResult(req).mapped();
 
     if (errors.caption) {
       return res.status(400).json({
         message: errors.caption.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -47,15 +34,15 @@ class Post {
     if (errors.files) {
       return res.status(400).json({
         message: errors.files.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
 
     if (!req.session.user) {
       return res.status(401).json({
-        message: 'please login and try again.',
-        error: 'unauthenticated',
+        message: 'Please login and try again.',
+        error: 'Unauthenticated',
         status: 401
       });
     }
@@ -73,13 +60,15 @@ class Post {
       const uploadSignedUrls = await this._s3.getPresignedUrlUpload(files);
       const createPost = await this._postRepository.create({userCognitoSub, caption, files});
 
-      res.status(200).json({
+      return res.status(200).json({
         message: createPost,
-        payload: uploadSignedUrls,
+        payload: {
+          upload_signed_urls: uploadSignedUrls,
+        },
         status: 200
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         message: error,
         error: 'Internal server error',
         status: 500
@@ -113,13 +102,15 @@ class Post {
         };
       });
 
-      res.status(200).json({
-        message: 'posts successfully retrieved.',
-        payload: postsAsPayloadResponse,
+      return res.status(200).json({
+        message: 'Posts successfully retrieved',
+        payload: {
+          posts: postsAsPayloadResponse
+        },
         status: 200
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         message: error,
         error: 'Internal server error',
         status: 500

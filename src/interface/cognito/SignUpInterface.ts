@@ -1,3 +1,5 @@
+import { ISignUpResult } from "amazon-cognito-identity-js";
+
 export type doSignUpParamTypes = {
   username: string;
   email: string;
@@ -11,7 +13,7 @@ export type verifyUserParamTypes = {
 }
 
 export interface SignUpInterface {
-  doSignUp(body: doSignUpParamTypes): Promise<any>;
-  verifyUser(body: verifyUserParamTypes): Promise<any>;
-  updateEmailVerifiedToTrue(username: string): Promise<any>;
+  doSignUp(body: doSignUpParamTypes): Promise<ISignUpResult | undefined>;
+  verifyUser(body: verifyUserParamTypes): Promise<string>;
+  updateEmailVerifiedToTrue(username: string): Promise<boolean>;
 }

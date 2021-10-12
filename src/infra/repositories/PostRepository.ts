@@ -40,7 +40,66 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
         return reject(errors.DATABASE_ERROR.CREATE);
       });
 
-      return resolve('post successfully created.');
+      return resolve('Post successfully created');
+    });
+  }
+
+  /**
+   * Gets user posts.
+   * @param userCognitoSub: string
+   * @returns Promise<{
+    posts_id: number,
+    posts_user_cognito_sub: string,
+    posts_caption: string,
+    posts_status: string,
+    posts_view_count: number,
+    posts_lat_long: Geometry,
+    posts_s3_files: { key: string, type: string }[],
+    posts_created_at: number,
+    posts_updated_at: number,
+    posts_deleted_at: number
+  }[]>
+   */
+  async getPostsByUserCognitoSub(userCognitoSub: string): Promise<{
+    posts_id: number,
+    posts_user_cognito_sub: string,
+    posts_caption: string,
+    posts_status: string,
+    posts_view_count: number,
+    posts_lat_long: Geometry,
+    posts_s3_files: { key: string, type: string }[],
+    posts_created_at: number,
+    posts_updated_at: number,
+    posts_deleted_at: number
+  }[]> {
+
+    return new Promise(async (resolve, reject) => {
+      const posts: {
+        posts_id: number,
+        posts_user_cognito_sub: string,
+        posts_caption: string,
+        posts_status: string,
+        posts_view_count: number,
+        posts_lat_long: Geometry,
+        posts_s3_files: { key: string, type: string }[],
+        posts_created_at: number,
+        posts_updated_at: number,
+        posts_deleted_at: number
+      }[] | void = await getRepository(Posts)
+        .createQueryBuilder('posts')
+        .select('posts')
+        .where('user_cognito_sub = :userCognitoSub', { userCognitoSub })
+        .getRawMany().catch((error) => {
+          this._log.error({
+            label: `${filePath} - getPostsByUserCognitoSub()`,
+            message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+            payload: userCognitoSub
+          });
+
+          return reject(errors.DATABASE_ERROR.GET);
+        });
+
+      return resolve(posts || []);
     });
   }
 

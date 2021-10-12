@@ -6,20 +6,7 @@ import { AccessTokenRepositoryInterface } from "../../interface/repositories/Acc
 import { Request, Response } from 'express';
 import { validationResult } from "express-validator";
 import repositories from '../../infra/repositories/index';
-
-// Declaration merging on express-session
-declare module 'express-session' {
-  interface Session {
-    accesstoken: string;
-    user: {
-      sub: string,
-      name: string,
-      email_verified: string,
-      username: string,
-      email: string
-    };
-  }
-}
+import '../../interface/declare/express-session';
 
 @Service()
 class Login {
@@ -39,7 +26,7 @@ class Login {
     if (errors.emailOrUsername) {
       return res.status(400).json({
         message: errors.emailOrUsername.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -47,7 +34,7 @@ class Login {
     if (errors.password) {
       return res.status(400).json({
         message: errors.password.msg,
-        error: 'bad request error',
+        error: 'Bad request error',
         status: 400
       });
     }
@@ -68,10 +55,16 @@ class Login {
         email
       }
       req.session.accesstoken = accesstoken;
-      res.status(200).send(signin);
+      return res.status(200).json({
+        message: 'Successfully logged in',
+        payload: {
+          accesstoken: signin.accessToken.jwtToken
+        },
+        status: 200
+      });
     } catch (error: any) {
-      res.status((error.code && error.code === 'NotAuthorizedException')? 401 : 500).json({
-        message: (error.code && error.code === 'NotAuthorizedException')? error.message : 'Internal server error',
+      return res.status((error.code && error.code === 'NotAuthorizedException')? 401 : 500).json({
+        message: (error.code && error.code === 'NotAuthorizedException')? error.message : error,
         error: (error.code && error.code === 'NotAuthorizedException')? 'Unauthorized' : 'Internal server error',
         status: (error.code && error.code === 'NotAuthorizedException')? 401 : 500
       });
@@ -82,17 +75,17 @@ class Login {
     try {
       const { email } = req.session.user;
 
-      await this._signIn.doSignOut(req.session);
+      await this._signIn.doSignOut(req);
       await this._accessTokenRepository.deleteAccessTokenItem(email);
 
-      res.status(200).json({
-        message: 'user successfully logged out',
+      return res.status(200).json({
+        message: 'User successfully logged out',
         payload: {},
         status: 200
       });
-    } catch (error: any) {
-      res.status(500).json({
-        message: 'Internal server error',
+    } catch (error) {
+      return res.status(500).json({
+        message: error,
         error: 'Internal server error',
         status: 500
       });

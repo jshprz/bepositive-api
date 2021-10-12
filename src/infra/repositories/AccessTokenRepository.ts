@@ -5,6 +5,7 @@ import BaseRepository from './BaseRepository';
 import { AccessTokens } from '../../database/postgresql/models/AccessTokens';
 import { getConnection } from 'typeorm';
 import path from 'path';
+import { errors } from '../../config/index';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
@@ -15,9 +16,9 @@ class AccessTokenRepository extends BaseRepository implements AccessTokenReposit
    * Creates accesstokens data
    * @param accesstoken: string
    * @param email: string
-   * @returns Promise<any>
+   * @returns Promise<boolean>
    */
-  async createAccessTokenItem(accesstoken: string, email: string): Promise<any> {
+  async createAccessTokenItem(accesstoken: string, email: string): Promise<boolean> {
     return new Promise(async (resolve, reject) => {
       await getConnection()
         .createQueryBuilder()
@@ -26,17 +27,17 @@ class AccessTokenRepository extends BaseRepository implements AccessTokenReposit
         .values([
           { accesstoken, email, created_at: Number(Date.now()) }
         ]).execute()
-        .catch((err) => {
+        .catch((error) => {
           this._log.error({
             label: `${filePath} - createAccessTokenItem()`,
-            message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
+            message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
             payload: {
               accesstoken,
               email
             }
           });
 
-          reject(err);
+          reject(errors.DATABASE_ERROR.CREATE);
         });
 
         resolve(true);
@@ -46,9 +47,9 @@ class AccessTokenRepository extends BaseRepository implements AccessTokenReposit
   /**
    * Deletes accesstokens data by email
    * @param email: string
-   * @returns Promise<any>
+   * @returns Promise<boolean>
    */
-  async deleteAccessTokenItem(email: string): Promise<any> {
+  async deleteAccessTokenItem(email: string): Promise<boolean> {
     return new Promise(async (resolve, reject) => {
       await getConnection()
         .createQueryBuilder()
@@ -56,16 +57,16 @@ class AccessTokenRepository extends BaseRepository implements AccessTokenReposit
         .from(AccessTokens)
         .where('email = :email', { email })
         .execute()
-        .catch((err) => {
+        .catch((error) => {
           this._log.error({
             label: `${filePath} - deleteAccessTokenItem()`,
-            message: `\n error: Database operation error \n details: ${err.detail || err.message} \n query: ${err.query}`,
+            message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
             payload: {
               email,
             }
         });
 
-        reject(err);
+        reject(errors.DATABASE_ERROR.DELETE);
       });
 
       resolve(true);
