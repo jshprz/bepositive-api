@@ -23,7 +23,7 @@ it('should create a post data in posts table postgresql', async () => {
   const item = {
     userCognitoSub: 'test cognito sub',
     caption: 'test caption',
-    s3Files: [
+    files: [
       {
         key: 'test s3 file key',
         type: 'test file type'
