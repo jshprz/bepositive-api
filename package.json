@@ -9,7 +9,8 @@
    "scripts": {
       "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
       "build": "npm run prebuild && tsc",
-      "start": "ts-node .",
+      "start": "npm run build && ts-node .",
+      "dev": "nodemon ./index.ts -L",
       "test": "jest"
    },
    "keywords": [],
@@ -48,5 +49,8 @@
       "typescript": "^4.3.5",
       "uniqid": "^5.4.0",
       "winston": "^3.3.3"
+   },
+   "devDependencies": {
+      "nodemon": "^2.0.13"
    }
 }
