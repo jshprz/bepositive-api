@@ -28,9 +28,9 @@ class SignUp extends AwsCognito implements SignUpInterface {
           });
 
           if (error.code && error.code === 'UsernameExistsException') {
-            return reject(error);  
+            return reject(error);
           }
-          
+
           return reject(errors.AWS_COGNITO_ERROR);
         }
 

@@ -66,7 +66,7 @@ class Login {
       const response = {
         message: '',
         error: '',
-        status: 500        
+        status: 500
       }
 
       if (error.code && (error.code === 'NotAuthorizedException' || error.code === 'UserNotConfirmedException')) {
@@ -76,7 +76,7 @@ class Login {
         response.status = 401;
 
       } else {
-        
+
         response.message = error;
         response.error = 'Internal server error';
         response.status = 500;
