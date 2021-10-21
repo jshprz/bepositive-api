@@ -19,12 +19,6 @@ const main = async () => {
     cookie: { secure: (process.env.NODE_ENV === 'local')? false : true }
   }));
 
-  if (process.env.NODE_ENV !== 'local') {
-    app.use((req, res, next) => {
-      app.set('trust proxy', 1); // Trust first proxy
-    });
-  }
-
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());
   app.use(multer().any());
