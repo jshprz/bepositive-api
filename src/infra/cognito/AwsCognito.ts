@@ -50,13 +50,13 @@ abstract class AwsCognito {
   }
 
   /**
-   * Gets Cognito user via username or an email.
+   * Gets Cognito user via email.
    * @param email string
    * @returns instance of CognitoUser from 'amazon-cognito-identity-js' library.
    */
-  getCognitoUser(username: string) {
+  getCognitoUser(email: string) {
     const userData = {
-      Username: username,
+      Username: email,
       Pool: this.userPool()
     }
 
@@ -65,11 +65,11 @@ abstract class AwsCognito {
 
   /**
    * Gets authentication details.
-   * @param body {emailOrUsername: string, password: string}
+   * @param body {email: string, password: string}
    * @returns instance of AuthenticationDetails from 'amazon-cognito-identity-js' library.
    */
-  getAuthenticationDetails(body: {emailOrUsername: string, password: string}) {
-    const authenticationData = { Username: body.emailOrUsername, Password: body.password };
+  getAuthenticationDetails(body: {email: string, password: string}) {
+    const authenticationData = { Username: body.email, Password: body.password };
 
     return new AuthenticationDetails(authenticationData);
   }

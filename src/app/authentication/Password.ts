@@ -17,20 +17,20 @@ class Password {
   async forgotPassword(req: Request, res: Response) {
     const errors = validationResult(req).mapped();
 
-    if (errors.emailOrUsername) {
+    if (errors.email) {
       return res.status(400).json({
-        message: errors.emailOrUsername.msg,
+        message: errors.email.msg,
         error: 'Bad request error',
         status: 400
       });
     }
 
     try {
-      const { emailOrUsername } = req.body;
-      await this._resetPassword.forgotPassword(emailOrUsername);
+      const { email } = req.body;
+      await this._resetPassword.forgotPassword(email);
 
       return res.status(200).json({
-        message: 'Reset password token successfully sent to the email',
+        message: `Reset password token successfully sent to this email: ${email}`,
         payload: {},
         status: 200
       });
@@ -46,9 +46,9 @@ class Password {
   async resetPassword(req: Request, res: Response) {
     const errors = validationResult(req).mapped();
 
-    if (errors.emailOrUsername) {
+    if (errors.email) {
       return res.status(400).json({
-        message: errors.emailOrUsername.msg,
+        message: errors.email.msg,
         error: 'Bad request error',
         status: 400
       });
@@ -77,11 +77,38 @@ class Password {
         payload: {},
         status: 200
       });
-    } catch (error) {
-      return res.status(500).json({
-        message: error,
-        error: 'Internal server error',
+    } catch (error: any) {
+
+      const response = {
+        message: '',
+        error: '',
         status: 500
+      }
+
+      if (error.code && error.code === 'CodeMismatchException') {
+
+        response.message = error.message;
+        response.error = 'CodeMismatchException';
+        response.status = 409;
+
+      } else if (error.code && error.code === 'ExpiredCodeException') {
+
+        response.message = 'Verification code has already been expired.';
+        response.error = 'ExpiredCodeException';
+        response.status = 410;
+
+      } else {
+
+        response.message = error;
+        response.error = 'Internal server error';
+        response.status = 500;
+
+      }
+
+      return res.status(response.status).json({
+        message: response.message.toString(),
+        error: response.error,
+        status: response.status
       });
     }
   }

@@ -18,18 +18,21 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
    * @param item: {userCognitoSub: string, caption: string, s3Files: {key: string, type: string}[] }
    * @returns Promise<string>
    */
-  async create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[] }): Promise<string> {
+  async create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[] }): Promise<number | undefined> {
     return new Promise(async (resolve, reject) => {
       const postsModel = new Posts();
 
-      postsModel.user_cognito_sub = item.userCognitoSub;
+      postsModel.user_id = item.userCognitoSub;
       postsModel.caption = item.caption;
       postsModel.status = 'active';
       postsModel.view_count = 0;
       postsModel.s3_files = item.files;
       postsModel.created_at = Number(Date.now());
 
-      await postsModel.save().catch((error) => {
+      await postsModel.save().then((result) => {
+
+        return resolve(result.id);
+      }).catch((error) => {
 
         this._log.error({
           label: `${filePath} - create()`,
@@ -39,8 +42,6 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
 
         return reject(errors.DATABASE_ERROR.CREATE);
       });
-
-      return resolve('Post successfully created');
     });
   }
 
@@ -49,7 +50,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
    * @param userCognitoSub: string
    * @returns Promise<{
     posts_id: number,
-    posts_user_cognito_sub: string,
+    posts_user_id: string,
     posts_caption: string,
     posts_status: string,
     posts_view_count: number,
@@ -62,7 +63,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
    */
   async getPostsByUserCognitoSub(userCognitoSub: string): Promise<{
     posts_id: number,
-    posts_user_cognito_sub: string,
+    posts_user_id: string,
     posts_caption: string,
     posts_status: string,
     posts_view_count: number,
@@ -76,7 +77,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
     return new Promise(async (resolve, reject) => {
       const posts: {
         posts_id: number,
-        posts_user_cognito_sub: string,
+        posts_user_id: string,
         posts_caption: string,
         posts_status: string,
         posts_view_count: number,
@@ -88,7 +89,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
       }[] | void = await getRepository(Posts)
         .createQueryBuilder('posts')
         .select('posts')
-        .where('user_cognito_sub = :userCognitoSub', { userCognitoSub })
+        .where('user_id = :userCognitoSub', { userCognitoSub })
         .getRawMany().catch((error) => {
           this._log.error({
             label: `${filePath} - getPostsByUserCognitoSub()`,

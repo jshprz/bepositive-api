@@ -8,7 +8,7 @@ export class Posts extends BaseEntity {
   id?: number;
 
   @Column({type: "varchar", length: 255, nullable: false})
-  user_cognito_sub?: string;
+  user_id?: string;
 
   @Column({type: "text", nullable: true})
   caption?: string;

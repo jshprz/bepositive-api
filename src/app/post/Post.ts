@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import { Container, Service } from 'typedi';
 import { PostRepositoryInterface } from '../../interface/repositories/PostRepositoryInterface';
+import { UserRelationshipRepositoryInterface } from '../../interface/repositories/UserRelationshipRepositoryInterface';
+import { UserFeedRepositoryInterface } from '../../interface/repositories/UserFeedRepositoryInterface';
 import repositories from '../../infra/repositories';
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
@@ -8,16 +10,21 @@ import s3 from '../../infra/s3/index';
 import { MediaInterface } from '../../interface/s3/MediaInterface';
 import { config } from '../../config/index';
 import uniqid from 'uniqid';
+import '../../interface/declare/express-session';
 
 @Service()
 class Post {
   private _postRepository: PostRepositoryInterface;
   private _s3: MediaInterface;
+  private _userRelationshipRepository: UserRelationshipRepositoryInterface;
+  private _userFeedRepository: UserFeedRepositoryInterface;
 
   constructor() {
     const container = Container.of();
     this._postRepository = container.get(repositories.PostRepository);
     this._s3 = container.get(s3.Media);
+    this._userRelationshipRepository = container.get(repositories.UserRelationshipRepository);
+    this._userFeedRepository = container.get(repositories.UserFeedRepository);
   }
 
   async createPost(req: Request, res: Response) {
@@ -58,14 +65,30 @@ class Post {
       });
 
       const uploadSignedUrls = await this._s3.getPresignedUrlUpload(files);
-      const createPost = await this._postRepository.create({userCognitoSub, caption, files});
+      const postId = await this._postRepository.create({userCognitoSub, caption, files});
+      const followers = await this._userRelationshipRepository.getFollowers(userCognitoSub);
 
-      return res.status(200).json({
-        message: createPost,
-        payload: {
-          upload_signed_urls: uploadSignedUrls,
-        },
-        status: 200
+      Promise.all(
+        followers.map(async (follower) => {
+          const userId = follower.user_relationships_user_id;
+          return await this._userFeedRepository.createFeed(userId, postId);
+        })
+      ).then(() => {
+
+        return res.status(200).json({
+          message: 'Post created successfully.',
+          payload: {
+            upload_signed_urls: uploadSignedUrls,
+          },
+          status: 200
+        });
+      }).catch((error) => {
+
+        return res.status(500).json({
+          message: error,
+          error: 'Internal server error',
+          status: 500
+        });
       });
     } catch (error) {
       return res.status(500).json({

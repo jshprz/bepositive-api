@@ -1,10 +1,10 @@
 export type resetPasswordParamTypes = {
-  emailOrUsername: string,
+  email: string,
   verifyCode: string,
   newPassword: string
 }
 
 export interface ResetPasswordInterface {
-  forgotPassword(emailOrUsername: string): Promise<string>;
+  forgotPassword(email: string): Promise<string>;
   resetPassword(body: resetPasswordParamTypes): Promise<string>;
 }

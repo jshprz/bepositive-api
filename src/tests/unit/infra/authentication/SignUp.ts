@@ -2,11 +2,11 @@ import AwsCognito from "../../mocks/infra/authentication/AwsCognito";
 
 class SignUp extends AwsCognito {
 
-  async doSignUp(body: {username: string, email: string, name: string, password: string}): Promise<string> {
+  async doSignUp(body: {email: string, name: string, password: string}): Promise<string> {
     return new Promise(async (resolve, reject) => {
       const cognitoAttributeList = this.cognitoUserAttributeList(body.email, body.name);
 
-      this.userPool().signUp(body.username, body.password, cognitoAttributeList, [], (err: any, result: any) => {
+      this.userPool().signUp(body.email, body.password, cognitoAttributeList, [], (err: any, result: any) => {
         if (err) {
           reject(err);
         }
@@ -15,9 +15,9 @@ class SignUp extends AwsCognito {
     });
   }
 
-  async verifyUser(body: {username: string, verifyCode: string}) {
+  async verifyUser(body: {email: string, verifyCode: string}) {
     return new Promise((resolve, reject) => {
-      this.getCognitoUser(body.username).confirmRegistration(body.verifyCode, true, (err: any, result: any) => {
+      this.getCognitoUser(body.email).confirmRegistration(body.verifyCode, true, (err: any, result: any) => {
         if (err) {
           return reject(err);
         }

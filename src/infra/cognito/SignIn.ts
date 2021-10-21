@@ -16,14 +16,14 @@ class SignIn extends AwsCognito implements SignInInterface {
 
   /**
    * Signs in a user via AWS Cognito user pool.
-   * @param body { emailOrUsername: string, password: string }
+   * @param body { email: string, password: string }
    * @returns Promise<CognitoUserSession>
    */
   async doSignIn(body: doSignInParamTypes): Promise<CognitoUserSession> {
     return new Promise((resolve, reject) => {
       const authenticationDetails = this.getAuthenticationDetails(body);
 
-      this.getCognitoUser(body.emailOrUsername).authenticateUser(authenticationDetails, {
+      this.getCognitoUser(body.email).authenticateUser(authenticationDetails, {
         onSuccess: result => resolve(result),
         onFailure: error => {
           this._log.error({
@@ -32,7 +32,11 @@ class SignIn extends AwsCognito implements SignInInterface {
             payload: body
           });
 
-          reject(errors.AWS_COGNITO_ERROR);
+          if (error.code && (error.code === 'NotAuthorizedException' || error.code === 'UserNotConfirmedException')) {
+            return reject(error);
+          }
+
+          return reject(errors.AWS_COGNITO_ERROR);
         }
       });
     });

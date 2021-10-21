@@ -2,7 +2,6 @@ import SignUp from "./SignUp";
 
 test('Test doSignUp()', async () => {
   const body = {
-    username: 'dummyuser',
     email: 'dummyemail',
     name: 'dummyname',
     password: 'dummypass'
@@ -14,7 +13,7 @@ test('Test doSignUp()', async () => {
 
 test('Test verifyUser()', async () => {
   const body = {
-    username: 'dummyuser',
+    email: 'dummyuser',
     verifyCode: '12345'
   }
 

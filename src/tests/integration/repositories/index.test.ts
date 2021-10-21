@@ -31,7 +31,7 @@ it('should create a post data in posts table postgresql', async () => {
     ]
   };
 
-  await expect(postRepositoryContainer.create(item)).resolves.toEqual('post successfully created.');
+  await expect(postRepositoryContainer.create(item)).resolves.toEqual('Post successfully created');
 });
 
 afterAll(async () => await closeConnection());
