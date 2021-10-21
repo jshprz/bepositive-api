@@ -10,7 +10,7 @@ declare module 'amazon-cognito-identity-js' {
 }
 
 export type doSignInParamTypes = {
-  emailOrUsername: string;
+  email: string;
   password: string;
 }
 

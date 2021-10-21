@@ -17,14 +17,6 @@ class Registration {
   async register(req: Request, res: Response) {
     const errors = validationResult(req).mapped();
 
-    if (errors.username) {
-      return res.status(400).json({
-        message: errors.username.msg,
-        error: 'Bad request error',
-        status: 400
-      });
-    }
-
     if (errors.email) {
       return res.status(400).json({
         message: errors.email.msg,
@@ -50,10 +42,9 @@ class Registration {
     }
 
     try {
-      const { username, email, name, password } = req.body;
+      const { email, name, password } = req.body;
 
       await this._signUp.doSignUp({
-        username,
         email,
         name,
         password
@@ -76,9 +67,9 @@ class Registration {
   async verify(req: Request, res: Response) {
     const errors = validationResult(req).mapped();
 
-    if (errors.username) {
+    if (errors.email) {
       return res.status(400).json({
-        message: errors.username.msg,
+        message: errors.email.msg,
         error: 'Bad request error',
         status: 400
       });
@@ -93,20 +84,47 @@ class Registration {
     }
 
     try {
-      const { username } = req.body;
+      const { email } = req.body;
       await this._signUp.verifyUser(req.body);
-      await this._signUp.updateEmailVerifiedToTrue(username);
+      await this._signUp.updateEmailVerifiedToTrue(email);
 
       return res.status(200).json({
         message: 'Verified successfully.',
         payload: {},
         status: 200
       });
-    } catch (error) {
-      return res.status(500).json({
-        message: error,
-        error: 'Internal server error',
+    } catch (error: any) {
+
+      const response = {
+        message: '',
+        error: '',
         status: 500
+      }
+
+      if (error.code && error.code === 'CodeMismatchException') {
+
+        response.message = error.message;
+        response.error = 'CodeMismatchException';
+        response.status = 409;
+
+      } else if (error.code && error.code === 'ExpiredCodeException') {
+
+        response.message = 'Verification code has already been expired.';
+        response.error = 'ExpiredCodeException';
+        response.status = 410;
+
+      } else {
+
+        response.message = error;
+        response.error = 'Internal server error';
+        response.status = 500;
+
+      }
+
+      return res.status(response.status).json({
+        message: response.message.toString(),
+        error: response.error,
+        status: response.status
       });
     }
   }

@@ -12,14 +12,14 @@ class SignUp extends AwsCognito implements SignUpInterface {
 
   /**
    * Registers a user to AWS Cognito user pool.
-   * @param body { username: string, email: string, password: string }
+   * @param body { email: string, name: string, password: string }
    * @returns Promise<ISignUpResult | undefined>
    */
   async doSignUp(body: doSignUpParamTypes): Promise<ISignUpResult | undefined> {
     return new Promise(async (resolve, reject) => {
       const cognitoAttributeList = this.cognitoUserAttributeList(body.email, body.name);
 
-      this.userPool().signUp(body.username, body.password, cognitoAttributeList, [], (error: Error | undefined, result: ISignUpResult | undefined) => {
+      this.userPool().signUp(body.email, body.password, cognitoAttributeList, [], (error: any, result: ISignUpResult | undefined) => {
         if (error) {
           this._log.error({
             label: `${filePath} - doSignUp()`,
@@ -27,22 +27,26 @@ class SignUp extends AwsCognito implements SignUpInterface {
             payload: body
           });
 
-          reject(errors.AWS_COGNITO_ERROR);
+          if (error.code && error.code === 'UsernameExistsException') {
+            return reject(error);  
+          }
+          
+          return reject(errors.AWS_COGNITO_ERROR);
         }
 
-        resolve(result);
+        return resolve(result);
       });
     });
   }
 
   /**
    * Verifies user registration through a verification code from the user's email.
-   * @param body { username: string, verifyCode: string }
+   * @param body { email: string, verifyCode: string }
    * @returns Promise<string>
    */
   async verifyUser(body: verifyUserParamTypes): Promise<string> {
     return new Promise((resolve, reject) => {
-      this.getCognitoUser(body.username).confirmRegistration(body.verifyCode, true, (error: string, result: string) => {
+      this.getCognitoUser(body.email).confirmRegistration(body.verifyCode, true, (error: any, result: string) => {
         if (error) {
           this._log.error({
             label: `${filePath} - verifyUser()`,
@@ -50,20 +54,24 @@ class SignUp extends AwsCognito implements SignUpInterface {
             payload: body
           });
 
-          reject(errors.AWS_COGNITO_ERROR);
+          if (error.code && (error.code === 'CodeMismatchException' || error.code === 'ExpiredCodeException')) {
+            return reject(error);
+          }
+
+          return reject(errors.AWS_COGNITO_ERROR);
         }
 
-        resolve(result);
+        return resolve(result);
       });
     })
   }
 
   /**
    * Updates email_verified attribute to true within the AWS Cognito user pool.
-   * @param username: string
+   * @param email: string
    * @returns Promise<boolean>
    */
-  async updateEmailVerifiedToTrue(username: string): Promise<boolean> {
+  async updateEmailVerifiedToTrue(email: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       this._client.adminUpdateUserAttributes({
         UserAttributes: [{
@@ -73,7 +81,7 @@ class SignUp extends AwsCognito implements SignUpInterface {
           // other user attributes like phone_number or email themselves, etc
         ],
         UserPoolId: process.env.AWS_COGNITO_POOL_ID,
-        Username: username
+        Username: email
 
       }, (error: string) => {
         if (error) {

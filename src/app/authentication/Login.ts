@@ -23,9 +23,9 @@ class Login {
   async normalLogin(req: Request, res: Response) {
     const errors = validationResult(req).mapped();
 
-    if (errors.emailOrUsername) {
+    if (errors.email) {
       return res.status(400).json({
-        message: errors.emailOrUsername.msg,
+        message: errors.email.msg,
         error: 'Bad request error',
         status: 400
       });
@@ -51,7 +51,6 @@ class Login {
         sub,
         name,
         email_verified,
-        username: signin.idToken.payload['cognito:username'],
         email
       }
       req.session.accesstoken = accesstoken;
@@ -63,10 +62,31 @@ class Login {
         status: 200
       });
     } catch (error: any) {
-      return res.status((error.code && error.code === 'NotAuthorizedException')? 401 : 500).json({
-        message: (error.code && error.code === 'NotAuthorizedException')? error.message : error,
-        error: (error.code && error.code === 'NotAuthorizedException')? 'Unauthorized' : 'Internal server error',
-        status: (error.code && error.code === 'NotAuthorizedException')? 401 : 500
+
+      const response = {
+        message: '',
+        error: '',
+        status: 500        
+      }
+
+      if (error.code && (error.code === 'NotAuthorizedException' || error.code === 'UserNotConfirmedException')) {
+
+        response.message = error.message;
+        response.error = 'Unauthorized';
+        response.status = 401;
+
+      } else {
+        
+        response.message = error;
+        response.error = 'Internal server error';
+        response.status = 500;
+
+      }
+
+      return res.status(response.status).json({
+        message: response.message.toString(),
+        error: response.error,
+        status: response.status
       });
     }
   }

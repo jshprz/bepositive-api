@@ -7,7 +7,6 @@ declare module 'express-session' {
       sub: string,
       name: string,
       email_verified: boolean,
-      username: string,
       email: string
     };
   }
