@@ -13,7 +13,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
 
   /**
    * Creates a follower's feed.
-   * @param userId: string
+   * @param userId: string 
    * @param postId: number | undefined
    * @returns Promise<boolean>
   */
