@@ -12,9 +12,22 @@ const main = async () => {
   const app = express();
   const port = process.env.PORT;
 
-  app.use(session({
-    secret: 'keyboard cat'
-  }));
+  if (process.env.NODE_ENV === 'local') {
+    
+    app.use(session({
+      secret: 'keyboard cat',
+      resave: false,
+      saveUninitialized: true,
+      cookie: { secure: false }
+    }));
+
+  } else {
+    
+    app.use(session({
+      secret: 'keyboard cat'
+    }));
+    
+  }
 
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());
