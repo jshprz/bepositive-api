@@ -132,6 +132,42 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
         return resolve(post);
     });
   }
+
+  /**
+   * Updates a post from posts table.
+   * @param id: number
+   * @param caption: string
+   * @returns Promise<boolean>
+   */
+   async updatePost(id: number, caption: string): Promise<boolean> {
+     
+    return new Promise(async (resolve, reject) => {
+      await getRepository(Posts)
+        .createQueryBuilder('posts')
+        .update(Posts)
+        .set({
+          caption: caption,
+          updated_at: Number(Date.now())
+        })
+        .where('id = :id', {id})
+        .andWhere('deleted_at IS NULL')
+        .andWhere('status != :status', {status: 'deleted'})
+        .execute().catch((error) => {
+          this._log.error({
+            label: `${filePath} - updatePost()`,
+            message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+            payload: {
+              id,
+              caption
+            }
+          });
+
+          return reject(errors.DATABASE_ERROR.UPDATE);
+        });
+      
+        return resolve(true);
+    });
+  }
 }
 
 export default PostRepository;

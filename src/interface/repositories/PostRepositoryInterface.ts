@@ -16,4 +16,5 @@ export interface PostRepositoryInterface {
     posts_updated_at: number,
     posts_deleted_at: number
   }[]>;
+  updatePost(id: number, caption: string): Promise<boolean>;
 }
