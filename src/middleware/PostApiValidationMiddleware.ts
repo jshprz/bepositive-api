@@ -2,6 +2,10 @@ import { check } from "express-validator";
 import path from 'path';
 import mime from 'mime';
 
+export const getPostByIdApiValidation = [
+  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric()
+];
+
 export const createPostApiValidation = [
   check('caption').not().isEmpty().withMessage('caption property is required.'),
   check('files').not().isEmpty().withMessage('files property is required.').isArray().withMessage('files property should be array type.').custom((value: {key: string, type: string}[]) => {

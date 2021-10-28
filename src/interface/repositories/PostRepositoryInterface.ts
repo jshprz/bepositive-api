@@ -1,6 +1,9 @@
 import { Geometry } from "geojson";
+import { Posts } from '../../database/postgresql/models/Posts';
+
 export interface PostRepositoryInterface {
   create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[] }): Promise<number | undefined>;
+  getPostById(id: number): Promise<Posts | void>;
   getPostsByUserCognitoSub(userCognitoSub: string): Promise<{
     posts_id: number,
     posts_user_id: string,
