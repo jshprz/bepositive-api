@@ -17,4 +17,5 @@ export interface PostRepositoryInterface {
     posts_deleted_at: number
   }[]>;
   updatePost(id: number, caption: string): Promise<boolean>;
+  removePostById(id: number): Promise<boolean>;
 }

@@ -7,6 +7,7 @@ import { PostRepositoryInterface } from '../../interface/repositories/PostReposi
 import { errors } from '../../config/index';
 import { getRepository } from 'typeorm';
 import { Geometry } from "geojson";
+import { resolve } from 'url';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
@@ -166,6 +167,38 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
         });
       
         return resolve(true);
+    });
+  }
+
+  /**
+   * Removes a post by id.
+   * @param id: number
+   * @returns Promise<boolean>
+   */
+   async removePostById(id: number): Promise<boolean> {
+    return new Promise(async (resolve, reject) => {
+
+      await getRepository(Posts)
+        .createQueryBuilder('posts')
+        .update(Posts)
+        .set({
+          status: 'deleted',
+          deleted_at: Number(Date.now())
+        })
+        .where('id = :id', {id})
+        .execute().catch((error) => {
+          this._log.error({
+            label: `${filePath} - delete()`,
+            message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+            payload: {
+              id
+            }
+          });
+
+          return reject(errors.DATABASE_ERROR.UPDATE);
+        });
+
+      return resolve(true);
     });
   }
 }
