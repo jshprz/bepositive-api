@@ -2,6 +2,10 @@ import { check } from "express-validator";
 import path from 'path';
 import mime from 'mime';
 
+export const removePostApiValidation = [
+  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric(),
+];
+
 export const updatePostApiValidation = [
   check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric(),
   check('caption').not().isEmpty().withMessage('caption property is required.')

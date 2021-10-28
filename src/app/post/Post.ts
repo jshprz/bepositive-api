@@ -243,6 +243,46 @@ class Post {
       });
     }
   }
+
+  async removePost(req: Request, res: Response) {
+
+    const errors = validationResult(req).mapped();
+    
+    if (errors.id) {
+      return res.status(400).json({
+        message: errors.id.msg,
+        error: 'Bad request error',
+        status: 400
+      });
+    }
+
+    if (!req.session.user) {
+      return res.status(401).json({
+        message: 'Please login and try again.',
+        error: 'Unauthenticated',
+        status: 401
+      });
+    }
+
+    try {
+      
+      await this._postRepository.removePostById(Number(req.params.id));
+
+      return res.status(200).json({
+        message: 'The post was successfully deleted.',
+        payload: {},
+        status: 200
+      });
+
+    } catch (error) {
+      
+      return res.status(500).json({
+        message: error,
+        error: 'Internal server error',
+        status: 500
+      });
+    }
+  }
 }
 
 export default Post;
