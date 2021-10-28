@@ -103,6 +103,35 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
       return resolve(posts || []);
     });
   }
+
+  /**
+   * Get a post by id.
+   * @param id: number
+   * @returns Promise<Posts | void>
+   */
+  async getPostById(id: number): Promise<Posts | void> {
+    
+    return new Promise(async (resolve, reject) => {
+      
+      const post: Posts | void = await getRepository(Posts)
+        .createQueryBuilder('posts')
+        .select('posts')
+        .where('id = :id', {id})
+        .andWhere('deleted_at IS NULL')
+        .andWhere('status != :status', {status: 'deleted'})
+        .getOne().catch((error) => {
+          this._log.error({
+            label: `${filePath} - getPostById()`,
+            message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+            payload: id
+          });
+
+          return reject(errors.DATABASE_ERROR.GET);
+        });
+        
+        return resolve(post);
+    });
+  }
 }
 
 export default PostRepository;
