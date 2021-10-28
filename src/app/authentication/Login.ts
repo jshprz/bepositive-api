@@ -69,11 +69,17 @@ class Login {
         status: 500
       }
 
-      if (error.code && (error.code === 'NotAuthorizedException' || error.code === 'UserNotConfirmedException')) {
+      if (error.code && error.code === 'NotAuthorizedException') {
 
         response.message = error.message;
         response.error = 'Unauthorized';
         response.status = 401;
+
+      } else if (error.code && error.code === 'UserNotConfirmedException') {
+        
+        response.message = error.message;
+        response.error = 'Forbidden';
+        response.status = 403;
 
       } else {
 
