@@ -185,6 +185,64 @@ class Post {
       });
     }
   }
+
+  async updatePost(req: Request, res: Response) {
+    
+    const errors = validationResult(req).mapped();
+
+    if (errors.id) {
+      return res.status(400).json({
+        message: errors.id.msg,
+        error: 'Bad request error',
+        status: 400
+      });
+    }
+
+    if (errors.caption) {
+      return res.status(400).json({
+        message: errors.caption.msg,
+        error: 'Bad request error',
+        status: 400
+      });
+    }
+
+    if (!req.session.user) {
+      return res.status(401).json({
+        message: 'Please login and try again.',
+        error: 'Unauthenticated',
+        status: 401
+      });
+    }
+
+    try {
+      
+      const post = await this._postRepository.getPostById(Number(req.params.id));
+
+      if (!post) {
+        return res.status(404).json({
+          message: 'Post not found.',
+          error: 'Not found.',
+          status: 404
+        });
+      }
+
+      await this._postRepository.updatePost(Number(req.params.id), req.body.caption);
+
+      return res.status(200).json({
+        message: 'The post was updated successfully.',
+        payload: {},
+        status: 200
+      });
+
+    } catch (error) {
+      
+      return res.status(500).json({
+        message: error,
+        error: 'Internal server error',
+        status: 500
+      });
+    }
+  }
 }
 
 export default Post;
