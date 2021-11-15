@@ -58,6 +58,53 @@ class UserRelationshipRepository extends BaseRepository implements UserRelations
       return resolve(followers || []);
     });
   }
+
+  /**
+   * Gets user followings.
+   * @param userCognitoSub: string
+   * @returns Promise<{
+      user_relationships_id: number,
+      user_relationships_user_id: string,
+      user_relationships_following_id: string,
+      user_relationships_created_at: number,
+      user_relationships_updated_at: number,
+      user_relationships_deleted_at: number
+    }[]>
+   */
+  getFollowings(userCognitoSub: string): Promise<{
+    user_relationships_id: number,
+    user_relationships_user_id: string,
+    user_relationships_following_id: string,
+    user_relationships_created_at: number,
+    user_relationships_updated_at: number,
+    user_relationships_deleted_at: number
+  }[]> {
+
+    return new Promise(async (resolve, reject) => {
+      const followers: {
+        user_relationships_id: number,
+        user_relationships_user_id: string,
+        user_relationships_following_id: string,
+        user_relationships_created_at: number,
+        user_relationships_updated_at: number,
+        user_relationships_deleted_at: number
+      }[] | void = await getRepository(UserRelationships)
+      .createQueryBuilder('user_relationships')
+      .select('user_relationships')
+      .where('following_id = :userCognitoSub', { userCognitoSub })
+      .getRawMany().catch((error) => {
+        this._log.error({
+          label: `${filePath} - getFollowings()`,
+          message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+          payload: userCognitoSub
+        });
+
+        return reject(errors.DATABASE_ERROR.GET);
+      });
+
+      return resolve(followers || []);
+    });
+  }
 }
 
 export default UserRelationshipRepository;
