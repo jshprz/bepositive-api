@@ -11,6 +11,7 @@ import { MediaInterface } from '../../interface/s3/MediaInterface';
 import { config } from '../../config/index';
 import uniqid from 'uniqid';
 import '../../interface/declare/express-session';
+import { Client } from '@googlemaps/google-maps-services-js';
 
 @Service()
 class Post {
@@ -18,6 +19,7 @@ class Post {
   private _s3: MediaInterface;
   private _userRelationshipRepository: UserRelationshipRepositoryInterface;
   private _userFeedRepository: UserFeedRepositoryInterface;
+  private _googlemapsApi: Client;
 
   constructor() {
     const container = Container.of();
@@ -25,6 +27,7 @@ class Post {
     this._s3 = container.get(s3.Media);
     this._userRelationshipRepository = container.get(repositories.UserRelationshipRepository);
     this._userFeedRepository = container.get(repositories.UserFeedRepository);
+    this._googlemapsApi = new Client({});
   }
 
   async createPost(req: Request, res: Response) {
