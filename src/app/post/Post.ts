@@ -8,18 +8,17 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import s3 from '../../infra/s3/index';
 import { MediaInterface } from '../../interface/s3/MediaInterface';
-import { config } from '../../config/index';
+import { config } from '../../config';
 import uniqid from 'uniqid';
 import '../../interface/declare/express-session';
 import { Client } from '@googlemaps/google-maps-services-js';
-
 @Service()
 class Post {
   private _postRepository: PostRepositoryInterface;
   private _s3: MediaInterface;
   private _userRelationshipRepository: UserRelationshipRepositoryInterface;
   private _userFeedRepository: UserFeedRepositoryInterface;
-  private _googlemapsApi: Client;
+  private _googleapis: Client;
 
   constructor() {
     const container = Container.of();
@@ -27,7 +26,7 @@ class Post {
     this._s3 = container.get(s3.Media);
     this._userRelationshipRepository = container.get(repositories.UserRelationshipRepository);
     this._userFeedRepository = container.get(repositories.UserFeedRepository);
-    this._googlemapsApi = new Client({});
+    this._googleapis = new Client({});
   }
 
   async createPost(req: Request, res: Response) {
@@ -49,6 +48,14 @@ class Post {
       });
     }
 
+    if (errors.googlemapsPlaceId) {
+      return res.status(400).json({
+        message: errors.google_maps_place_id.msg,
+        error: 'Bad request error',
+        status: 400
+      });
+    }
+
     if (!req.session.user) {
       return res.status(401).json({
         message: 'Please login and try again.',
@@ -59,7 +66,7 @@ class Post {
 
     try {
       const userCognitoSub: string = req.session.user.sub;
-      const { caption, files } = req.body;
+      const { caption, files, googlemapsPlaceId } = req.body;
 
       // We append which folder inside S3 bucket the file will be uploaded.
       // We make the filename unique.
@@ -68,7 +75,7 @@ class Post {
       });
 
       const uploadSignedUrls = await this._s3.getPresignedUrlUpload(files);
-      const postId = await this._postRepository.create({userCognitoSub, caption, files});
+      const postId = await this._postRepository.create({userCognitoSub, caption, files, googlemapsPlaceId});
       const followers = await this._userRelationshipRepository.getFollowers(userCognitoSub);
 
       Promise.all(
@@ -162,9 +169,22 @@ class Post {
         status: 401
       });
     }
-    
+
     try {
       const post = await this._postRepository.getPostById(Number(req.params.id));
+
+      if (post?.google_maps_place_id) {
+        // Retrieve post location details
+        const place = await this._googleapis.placeDetails({
+          params: {
+            place_id: post.google_maps_place_id,
+            key: `${process.env.GOOGLE_MAPS_API_KEY}`
+          }
+        }).catch((error) => {
+          throw error.stack;
+        });
+        post.location_details = `${place.data.result.name}, ${place.data.result.vicinity}`;
+      }
 
       if (post?.s3_files) {
         post.s3_files.forEach((file) => {
@@ -179,7 +199,7 @@ class Post {
         },
         status: 200
       });
-    } catch (error) {
+    } catch (error: any) {
 
       return res.status(500).json({
         message: error,
@@ -190,7 +210,7 @@ class Post {
   }
 
   async updatePost(req: Request, res: Response) {
-    
+
     const errors = validationResult(req).mapped();
 
     if (errors.id) {
@@ -218,7 +238,7 @@ class Post {
     }
 
     try {
-      
+
       const post = await this._postRepository.getPostById(Number(req.params.id));
 
       if (!post) {
@@ -238,7 +258,7 @@ class Post {
       });
 
     } catch (error) {
-      
+
       return res.status(500).json({
         message: error,
         error: 'Internal server error',
@@ -250,7 +270,7 @@ class Post {
   async removePost(req: Request, res: Response) {
 
     const errors = validationResult(req).mapped();
-    
+
     if (errors.id) {
       return res.status(400).json({
         message: errors.id.msg,
@@ -268,7 +288,7 @@ class Post {
     }
 
     try {
-      
+
       await this._postRepository.removePostById(Number(req.params.id));
 
       return res.status(200).json({
@@ -278,7 +298,7 @@ class Post {
       });
 
     } catch (error) {
-      
+
       return res.status(500).json({
         message: error,
         error: 'Internal server error',

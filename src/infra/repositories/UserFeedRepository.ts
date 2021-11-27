@@ -7,7 +7,6 @@ import { UserFeedRepositoryInterface } from '../../interface/repositories/UserFe
 import path from 'path';
 import { errors } from '../../config/index';
 import { getRepository } from 'typeorm';
-import { Geometry } from "geojson";
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
@@ -54,7 +53,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
       posts_caption: string,
       posts_status: string,
       posts_view_count: number,
-      posts_lat_long: Geometry,
+      posts_google_maps_place_id: string,
       posts_s3_files: { key: string, type: string }[],
       posts_created_at: number,
       posts_updated_at: number,
@@ -67,7 +66,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
     posts_caption: string,
     posts_status: string,
     posts_view_count: number,
-    posts_lat_long: Geometry,
+    posts_google_maps_place_id: string,
     posts_s3_files: { key: string, type: string }[],
     posts_created_at: number,
     posts_updated_at: number,
@@ -81,7 +80,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
         posts_caption: string,
         posts_status: string,
         posts_view_count: number,
-        posts_lat_long: Geometry,
+        posts_google_maps_place_id: string,
         posts_s3_files: { key: string, type: string }[],
         posts_created_at: number,
         posts_updated_at: number,
@@ -120,7 +119,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
       caption: string,
       status: string,
       view_count: number,
-      lat_long: Geometry,
+      google_maps_place_id: string,
       s3_files: { key: string, type: string }[],
       created_at: number,
       updated_at: number,
@@ -134,7 +133,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
     caption: string,
     status: string,
     view_count: number,
-    lat_long: Geometry,
+    google_maps_place_id: string,
     s3_files: { key: string, type: string }[],
     created_at: number,
     updated_at: number,
@@ -149,7 +148,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
         caption: string,
         status: string,
         view_count: number,
-        lat_long: Geometry,
+        google_maps_place_id: string,
         s3_files: { key: string, type: string }[],
         created_at: number,
         updated_at: number,

@@ -1,11 +1,11 @@
 import express from 'express';
 import { getConnection } from './src/config/database';
 import { apis } from './src/routes/index';
-import infraUtils from './src/infra/utils';
+import Logger from './src/infra/utils/Logger';
 import session from 'express-session';
 import multer from 'multer';
 
-const logger = new infraUtils.Logger();
+const logger = new Logger();
 
 const main = async () => {
   getConnection();
@@ -37,6 +37,7 @@ const main = async () => {
   app.use('/rest/v1/user', apis.UserApi);
   app.use('/rest/v1/post', apis.PostApi);
   app.use('/rest/v1/feed', apis.UserFeedApi);
+  app.use('/rest/v1/location', apis.LocationApi);
 
   app.listen(port, () => {
     logger.info({

@@ -8,23 +8,27 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import '../../interface/declare/express-session';
 import { UserPoolInterface } from '../../interface/cognito/UserPoolInterface';
+import { Client } from '@googlemaps/google-maps-services-js';
 
 @Service()
 class UserFeed {
   private _userFeedRepository: UserFeedRepositoryInterface;
   private _userRelationshipRepository: UserRelationshipRepositoryInterface;
   private _userPool: UserPoolInterface;
+  private _googleapis: Client;
 
   constructor() {
     const container = Container.of();
     this._userFeedRepository = container.get(repositories.UserFeedRepository);
     this._userRelationshipRepository = container.get(repositories.UserRelationshipRepository);
-    this._userPool = container.get(cognito.UserPool)
+    this._userPool = container.get(cognito.UserPool);
+    this._googleapis = new Client({});
   }
 
   /**
    * Retrieves feed for user followings.
    * @param req: Request
+   * @param res: Response
    * @returns res: Response
    */
   async getFeed(req: Request, res: Response) {
@@ -57,8 +61,22 @@ class UserFeed {
       });
 
       const posts = await this._userFeedRepository.getFeed(pagination, followings);
+
       for (let i = 0; i < posts.length; i++) {
         try {
+          posts[i]['location_details'] = '';
+          if (posts[i].posts_google_maps_place_id) {
+            // Retrieve post location details
+            const place = await this._googleapis.placeDetails({
+              params: {
+                place_id: posts[i].posts_google_maps_place_id,
+                key: `${process.env.GOOGLE_MAPS_API_KEY}`
+              }
+            }).catch((error) => {
+              throw error.stack;
+            });
+            posts[i]['location_details'] = `${place.data.result.name}, ${place.data.result.vicinity}`;
+          }
           posts[i]['user'] = await this._userPool.getUser(posts[i].posts_user_id)
         } catch(e) {
           posts.splice(i, 1)
@@ -110,6 +128,19 @@ class UserFeed {
       const posts = await this._userFeedRepository.getTrendingFeed(pagination, threshold);
       for (let i = 0; i < posts.length; i++) {
         try {
+          posts[i]['location_details'] = '';
+          if (posts[i].google_maps_place_id) {
+            // Retrieve post location details
+            const place = await this._googleapis.placeDetails({
+              params: {
+                place_id: posts[i].google_maps_place_id,
+                key: `${process.env.GOOGLE_MAPS_API_KEY}`
+              }
+            }).catch((error) => {
+              throw error.stack;
+            });
+            posts[i]['location_details'] = `${place.data.result.name}, ${place.data.result.vicinity}`;
+          }
           posts[i]['user'] = await this._userPool.getUser(posts[i].user_id)
         } catch(e) {
           posts.splice(i, 1)

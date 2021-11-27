@@ -125,3 +125,4 @@ ormconfig.json
 !.elasticbeanstalk/*.global.yml
 
 postgresdata
+.idea

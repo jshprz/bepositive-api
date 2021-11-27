@@ -1,17 +1,18 @@
 import 'reflect-metadata';
 import { Container } from 'typedi';
-import infraUtils from '../utils';
+import Logger from '../utils/Logger';
 import AWS from 'aws-sdk';
 
 abstract class AwsS3 {
 
-  protected _log = Container.get(infraUtils.Logger);
+  protected _log = Container.get(Logger);
   protected _s3 = new AWS.S3();
 
   /**
    * Returns an array of string containing an upload presigned URL/s
    * @param s3FilenameKey: string
    * @param contentType: string
+   * @param acl: string
    * @returns string
    */
   presignedPutUrl(s3FilenameKey: string, contentType: string, acl: string): string {

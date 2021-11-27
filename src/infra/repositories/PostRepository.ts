@@ -6,8 +6,6 @@ import path from 'path';
 import { PostRepositoryInterface } from '../../interface/repositories/PostRepositoryInterface';
 import { errors } from '../../config/index';
 import { getRepository } from 'typeorm';
-import { Geometry } from "geojson";
-import { resolve } from 'url';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
@@ -19,7 +17,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
    * @param item: {userCognitoSub: string, caption: string, s3Files: {key: string, type: string}[] }
    * @returns Promise<string>
    */
-  async create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[] }): Promise<number | undefined> {
+  async create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<number | undefined> {
     return new Promise(async (resolve, reject) => {
       const postsModel = new Posts();
 
@@ -27,6 +25,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
       postsModel.caption = item.caption;
       postsModel.status = 'active';
       postsModel.view_count = 0;
+      postsModel.google_maps_place_id = item.googlemapsPlaceId;
       postsModel.s3_files = item.files;
       postsModel.created_at = Number(Date.now());
 
@@ -55,7 +54,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
     posts_caption: string,
     posts_status: string,
     posts_view_count: number,
-    posts_lat_long: Geometry,
+    posts_google_maps_place_id: string,
     posts_s3_files: { key: string, type: string }[],
     posts_created_at: number,
     posts_updated_at: number,
@@ -68,7 +67,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
     posts_caption: string,
     posts_status: string,
     posts_view_count: number,
-    posts_lat_long: Geometry,
+    posts_google_maps_place_id: string,
     posts_s3_files: { key: string, type: string }[],
     posts_created_at: number,
     posts_updated_at: number,
@@ -82,7 +81,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
         posts_caption: string,
         posts_status: string,
         posts_view_count: number,
-        posts_lat_long: Geometry,
+        posts_google_maps_place_id: string,
         posts_s3_files: { key: string, type: string }[],
         posts_created_at: number,
         posts_updated_at: number,
@@ -108,13 +107,33 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
   /**
    * Get a post by id.
    * @param id: number
-   * @returns Promise<Posts | void>
+   * @returns Promise<{
+    id: number | void,
+    user_id: string | void,
+    caption: string | void,
+    status: string | void,
+    view_count: number | void,
+    google_maps_place_id: string | void,
+    s3_files: { key: string, type: string }[] | void,
+    created_at: number | void,
+    location_details: string | undefined
+  }>
    */
-  async getPostById(id: number): Promise<Posts | void> {
+  async getPostById(id: number): Promise<{
+    id: number | void,
+    user_id: string | void,
+    caption: string | void,
+    status: string | void,
+    view_count: number | void,
+    google_maps_place_id: string | void,
+    s3_files: { key: string, type: string }[] | void,
+    created_at: number | void,
+    location_details: string
+  }> {
     
     return new Promise(async (resolve, reject) => {
       
-      const post: Posts | void = await getRepository(Posts)
+      const post = await getRepository(Posts)
         .createQueryBuilder('posts')
         .select('posts')
         .where('id = :id', {id})
@@ -130,7 +149,17 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
           return reject(errors.DATABASE_ERROR.GET);
         });
         
-        return resolve(post);
+        return resolve({
+          id: post?.id,
+          user_id: post?.user_id,
+          caption: post?.caption,
+          status: post?.status,
+          view_count: post?.view_count,
+          google_maps_place_id: post?.google_maps_place_id,
+          s3_files: post?.s3_files,
+          created_at: post?.created_at,
+          location_details: ''
+        });
     });
   }
 
