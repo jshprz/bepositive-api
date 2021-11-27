@@ -1,20 +1,20 @@
 import { Container, Service } from 'typedi';
 import 'reflect-metadata';
 import AwsSes from './AwsSes';
-import infraUtils from '../utils';
+import Logger from '../utils/Logger';
 import path from 'path';
 import { EmailInterface } from '../../interface/ses/EmailInterface';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
+
 @Service()
 class Email extends AwsSes implements EmailInterface {
 
-  private _log: any;
+  private _log: Logger;
 
   constructor() {
     super();
-
-    this._log = Container.get(infraUtils.Logger);
+    this._log = Container.get(Logger);
   }
 
   /**

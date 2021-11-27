@@ -24,7 +24,7 @@ class ResetPassword extends AwsCognito implements ResetPasswordInterface {
         onFailure: (error) => {
           this._log.error({
             label: `${filePath} - forgotPassword()`,
-            message: error,
+            message: error.toString(),
             payload: {}
           });
 

@@ -1,4 +1,3 @@
-import { Geometry } from "geojson";
 
 export interface UserFeedRepositoryInterface {
   createFeed(userId: string, postId: number | undefined): Promise<boolean>;
@@ -8,7 +7,7 @@ export interface UserFeedRepositoryInterface {
     posts_caption: string,
     posts_status: string,
     posts_view_count: number,
-    posts_lat_long: Geometry,
+    posts_google_maps_place_id: string,
     posts_s3_files: { key: string, type: string }[],
     posts_created_at: number,
     posts_updated_at: number,
@@ -20,7 +19,7 @@ export interface UserFeedRepositoryInterface {
     caption: string,
     status: string,
     view_count: number,
-    lat_long: Geometry,
+    google_maps_place_id: string,
     s3_files: { key: string, type: string }[],
     created_at: number,
     updated_at: number,

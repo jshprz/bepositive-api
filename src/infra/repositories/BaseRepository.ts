@@ -1,20 +1,19 @@
 import { getConnection } from 'typeorm';
 import { Container } from 'typedi';
-import infraUtils from '../utils/index';
+import Logger from '../utils/Logger';
 import path from 'path';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
-export type createParamsType = { email: string, password: string, account_status: string }
 interface BaseRepositoryInterface {
   getItemById(id: string, entity: any, table: string): Promise<any>;
 }
 
 abstract class BaseRepository implements BaseRepositoryInterface {
-  protected _log: any;
+  protected _log: Logger;
 
   constructor() {
-    this._log = Container.get(infraUtils.Logger);
+    this._log = Container.get(Logger);
   }
 
   /**

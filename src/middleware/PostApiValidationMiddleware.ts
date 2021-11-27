@@ -45,6 +45,7 @@ export const createPostApiValidation = [
       return Promise.reject(errorMessage);
     }
   }),
+  check('google_maps_place_id').isString().withMessage('google_maps_place_id should be type of string.')
 ];
 
 function validateKey(extension: string): {isFailed: boolean, message: string | null} {

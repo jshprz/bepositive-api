@@ -13,26 +13,26 @@ const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 class AccessTokenRepository extends BaseRepository implements AccessTokenRepositoryInterface {
 
   /**
-   * Creates accesstokens data
-   * @param accesstoken: string
+   * Creates accessTokens data
+   * @param accessToken: string
    * @param email: string
    * @returns Promise<boolean>
    */
-  async createAccessTokenItem(accesstoken: string, email: string): Promise<boolean> {
+  async createAccessTokenItem(accessToken: string, email: string): Promise<boolean> {
     return new Promise(async (resolve, reject) => {
       await getConnection()
         .createQueryBuilder()
         .insert()
         .into(AccessTokens)
         .values([
-          { accesstoken, email, created_at: Number(Date.now()) }
+          { accessToken: accessToken, email, created_at: Number(Date.now()) }
         ]).execute()
         .catch((error) => {
           this._log.error({
             label: `${filePath} - createAccessTokenItem()`,
             message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
             payload: {
-              accesstoken,
+              accessToken: accessToken,
               email
             }
           });
@@ -45,7 +45,7 @@ class AccessTokenRepository extends BaseRepository implements AccessTokenReposit
   }
 
   /**
-   * Deletes accesstokens data by email
+   * Deletes accessTokens data by email
    * @param email: string
    * @returns Promise<boolean>
    */

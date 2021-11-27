@@ -1,5 +1,4 @@
 import { Entity, Column, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
-import { Geometry } from "geojson";
 
 @Entity({name: "posts"})
 export class Posts extends BaseEntity {
@@ -19,8 +18,8 @@ export class Posts extends BaseEntity {
   @Column({type: "bigint", nullable: false})
   view_count?: number;
 
-  @Column({type: "point", nullable: true})
-  lat_long?: Geometry;
+  @Column({type: "varchar", nullable: true})
+  google_maps_place_id?: string;
 
   @Column("jsonb", {array: false, nullable: false})
   s3_files?: { key: string, type: string }[];
