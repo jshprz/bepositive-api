@@ -50,7 +50,7 @@ class SignIn extends AwsCognito implements SignInInterface {
   async doSignOut(req: Request): Promise<boolean> {
     return new Promise(async (resolve, reject) => {
       const param = {
-        AccessToken: req.session.accessToken,
+        AccessToken: req.session.accesstoken,
       }
       this._client.globalSignOut(param, (error: string) => {
         if (error) {

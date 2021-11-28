@@ -15,8 +15,8 @@ class Profile {
 
   async getUserProfile(req: Request, res: Response) {
     try {
-      const accessToken = req.headers.authorization?.split(' ')[1];
-      const profile = await this._profile.getUserProfile(accessToken || '');
+      const accesstoken = req.headers.authorization?.split(' ')[1];
+      const profile = await this._profile.getUserProfile(accesstoken || '');
       const userProfile = {
         username: profile.Username,
         user_attributes: profile.UserAttributes

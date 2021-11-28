@@ -1,5 +1,5 @@
 export interface UserPoolInterface {
-  getUserProfile(accessToken: string): Promise<{Username: string, UserAttributes: []}>;
+  getUserProfile(accesstoken: string): Promise<{Username: string, UserAttributes: []}>;
   getUser(sub:string): Promise<{
     username: string,
     sub: string,

@@ -12,10 +12,10 @@ export = async (req: any, res: any, next: any) => {
 
   if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
     const token = req.headers.authorization.split(' ')[1];
-    const accessToken = await getRepository(AccessTokens).find({ accessToken: token });
+    const accesstoken = await getRepository(AccessTokens).find({ accesstoken: token });
 
-    // Check the validity of the provided accessToken by checking existence of the access token within the accessTokens table.
-    if (accessToken.length > 0) {
+    // Check the validity of the provided accesstoken by checking existence of the access token within the accesstokens table.
+    if (accesstoken.length > 0) {
       // Check the validity of the access token via aws cognito.
       cognitoExpress.validate(token, (error: any) => {
         if (error) {

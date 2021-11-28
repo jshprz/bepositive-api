@@ -41,11 +41,11 @@ class Login {
 
     try {
       const signin = await this._signIn.doSignIn(req.body);
-      const accessToken: string = signin.accessToken.jwtToken;
+      const accesstoken: string = signin.accesstoken.jwtToken;
       const { sub, name, email_verified, email } = signin.idToken.payload;
 
-      // Creates accessToken record within the accessTokens table.
-      await this._accessTokenRepository.createAccessTokenItem(accessToken, email);
+      // Creates accesstoken record within the accesstokens table.
+      await this._accessTokenRepository.createAccessTokenItem(accesstoken, email);
 
       req.session.user = {
         sub,
@@ -53,11 +53,11 @@ class Login {
         email_verified,
         email
       }
-      req.session.accessToken = accessToken;
+      req.session.accesstoken = accesstoken;
       return res.status(200).json({
         message: 'Successfully logged in',
         payload: {
-          accessToken: signin.accessToken.jwtToken
+          accesstoken: signin.accesstoken.jwtToken
         },
         status: 200
       });

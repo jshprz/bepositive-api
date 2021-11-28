@@ -16,18 +16,18 @@ class UserPool extends AwsCognito implements UserPoolInterface {
 
   /**
    * Gets user information from AWS Cognito using access token
-   * @param accessToken
+   * @param accesstoken
    * @returns Promise<{Username: string, UserAttributes: []}>
    */
-  async getUserProfile(accessToken: string): Promise<{Username: string, UserAttributes: []}> {
+  async getUserProfile(accesstoken: string): Promise<{Username: string, UserAttributes: []}> {
     return new Promise(async (resolve, reject) => {
-      const params = { AccessToken: accessToken}
+      const params = { AccessToken: accesstoken}
       this._client.getUser(params, (error: Error, result: {Username: string, UserAttributes: []}) => {
         if (error) {
           this._log.error({
             label: `${filePath} - getUserProfile()`,
             message: error.toString(),
-            payload: accessToken
+            payload: accesstoken
           });
 
           reject(errors.AWS_COGNITO_ERROR);

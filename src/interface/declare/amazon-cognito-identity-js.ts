@@ -24,7 +24,8 @@ declare module 'amazon-cognito-identity-js' {
     'refreshToken': {
       'token': string
     },
-    "accessToken": {
+    // @ts-ignore
+    "accesstoken": {
       'jwtToken': string,
       'payload': {
         'origin_jti': string,

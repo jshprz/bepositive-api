@@ -3,7 +3,7 @@ import { Request } from 'express';
 
 declare module 'amazon-cognito-identity-js' {
   interface CognitoUserSession {
-    accessToken: {
+    accesstoken: {
       jwtToken: string
     };
   }
