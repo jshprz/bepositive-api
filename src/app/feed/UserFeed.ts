@@ -44,9 +44,9 @@ class UserFeed {
 
     if (!req.session.user) {
       return res.status(401).json({
-      message: 'Please login and try again.',
-      error: 'Unauthenticated',
-      status: 401
+        message: 'Please login and try again.',
+        error: 'Unauthenticated',
+        status: 401
       });
     }
 
@@ -65,11 +65,11 @@ class UserFeed {
       for (let i = 0; i < posts.length; i++) {
         try {
           posts[i].location_details = '';
-          if (posts[i].posts_google_maps_place_id) {
+          if (posts[i].google_maps_place_id) {
             // Retrieve post location details
             const place = await this._googleapis.placeDetails({
               params: {
-                place_id: posts[i].posts_google_maps_place_id,
+                place_id: posts[i].google_maps_place_id,
                 key: `${process.env.GOOGLE_MAPS_API_KEY}`
               }
             }).catch((error) => {
@@ -77,7 +77,7 @@ class UserFeed {
             });
             posts[i].location_details = `${place.data.result.name}, ${place.data.result.vicinity}`;
           }
-          posts[i].user = await this._userPool.getUser(posts[i].posts_user_id)
+          posts[i].user = await this._userPool.getUser(posts[i].user_id)
         } catch(e) {
           posts.splice(i, 1)
           continue;
@@ -103,7 +103,7 @@ class UserFeed {
    * @param req: Request
    * @returns res: Response
    */
-   async getTrendingFeed(req: Request, res: Response) {
+  async getTrendingFeed(req: Request, res: Response) {
     const errors = validationResult(req).mapped();
 
     if (errors.pagination) {
@@ -116,9 +116,9 @@ class UserFeed {
 
     if (!req.session.user) {
       return res.status(401).json({
-      message: 'Please login and try again.',
-      error: 'Unauthenticated',
-      status: 401
+        message: 'Please login and try again.',
+        error: 'Unauthenticated',
+        status: 401
       });
     }
 

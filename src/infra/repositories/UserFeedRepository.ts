@@ -48,69 +48,57 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
    * @param pagination: {page: number, size: number}
    * @param followings: string[],
    * @returns Promise<{
-   *  posts_id: number,
-   *  posts_user_id: string,
-   *  posts_caption: string,
-   *  posts_status: string,
-   *  posts_view_count: number,
-   *  posts_google_maps_place_id: string,
-   *  posts_s3_files: { key: string, type: string }[],
-   *  posts_created_at: number,
-   *  posts_updated_at: number,
-   *  posts_deleted_at: number,
+   *  id: number,
+   *  user_id: string,
+   *  caption: string,
+   *  status: string,
+   *  view_count: number,
+   *  google_maps_place_id: string,
+   *  s3_files: { key: string, type: string }[],
+   *  created_at: number,
+   *  updated_at: number,
+   *  deleted_at: number,
    *  location_details: string,
    *  user?: { username: string; sub: string; email_verified: string; name: string; email: string; dateCreated: Date; dateModified: Date; enabled: boolean; status: string }
    * }[]>
    */
   async getFeed(pagination: {page: number, size: number}, followings: string[] | any): Promise<{
-    posts_id: number,
-    posts_user_id: string,
-    posts_caption: string,
-    posts_status: string,
-    posts_view_count: number,
-    posts_google_maps_place_id: string,
-    posts_s3_files: { key: string, type: string }[],
-    posts_created_at: number,
-    posts_updated_at: number,
-    posts_deleted_at: number,
+    id: number,
+    user_id: string,
+    caption: string,
+    status: string,
+    view_count: number,
+    google_maps_place_id: string,
+    s3_files: { key: string, type: string }[],
+    created_at: number,
+    updated_at: number,
+    deleted_at: number,
     location_details: string,
     user?: { username: string; sub: string; email_verified: string; name: string; email: string; dateCreated: Date; dateModified: Date; enabled: boolean; status: string }
   }[]> {
     const {page, size} = pagination;
     return new Promise(async (resolve, reject) => {
-      const posts: {
-        posts_id: number,
-        posts_user_id: string,
-        posts_caption: string,
-        posts_status: string,
-        posts_view_count: number,
-        posts_google_maps_place_id: string,
-        posts_s3_files: { key: string, type: string }[],
-        posts_created_at: number,
-        posts_updated_at: number,
-        posts_deleted_at: number
-        location_details: string
-      }[] | void = await getRepository(Posts)
+      const posts: Posts[] | void = await getRepository(Posts)
         .createQueryBuilder('posts')
         .skip((page - 1) * size)
         .take(size)
         .where(qb => {
           const subQuery = qb.subQuery()
-              .select("user_feeds.post_id")
-              .from(UserFeeds, "user_feeds")
-              .where("user_feeds.user_id IN (:...followings)", {followings})
-              .getQuery();
+            .select("user_feeds.post_id")
+            .from(UserFeeds, "user_feeds")
+            .where("user_feeds.user_id IN (:...followings)", {followings})
+            .getQuery();
           return "posts.id IN " + subQuery + " order by posts.created_at desc";
-        })
-        .getRawMany().catch((error) => {
-        this._log.error({
-          label: `${filePath} - getFeed()`,
-          message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-          payload: followings
+        }).getMany().catch((error) => {
+          this._log.error({
+            label: `${filePath} - getFeed()`,
+            message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+            payload: followings
+          });
+          return reject(errors.DATABASE_ERROR.GET);
         });
-        return reject(errors.DATABASE_ERROR.GET);
-        });
-      return resolve(posts || []);
+      // @ts-ignore
+      return resolve(posts);
     });
   }
 
@@ -176,10 +164,10 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
         .getRawMany().catch((error) => {
           this._log.error({
             label: `${filePath} - getTrendingFeed()`,
-          message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-          payload: {pagination, threshold}
-        });
-        return reject(errors.DATABASE_ERROR.GET);
+            message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+            payload: {pagination, threshold}
+          });
+          return reject(errors.DATABASE_ERROR.GET);
         });
       // @ts-ignore
       return resolve(posts || []);
