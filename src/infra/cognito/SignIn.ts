@@ -5,9 +5,9 @@ import 'reflect-metadata';
 import path from 'path';
 import { errors } from '../../config/index';
 import { Request } from 'express';
+import '../../interface/declare/amazon-cognito-identity-js';
 import { CognitoUserSession } from "amazon-cognito-identity-js";
 import '../../interface/declare/express-session';
-import '../../interface/declare/amazon-cognito-identity-js';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
 
@@ -50,7 +50,7 @@ class SignIn extends AwsCognito implements SignInInterface {
   async doSignOut(req: Request): Promise<boolean> {
     return new Promise(async (resolve, reject) => {
       const param = {
-        AccessToken: req.session.accesstoken,
+        AccessToken: req.session.accessToken,
       }
       this._client.globalSignOut(param, (error: string) => {
         if (error) {

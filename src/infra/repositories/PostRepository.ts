@@ -130,9 +130,9 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
     created_at: number | void,
     location_details: string
   }> {
-    
+
     return new Promise(async (resolve, reject) => {
-      
+
       const post = await getRepository(Posts)
         .createQueryBuilder('posts')
         .select('posts')
@@ -148,7 +148,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
 
           return reject(errors.DATABASE_ERROR.GET);
         });
-        
+
         return resolve({
           id: post?.id,
           user_id: post?.user_id,
@@ -170,13 +170,13 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
    * @returns Promise<boolean>
    */
    async updatePost(id: number, caption: string): Promise<boolean> {
-     
+
     return new Promise(async (resolve, reject) => {
       await getRepository(Posts)
         .createQueryBuilder('posts')
         .update(Posts)
         .set({
-          caption: caption,
+          caption,
           updated_at: Number(Date.now())
         })
         .where('id = :id', {id})
@@ -194,7 +194,7 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
 
           return reject(errors.DATABASE_ERROR.UPDATE);
         });
-      
+
         return resolve(true);
     });
   }

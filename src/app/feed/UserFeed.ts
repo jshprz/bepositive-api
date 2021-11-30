@@ -64,7 +64,7 @@ class UserFeed {
 
       for (let i = 0; i < posts.length; i++) {
         try {
-          posts[i]['location_details'] = '';
+          posts[i].location_details = '';
           if (posts[i].posts_google_maps_place_id) {
             // Retrieve post location details
             const place = await this._googleapis.placeDetails({
@@ -75,9 +75,9 @@ class UserFeed {
             }).catch((error) => {
               throw error.stack;
             });
-            posts[i]['location_details'] = `${place.data.result.name}, ${place.data.result.vicinity}`;
+            posts[i].location_details = `${place.data.result.name}, ${place.data.result.vicinity}`;
           }
-          posts[i]['user'] = await this._userPool.getUser(posts[i].posts_user_id)
+          posts[i].user = await this._userPool.getUser(posts[i].posts_user_id)
         } catch(e) {
           posts.splice(i, 1)
           continue;
@@ -128,7 +128,7 @@ class UserFeed {
       const posts = await this._userFeedRepository.getTrendingFeed(pagination, threshold);
       for (let i = 0; i < posts.length; i++) {
         try {
-          posts[i]['location_details'] = '';
+          posts[i].location_details = '';
           if (posts[i].google_maps_place_id) {
             // Retrieve post location details
             const place = await this._googleapis.placeDetails({
@@ -139,9 +139,9 @@ class UserFeed {
             }).catch((error) => {
               throw error.stack;
             });
-            posts[i]['location_details'] = `${place.data.result.name}, ${place.data.result.vicinity}`;
+            posts[i].location_details = `${place.data.result.name}, ${place.data.result.vicinity}`;
           }
-          posts[i]['user'] = await this._userPool.getUser(posts[i].user_id)
+          posts[i].user = await this._userPool.getUser(posts[i].user_id)
         } catch(e) {
           posts.splice(i, 1)
           continue;

@@ -1,13 +1,6 @@
 import { CognitoUserSession } from "amazon-cognito-identity-js";
 import { Request } from 'express';
-
-declare module 'amazon-cognito-identity-js' {
-  interface CognitoUserSession {
-    accesstoken: {
-      jwtToken: string
-    };
-  }
-}
+import '../declare/amazon-cognito-identity-js';
 
 export type doSignInParamTypes = {
   email: string;

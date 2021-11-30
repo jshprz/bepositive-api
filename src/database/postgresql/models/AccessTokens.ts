@@ -6,7 +6,7 @@ export class AccessTokens extends BaseEntity {
   id?: number;
 
   @Column({type: "text", nullable: false})
-  accesstoken?: string;
+  accessToken?: string;
 
   @Column({type: "varchar", length: 50, nullable: false})
   email?: string;

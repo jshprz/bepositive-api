@@ -2,7 +2,7 @@ export {};
 // Declaration merging on express-session
 declare module 'express-session' {
   interface Session {
-    accesstoken: string;
+    accessToken: string;
     user: {
       sub: string,
       name: string,

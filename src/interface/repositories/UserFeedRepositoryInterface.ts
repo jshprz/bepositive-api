@@ -11,7 +11,9 @@ export interface UserFeedRepositoryInterface {
     posts_s3_files: { key: string, type: string }[],
     posts_created_at: number,
     posts_updated_at: number,
-    posts_deleted_at: number
+    posts_deleted_at: number,
+    location_details: string,
+    user?: { username: string; sub: string; email_verified: string; name: string; email: string; dateCreated: Date; dateModified: Date; enabled: boolean; status: string }
   }[]>;
   getTrendingFeed(pagination: {page: number, size: number}, threshold: number): Promise<{
     id: number,
@@ -24,6 +26,8 @@ export interface UserFeedRepositoryInterface {
     created_at: number,
     updated_at: number,
     deleted_at: number,
-    likes: number
+    likes: number,
+    location_details: string,
+    user?: { username: string; sub: string; email_verified: string; name: string; email: string; dateCreated: Date; dateModified: Date; enabled: boolean; status: string }
   }[]>;
 }

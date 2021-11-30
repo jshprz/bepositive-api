@@ -195,7 +195,7 @@ class Post {
       return res.status(200).json({
         message: 'Post retrieved',
         payload: {
-          post: post
+          post
         },
         status: 200
       });

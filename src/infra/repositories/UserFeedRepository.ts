@@ -5,7 +5,7 @@ import { UserFeeds } from '../../database/postgresql/models/UserFeeds';
 import { Posts } from '../../database/postgresql/models/Posts';
 import { UserFeedRepositoryInterface } from '../../interface/repositories/UserFeedRepositoryInterface';
 import path from 'path';
-import { errors } from '../../config/index';
+import { errors } from '../../config';
 import { getRepository } from 'typeorm';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
@@ -18,7 +18,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
    * @param userId: string
    * @param postId: number | undefined
    * @returns Promise<boolean>
-  */
+   */
   createFeed(userId: string, postId: number | undefined): Promise<boolean> {
     return new Promise(async (resolve, reject) => {
       const userFeedsModel = new UserFeeds();
@@ -49,17 +49,19 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
    * @param followings: string[],
    * @returns Promise<{
    *  posts_id: number,
-      posts_user_id: string,
-      posts_caption: string,
-      posts_status: string,
-      posts_view_count: number,
-      posts_google_maps_place_id: string,
-      posts_s3_files: { key: string, type: string }[],
-      posts_created_at: number,
-      posts_updated_at: number,
-      posts_deleted_at: number
-  * }[]>
-  */
+   *  posts_user_id: string,
+   *  posts_caption: string,
+   *  posts_status: string,
+   *  posts_view_count: number,
+   *  posts_google_maps_place_id: string,
+   *  posts_s3_files: { key: string, type: string }[],
+   *  posts_created_at: number,
+   *  posts_updated_at: number,
+   *  posts_deleted_at: number,
+   *  location_details: string,
+   *  user?: { username: string; sub: string; email_verified: string; name: string; email: string; dateCreated: Date; dateModified: Date; enabled: boolean; status: string }
+   * }[]>
+   */
   async getFeed(pagination: {page: number, size: number}, followings: string[] | any): Promise<{
     posts_id: number,
     posts_user_id: string,
@@ -70,7 +72,9 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
     posts_s3_files: { key: string, type: string }[],
     posts_created_at: number,
     posts_updated_at: number,
-    posts_deleted_at: number
+    posts_deleted_at: number,
+    location_details: string,
+    user?: { username: string; sub: string; email_verified: string; name: string; email: string; dateCreated: Date; dateModified: Date; enabled: boolean; status: string }
   }[]> {
     const {page, size} = pagination;
     return new Promise(async (resolve, reject) => {
@@ -85,6 +89,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
         posts_created_at: number,
         posts_updated_at: number,
         posts_deleted_at: number
+        location_details: string
       }[] | void = await getRepository(Posts)
         .createQueryBuilder('posts')
         .skip((page - 1) * size)
@@ -115,17 +120,18 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
    * @param threshold: number
    * @returns Promise<{
    *  id: number,
-      user_id: string,
-      caption: string,
-      status: string,
-      view_count: number,
-      google_maps_place_id: string,
-      s3_files: { key: string, type: string }[],
-      created_at: number,
-      updated_at: number,
-      deleted_at: number,
-      likes: number
-      }[]>
+   *  user_id: string,
+   *  caption: string,
+   *  status: string,
+   *  view_count: number,
+   *  google_maps_place_id: string,
+   *  s3_files: { key: string, type: string }[],
+   *  created_at: number,
+   *  updated_at: number,
+   *  deleted_at: number,
+   *  likes: number,
+   *  user?: { username: string; sub: string; email_verified: string; name: string; email: string; dateCreated: Date; dateModified: Date; enabled: boolean; status: string }
+   * }[]>
    */
   async getTrendingFeed(pagination: {page: number, size: number}, threshold: number): Promise<{
     id: number,
@@ -138,7 +144,9 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
     created_at: number,
     updated_at: number,
     deleted_at: number,
-    likes: number
+    likes: number,
+    location_details: string,
+    user?: { username: string; sub: string; email_verified: string; name: string; email: string; dateCreated: Date; dateModified: Date; enabled: boolean; status: string }
   }[]> {
     const {page, size} = pagination;
     return new Promise(async (resolve, reject) => {
@@ -173,6 +181,7 @@ class UserFeedRepository extends BaseRepository implements UserFeedRepositoryInt
         });
         return reject(errors.DATABASE_ERROR.GET);
         });
+      // @ts-ignore
       return resolve(posts || []);
     });
   }

@@ -28,7 +28,8 @@ it('should create a post data in posts table postgresql', async () => {
         key: 'test s3 file key',
         type: 'test file type'
       }
-    ]
+    ],
+    googlemapsPlaceId: ''
   };
 
   await expect(postRepositoryContainer.create(item)).resolves.toEqual('Post successfully created');
