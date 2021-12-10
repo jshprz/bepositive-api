@@ -128,6 +128,34 @@ class Registration {
       });
     }
   }
+
+  async resendAccountConfirmationCode(req: Request, res: Response) {
+    const errors = validationResult(req).mapped();
+
+    if (errors.email) {
+      return res.status(400).json({
+        message: errors.email.msg,
+        error: 'Bad request error',
+        status: 400
+      });
+    }
+
+    try {
+      await this._signUp.resendAccountConfirmationCode(req.body.email);
+
+      return res.status(200).json({
+        message: `The verification code has been re-sent to this email: ${req.body.email}`,
+        payload: {},
+        status: 200
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error.toString(),
+        error: 'Internal server error',
+        status: 500
+      });
+    }
+  }
 }
 
 export default Registration;

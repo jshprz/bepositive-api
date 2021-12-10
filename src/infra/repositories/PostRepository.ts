@@ -4,7 +4,7 @@ import BaseRepository from './BaseRepository';
 import { Posts } from '../../database/postgresql/models/Posts';
 import path from 'path';
 import { PostRepositoryInterface } from '../../interface/repositories/PostRepositoryInterface';
-import { errors } from '../../config/index';
+import { errors } from '../../config';
 import { getRepository } from 'typeorm';
 
 const filePath = path.dirname(__filename) + '\\' + path.basename(__filename);
@@ -49,17 +49,17 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
    * Gets user posts.
    * @param userCognitoSub: string
    * @returns Promise<{
-    posts_id: number,
-    posts_user_id: string,
-    posts_caption: string,
-    posts_status: string,
-    posts_view_count: number,
-    posts_google_maps_place_id: string,
-    posts_s3_files: { key: string, type: string }[],
-    posts_created_at: number,
-    posts_updated_at: number,
-    posts_deleted_at: number
-  }[]>
+   * posts_id: number,
+   * posts_user_id: string,
+   * posts_caption: string,
+   * posts_status: string,
+   * posts_view_count: number,
+   * posts_google_maps_place_id: string,
+   * posts_s3_files: { key: string, type: string }[],
+   * posts_created_at: number,
+   * posts_updated_at: number,
+   * posts_deleted_at: number
+   * }[]>
    */
   async getPostsByUserCognitoSub(userCognitoSub: string): Promise<{
     posts_id: number,
@@ -108,16 +108,16 @@ class PostRepository extends BaseRepository implements PostRepositoryInterface {
    * Get a post by id.
    * @param id: number
    * @returns Promise<{
-    id: number | void,
-    user_id: string | void,
-    caption: string | void,
-    status: string | void,
-    view_count: number | void,
-    google_maps_place_id: string | void,
-    s3_files: { key: string, type: string }[] | void,
-    created_at: number | void,
-    location_details: string | undefined
-  }>
+   * id: number | void,
+   * user_id: string | void,
+   * caption: string | void,
+   * status: string | void,
+   * view_count: number | void,
+   * google_maps_place_id: string | void,
+   * s3_files: { key: string, type: string }[] | void,
+   * created_at: number | void,
+   * location_details: string | undefined
+   * }>
    */
   async getPostById(id: number): Promise<{
     id: number | void,

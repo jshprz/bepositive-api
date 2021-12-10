@@ -99,6 +99,31 @@ class SignUp extends AwsCognito implements SignUpInterface {
     });
   }
 
+  /**
+   * Resends account confirmation code via provided email.
+   * @param email: string
+   * @returns Promise<boolean>
+   */
+  async resendAccountConfirmationCode(email: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+        this._client.resendConfirmationCode({
+          ClientId: process.env.AWS_COGNITO_APP_CLIENT_ID,
+          Username: email
+        }, (error) => {
+          if (error) {
+            this._log.error({
+              label: `${filePath} - resendAccountConfirmationCode()`,
+              message: error,
+              payload: {}
+            });
+            return reject(error);
+          } else {
+            return resolve(true);
+          }
+        });
+    });
+  }
+
 }
 
 export default SignUp;

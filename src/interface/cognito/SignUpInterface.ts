@@ -15,4 +15,5 @@ export interface SignUpInterface {
   doSignUp(body: doSignUpParamTypes): Promise<ISignUpResult | undefined>;
   verifyUser(body: verifyUserParamTypes): Promise<string>;
   updateEmailVerifiedToTrue(email: string): Promise<boolean>;
+  resendAccountConfirmationCode(email: string): Promise<boolean>;
 }
