@@ -1,5 +1,9 @@
 import { check } from 'express-validator';
 
+export const resendAccountConfirmationCodeApiValidation = [
+  check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.')
+];
+
 export const registerApiValidation = [
     check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.'),
     check('name').not().isEmpty().withMessage('name property is required.').isAlpha('en-US', { ignore: ' ' }).withMessage('name property is alpha.').isLength({ max: 32 }).withMessage('name property maximum length is only 32 characters.'),

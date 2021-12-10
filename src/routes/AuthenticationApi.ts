@@ -7,7 +7,8 @@ import {
   verifyApiValidation,
   loginApiValidation,
   passwordForgotApiValidation,
-  passwordResetApiValidation
+  passwordResetApiValidation,
+  resendAccountConfirmationCodeApiValidation
 } from '../middleware/AuthenticationApiValidationMiddleware';
 import authMiddleWare from '../middleware/AuthorizationMiddleware';
 
@@ -23,5 +24,6 @@ router.post('/login', loginApiValidation, (req: any, res: any) => login.normalLo
 router.patch('/register/verify', verifyApiValidation, (req: any, res: any) => registration.verify(req, res));
 router.post('/register', registerApiValidation, (req: any, res: any) => registration.register(req, res));
 router.delete('/logout', authMiddleWare, (req: any, res: any) => login.logout(req, res));
+router.post('/register/verify/resend', resendAccountConfirmationCodeApiValidation, (req: any, res:any) => registration.resendAccountConfirmationCode(req, res));
 
 export default router;
