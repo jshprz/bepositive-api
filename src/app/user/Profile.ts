@@ -17,10 +17,12 @@ class Profile {
     try {
       const accessToken = req.headers.authorization?.split(' ')[1];
       const profile = await this._profile.getUserProfile(accessToken || '');
-      const userProfile = {
-        username: profile.Username,
-        user_attributes: profile.UserAttributes
+      const userProfile:any | {} = {
+        username: profile.Username
       }
+      profile.UserAttributes.forEach(attr => {
+        userProfile[attr['Name']] = attr['Value'];
+      });
 
       return res.status(200).json({
         message: 'User profile successfully retrieved',
