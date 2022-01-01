@@ -1,12 +1,10 @@
 import express from 'express';
-import { Container } from 'typedi';
-import 'reflect-metadata';
-import appUser from '../app/user/index';
+import UserController from "../app/controllers/UserController";
 import authMiddleWare from '../middleware/AuthorizationMiddleware';
 
 const router = express.Router();
-const profile = Container.get(appUser.Profile);
+const userController = new UserController();
 
-router.get('/profile', authMiddleWare, (req: any, res: any) => profile.getUserProfile(req, res));
+router.get('/profile', authMiddleWare, (req: any, res: any) => userController.getUserProfile(req, res));
 
 export default router;

@@ -1,11 +1,11 @@
 import express from 'express';
-import { getConnection } from './src/config/database';
+import { getConnection } from './src/config/Database';
 import { apis } from './src/routes/index';
-import Logger from './src/infra/utils/Logger';
+import Logger from './src/config/Logger';
 import session from 'express-session';
 import multer from 'multer';
 
-const logger = new Logger();
+const logger = Logger.createLogger('Main');
 
 const main = async () => {
   getConnection();
@@ -33,23 +33,23 @@ const main = async () => {
     res.end('Bepositive API');
   });
 
-  app.use('/rest/v1/auth', apis.AuthenticationApi);
-  app.use('/rest/v1/user', apis.UserApi);
-  app.use('/rest/v1/post', apis.PostApi);
-  app.use('/rest/v1/feed', apis.UserFeedApi);
-  app.use('/rest/v1/location', apis.LocationApi);
+  app.use('/api/v1/auth', apis.AuthenticationApi);
+  app.use('/api/v1/user', apis.UserApi);
+  app.use('/api/v1/post', apis.PostApi);
+  app.use('/api/v1/feed', apis.UserFeedApi);
+  app.use('/api/v1/location', apis.LocationApi);
 
   app.listen(port, () => {
     logger.info({
-      label: 'index.js - listen()',
-      message: `Server started: ${port}`
+      message: `Server started: ${port}`,
+      payload: {}
     });
   });
 }
 
 main().catch(err => {
   logger.error({
-    label: 'index.js',
-    message: err
+    message: err,
+    payload: {}
   });
 });
