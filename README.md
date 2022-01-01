@@ -33,7 +33,7 @@ This serves as the back-end for the Bepositive application, a social media appli
       - ses
     - routes
     - tests
-- index.ts
+- Context.ts
 ```
 
 ## Setup Database
