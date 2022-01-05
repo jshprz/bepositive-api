@@ -1,5 +1,6 @@
 import IAwsS3 from "../infras/aws/IAwsS3";
 import IPostRepository from "../infras/repositories/IPostRepository";
+import IPostLikeRepository from "../infras/repositories/IPostLikeRepository";
 import Logger from '../../../config/Logger';
 import Error from '../../../config/Error';
 import { Client } from '@googlemaps/google-maps-services-js';
@@ -14,6 +15,7 @@ class PostFacade {
     constructor(
         private _awsS3: IAwsS3,
         private _postRepository: IPostRepository,
+        private _postLikeRepository: IPostLikeRepository,
         private _userRelationshipRepository: IUserRelationshipRepository,
         private _feedRepository: IFeedRepository
     ) {
@@ -189,6 +191,164 @@ class PostFacade {
             });
 
             return resolve(true);
+        });
+    }
+
+    /**
+     * To like or unlike a post.
+     * @param postId
+     * @param userCognitoSub
+     * @returns Promise<void | {
+     *         message: string,
+     *         data: boolean,
+     *         code: number
+     *     }>
+     */
+    likeOrUnlikePost(postId: number, userCognitoSub: string): Promise<void | {
+        message: string,
+        data: { liked: boolean } | { unliked: boolean },
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+           const post = await this._postRepository.getPostById(postId).catch((error) => {
+               this._log.error({
+                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                   payload: {
+                       postId,
+                       userCognitoSub
+                   }
+               });
+
+               return reject({
+                   message: Error.DATABASE_ERROR.GET,
+                   code: 500
+               });
+           });
+
+           // check if post exists first.
+           if (!post) {
+               return reject({
+                   message: 'Post does not exist.',
+                   code: 404
+               });
+           }
+
+           const liked = await this._postLikeRepository.getByIdAndUserId(postId, userCognitoSub).catch((error) => {
+               this._log.error({
+                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                   payload: {
+                       postId,
+                       userCognitoSub
+                   }
+               });
+
+               return reject({
+                   message: Error.DATABASE_ERROR.GET,
+                   code: 500
+               });
+           });
+
+           // check if the user has already liked the post
+           if (liked) {
+               const unlikeResult = await this._unlikePost(postId, userCognitoSub).catch((error) => {
+                  return reject(error);
+               });
+
+               return resolve(unlikeResult);
+           } else {
+               const likeResult = await this._likePost(postId, userCognitoSub).catch((error) => {
+                  return reject(error);
+               });
+
+               return resolve(likeResult);
+           }
+        });
+    }
+
+    /**
+     * To like a post.
+     * @param postId
+     * @param userCognitoSub
+     * @returns Promise<{
+     *         message: string,
+     *         data: {
+     *             liked: boolean
+     *         },
+     *         code: number
+     *     }>
+     */
+    private _likePost(postId: number, userCognitoSub: string): Promise<{
+        message: string,
+        data: {
+            liked: boolean
+        },
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+           await this._postLikeRepository.create({userCognitoSub, postId}).save().catch((error) => {
+               this._log.error({
+                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                   payload: {
+                       postId,
+                       userCognitoSub
+                   }
+               });
+
+               return reject({
+                   message: Error.DATABASE_ERROR.CREATE,
+                   code: 500
+               });
+           });
+
+           return resolve({
+               message: 'Post successfully liked.',
+               data: {
+                   liked: true
+               },
+               code: 200
+           });
+        });
+    }
+
+    /**
+     * To unlike a post.
+     * @param postId
+     * @param userCognitoSub
+     * @returns Promise<{
+     *         message: string,
+     *         data: {
+     *             unliked: boolean
+     *         },
+     *         code: number
+     *     }>
+     */
+    private _unlikePost(postId: number, userCognitoSub: string): Promise<{
+        message: string,
+        data: {
+            unliked: boolean
+        },
+        code: number
+    }> {
+        return new Promise(async (resolve,reject) => {
+            await this._postLikeRepository.deleteByIdAndUserId(postId, userCognitoSub).catch((error) => {
+                this._log.error({
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    payload: {
+                        postId,
+                        userCognitoSub
+                    }
+                });
+
+                return reject(Error.DATABASE_ERROR.DELETE);
+            });
+
+            return resolve({
+                message: 'Post successfully unliked.',
+                data: {
+                    unliked: true
+                },
+                code: 200
+            });
         });
     }
 }

@@ -1,6 +1,7 @@
 import awsS3 from "../../modules/content-service/infras/aws/AwsS3";
 import postRepository from "../../modules/content-service/infras/repositories/PostRepository";
 import postShareRepository from "../../modules/content-service/infras/repositories/PostShareRepository";
+import postLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository";
 
 import userRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
 import feedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
@@ -21,7 +22,7 @@ class ContentController {
     private _postShareFacade;
 
     constructor() {
-        this._postFacade = new postFacade(new awsS3(), new postRepository(), new userRelationshipRepository(), new feedRepository());
+        this._postFacade = new postFacade(new awsS3(), new postRepository(), new postLikeRepository(), new userRelationshipRepository(), new feedRepository());
         this._postShareFacade = new postShareFacade(new postShareRepository(), new postRepository());
     }
 
@@ -338,6 +339,59 @@ class ContentController {
                     message: error.message,
                     error: 'Internal server error',
                     status: 500
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async likeOrUnlikePost(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.postId) {
+            return res.status(400).json({
+                message: errors.postId.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (!req.session.user) {
+            return res.status(401).json({
+                message: 'Please login and try again.',
+                error: 'Unauthenticated',
+                status: 401
+            });
+        }
+
+        try {
+            const postId = req.body.postId;
+            const userCognitoSub: string = req.session.user.sub;
+
+            const likeOrUnlikePostResult = await this._postFacade.likeOrUnlikePost(postId, userCognitoSub);
+
+            return res.status(likeOrUnlikePostResult.code).json({
+                message: likeOrUnlikePostResult.message,
+                payload: likeOrUnlikePostResult.data,
+                code: likeOrUnlikePostResult.code
+            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
                 });
             } else {
                 return res.status(520).json({
