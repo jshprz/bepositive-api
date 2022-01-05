@@ -57,6 +57,16 @@ export const createPostApiValidation = [
   check('google_maps_place_id').isString().withMessage('google_maps_place_id should be type of string.')
 ];
 
+export const likeOrUnlikePostApiValidation = [
+  check('postId').not().isEmpty().withMessage('Post ID property is required and must be a number').custom((value) => {
+    if (typeof(value) == 'string' || value === undefined || value === null || value.length === 0 ) {
+      return Promise.reject('Post ID property is required and must be a number');
+    } else {
+      return Promise.resolve();
+    }
+  })
+];
+
 function validateKey(extension: string): {isFailed: boolean, message: string | null} {
     switch (extension) {
       case '.jpg':
