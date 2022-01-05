@@ -1,5 +1,4 @@
-import { Posts } from "../../../../database/postgresql/models/Posts";
-import {UpdateResult} from "typeorm";
+import { UpdateResult } from "typeorm";
 
 interface IPostRepository {
     create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string });
