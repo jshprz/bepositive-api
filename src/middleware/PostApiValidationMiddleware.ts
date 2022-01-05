@@ -2,17 +2,26 @@ import { check } from "express-validator";
 import path from 'path';
 import mime from 'mime';
 
+export const getSharedPostByIdApiValidation = [
+  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
+];
+
+export const sharePostByIdApiValidation = [
+  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
+  check('shareCaption').not().isEmpty().withMessage('shareCaption property is required.')
+];
+
 export const removePostApiValidation = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric(),
+  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
 ];
 
 export const updatePostApiValidation = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric(),
+  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
   check('caption').not().isEmpty().withMessage('caption property is required.')
 ];
 
 export const getPostByIdApiValidation = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric()
+  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.')
 ];
 
 export const createPostApiValidation = [

@@ -1,10 +1,12 @@
 import awsS3 from "../../modules/content-service/infras/aws/AwsS3";
 import postRepository from "../../modules/content-service/infras/repositories/PostRepository";
+import postShareRepository from "../../modules/content-service/infras/repositories/PostShareRepository";
 
 import userRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
 import feedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
 
 import postFacade from "../../modules/content-service/facades/PostFacade";
+import postShareFacade from "../../modules/content-service/facades/PostShareFacade";
 
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
@@ -16,9 +18,11 @@ import '../../declarations/DExpressSession';
 
 class ContentController {
     private _postFacade;
+    private _postShareFacade;
 
     constructor() {
         this._postFacade = new postFacade(new awsS3(), new postRepository(), new userRelationshipRepository(), new feedRepository());
+        this._postShareFacade = new postShareFacade(new postShareRepository(), new postRepository());
     }
 
     async createPost(req: Request, res: Response) {
@@ -239,6 +243,109 @@ class ContentController {
                 error: 'Internal server error',
                 status: 500
             });
+        }
+    }
+
+    async sharePostById(req: Request, res: Response) {
+
+        const errors = validationResult(req).mapped();
+
+        if (errors.id) {
+            return res.status(400).json({
+                message: errors.postId.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.shareCaption) {
+            return res.status(400).json({
+                message: errors.shareCaption.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (!req.session.user) {
+            return res.status(401).json({
+                message: 'Please login and try again.',
+                error: 'Unauthenticated',
+                status: 401
+            });
+        }
+
+        try {
+            const { shareCaption } = req.body;
+            const userId: string = req.session.user.sub;
+            const postId: number = Number(req.params.id);
+
+            const sharedPost = await this._postShareFacade.createSharedPost(postId, {userId, postId, shareCaption});
+
+            return res.status(200).json({
+                message: sharedPost.message,
+                payload: {},
+                status: sharedPost.code
+            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async getSharedPostById(req: Request, res: Response) {
+
+        const errors = validationResult(req).mapped();
+
+        if (errors.id) {
+            return res.status(400).json({
+                message: errors.id.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (!req.session.user) {
+            return res.status(401).json({
+                message: 'Please login and try again.',
+                error: 'Unauthenticated',
+                status: 401
+            });
+        }
+
+        try {
+            const sharedPostId = Number(req.params.id);
+            const sharedPost = await this._postShareFacade.getSharedPostById(sharedPostId);
+
+            return res.status(200).json({
+                message: sharedPost.message,
+                payload: sharedPost.data,
+                status: sharedPost.code
+            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 }
