@@ -1,6 +1,6 @@
 import express from 'express';
 import { getConnection } from './src/config/Database';
-import { apis } from './src/routes/index';
+import { apis } from './src/routes';
 import Logger from './src/config/Logger';
 import session from 'express-session';
 import multer from 'multer';
@@ -38,6 +38,7 @@ const main = async () => {
   app.use('/api/v1/post', apis.PostApi);
   app.use('/api/v1/feed', apis.UserFeedApi);
   app.use('/api/v1/location', apis.LocationApi);
+  app.use('/api/v1/comment', apis.CommentApi);
 
   app.listen(port, () => {
     logger.info({
