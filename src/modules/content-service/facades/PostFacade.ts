@@ -83,7 +83,7 @@ class PostFacade {
         return new Promise(async (resolve, reject) => {
             const posts = await this._postRepository.getPostsByUserCognitoSub(userCognitoSub).catch((error) => {
                 this._log.error({
-                    message: error,
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                     payload: { userCognitoSub }
                 });
 
@@ -114,7 +114,7 @@ class PostFacade {
         return new Promise(async (resolve, reject) => {
             const post = await this._postRepository.getPostById(id).catch((error) => {
                 this._log.error({
-                    message: error,
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                     payload: { id }
                 });
 
@@ -154,7 +154,7 @@ class PostFacade {
         return new Promise(async (resolve, reject) => {
             const post = await this._postRepository.getPostById(id).catch((error) => {
                 this._log.error({
-                    message: error,
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                     payload: {
                         id,
                         caption
@@ -183,7 +183,7 @@ class PostFacade {
         return new Promise(async (resolve, reject) => {
             await this._postRepository.removePostById(id).catch((error) => {
                 this._log.error({
-                    message: error,
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                     payload: { id }
                 });
 
