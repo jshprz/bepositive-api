@@ -7,6 +7,9 @@ import commentFacade from "../../modules/comment-service/facades/CommentFacade";
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 
+// Declaration merging on express-session
+import '../../declarations/DExpressSession';
+
 class CommentController {
     private _commentFacade;
 
