@@ -1,3 +1,4 @@
+// @ts-ignore
 import CognitoExpress from 'cognito-express';
 import { AccessTokens } from '../database/postgresql/models/AccessTokens';
 import { getRepository } from 'typeorm';

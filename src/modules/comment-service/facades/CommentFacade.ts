@@ -4,6 +4,8 @@ import Error from '../../../config/Error';
 
 import IPostRepository from "../../content-service/infras/repositories/IPostRepository"; // External
 
+import { QueryFailedError } from "typeorm";
+
 class CommentFacade {
     private _log;
 
@@ -13,7 +15,6 @@ class CommentFacade {
 
     /**
      * Validate the post id and add a comment.
-     * @param postId
      * @param commentAttr: {userCognitoSub: string, postId: number, content: string}
      * @returns Promise<{
      *         message: string,
@@ -45,9 +46,9 @@ class CommentFacade {
                });
            }
 
-           await this._commentRepository.create(commentAttr).save().catch((error) => {
+           await this._commentRepository.create(commentAttr).save().catch((error: QueryFailedError) => {
                this._log.error({
-                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                   message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                    payload: {
                        commentAttr
                    }

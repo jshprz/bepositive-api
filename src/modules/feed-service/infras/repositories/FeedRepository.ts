@@ -13,15 +13,15 @@ class FeedRepository {
      * Creates a follower's feed.
      * @param userId: string
      * @param postId: number | undefined
-     * @returns instance of UserFeeds
+     * @returns Promise<UserFeeds>
      */
-    create(userId: string, postId: number | undefined) {
+    create(userId: string, postId: number | undefined): Promise<UserFeeds> {
 
         this._model.user_id = userId;
         this._model.post_id = postId;
         this._model.created_at = Number(Date.now());
 
-        return this._model;
+        return this._model.save();
     }
 
     /**

@@ -8,6 +8,8 @@ import { Client } from '@googlemaps/google-maps-services-js';
 import IUserRelationshipRepository from "../../user-service/infras/repositories/IUserRelationshipRepository"; // External
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
+import { QueryFailedError } from "typeorm";
+
 class PostFacade {
     private _log;
     private _googleapis;
@@ -32,14 +34,14 @@ class PostFacade {
     createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<string[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const promises: string[] = [];
+                const promises: any[] = [];
                 item.files.forEach((file: {key: string, type: string}) => {
                     promises.push(this._awsS3.presignedPutUrl(file.key, file.type, 'public-read'));
                 });
 
-                const post = await this._postRepository.create(item).save().catch((error) => {
+                const post = await this._postRepository.create(item).save().catch((error: QueryFailedError) => {
                     this._log.error({
-                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                         payload: item
                     });
 
@@ -55,15 +57,29 @@ class PostFacade {
                     return reject(Error.DATABASE_ERROR.GET);
                 });
 
-                followers.forEach((follower) => {
-                    const userId = follower.user_relationships_user_id;
-                    promises.push(this._feedRepository.create(userId, post.id).save());
-                });
+                // If the followers is not an array, it should be an error.
+                if (Array.isArray(followers) && post) {
+                    followers.forEach((follower) => {
+                        const userId = follower.user_relationships_user_id;
+                        promises.push(this._feedRepository.create(userId, post.id));
+                    });
+                } else {
+                    this._log.error({
+                        function: 'createPost()',
+                        message: `An error occurred while retrieving the followers: ${followers}`,
+                        payload: item
+                    });
+
+                    return reject({
+                        message: 'An error occurred while retrieving the followers',
+                        code: 500
+                    });
+                }
 
                 Promise.all(promises).then(async (result: string[]) => {
                     return resolve(result);
                 });
-            } catch (error) {
+            } catch (error: any) {
                 this._log.error({
                     message: error,
                     payload: item
@@ -84,13 +100,13 @@ class PostFacade {
             const posts = await this._postRepository.getPostsByUserCognitoSub(userCognitoSub).catch((error) => {
                 this._log.error({
                     message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                    payload: { userCognitoSub }
+                    payload: {userCognitoSub}
                 });
 
                 return reject(Error.DATABASE_ERROR.GET);
             });
 
-            const processPosts = posts.map((post) => {
+            const processPosts = posts.map((post: { posts_id: number; posts_s3_files: { key: string }[]; }) => {
                 const { posts_id, posts_s3_files } = post;
 
                 posts_s3_files[0].key = `${process.env.AWS_S3_BUCKET_URL}/${posts_s3_files[0].key}`; // S3 object file URL.
@@ -115,7 +131,7 @@ class PostFacade {
             const post = await this._postRepository.getPostById(id).catch((error) => {
                 this._log.error({
                     message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                    payload: { id }
+                    payload: {id}
                 });
 
                 return reject(Error.DATABASE_ERROR.GET);
@@ -135,7 +151,7 @@ class PostFacade {
             }
 
             if (post?.s3_files) {
-                post.s3_files.forEach((file) => {
+                post.s3_files.forEach((file: { key: string; }) => {
                     file.key = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
                 });
             }
@@ -184,7 +200,7 @@ class PostFacade {
             await this._postRepository.removePostById(id).catch((error) => {
                 this._log.error({
                     message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                    payload: { id }
+                    payload: {id}
                 });
 
                 return reject(Error.DATABASE_ERROR.UPDATE);
@@ -198,13 +214,13 @@ class PostFacade {
      * To like or unlike a post.
      * @param postId
      * @param userCognitoSub
-     * @returns Promise<void | {
+     * @returns Promise<{
      *         message: string,
-     *         data: boolean,
+     *         data: { liked: boolean } | { unliked: boolean },
      *         code: number
      *     }>
      */
-    likeOrUnlikePost(postId: number, userCognitoSub: string): Promise<void | {
+    likeOrUnlikePost(postId: number, userCognitoSub: string): Promise<{
         message: string,
         data: { liked: boolean } | { unliked: boolean },
         code: number
@@ -254,13 +270,18 @@ class PostFacade {
                   return reject(error);
                });
 
-               return resolve(unlikeResult);
+               if (unlikeResult && unlikeResult.message && unlikeResult.data && unlikeResult.code) {
+                   return resolve(unlikeResult);
+               }
+
            } else {
                const likeResult = await this._likePost(postId, userCognitoSub).catch((error) => {
                   return reject(error);
                });
 
-               return resolve(likeResult);
+               if (likeResult && likeResult.message && likeResult.data && likeResult.code) {
+                   return resolve(likeResult);
+               }
            }
         });
     }
@@ -285,9 +306,9 @@ class PostFacade {
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-           await this._postLikeRepository.create({userCognitoSub, postId}).save().catch((error) => {
+           await this._postLikeRepository.create({userCognitoSub, postId}).save().catch((error: QueryFailedError) => {
                this._log.error({
-                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                   message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                    payload: {
                        postId,
                        userCognitoSub

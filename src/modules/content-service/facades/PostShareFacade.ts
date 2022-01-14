@@ -2,6 +2,7 @@ import IPostShareRepository from "../infras/repositories/IPostShareRepository";
 import IPostRepository from "../infras/repositories/IPostRepository";
 import Logger from "../../../config/Logger";
 import Error from '../../../config/Error';
+import { QueryFailedError } from "typeorm";
 
 class PostShareFacade {
     private _log;
@@ -41,10 +42,10 @@ class PostShareFacade {
                 });
             }
 
-            await this._postShareRepository.create(sharedPostAttr).save().catch((error) => {
+            await this._postShareRepository.create(sharedPostAttr).save().catch((error: QueryFailedError) => {
                 this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                    payload: { sharedPostAttr }
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {sharedPostAttr}
                 });
 
                 return reject({
@@ -91,7 +92,7 @@ class PostShareFacade {
             const sharedPost = await this._postShareRepository.get(postId).catch((error) => {
                this._log.error({
                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                   payload: { postId }
+                   payload: {postId}
                });
 
                return reject({

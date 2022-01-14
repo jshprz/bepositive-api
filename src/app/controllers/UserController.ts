@@ -14,6 +14,7 @@ import { validationResult } from "express-validator";
 
 // Declaration merging on express-session
 import '../../declarations/DExpressSession';
+import '../../declarations/DAwsCognito'
 
 class UserController {
 
@@ -376,10 +377,16 @@ class UserController {
         try {
             const accessToken = req.headers.authorization?.split(' ')[1];
             const profile = await this._userAccountFacade.getUserProfile(accessToken || '');
-            const userProfile:any | {} = {
-                username: profile.Username
+            const userProfile = {
+                username: profile.Username,
+                sub: '',
+                email_verified: '',
+                name: '',
+                email: ''
             }
+
             profile.UserAttributes.forEach(attr => {
+                // @ts-ignore
                 userProfile[attr.Name] = attr.Value;
             });
 

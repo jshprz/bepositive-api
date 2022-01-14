@@ -31,8 +31,9 @@ class RegistrationFacade {
         return new Promise((resolve, reject) => {
            const cognitoAttributeList = this._awsCognito.cognitoUserAttributeList(body.email, body.name);
 
-           this._awsCognito.userPool().signUp(body.email, body.password, cognitoAttributeList, [], (error: any, result: ISignUpResult | void) => {
-              if (error) {
+           this._awsCognito.userPool().signUp(body.email, body.password, cognitoAttributeList, [], (error: any, result?: ISignUpResult) => {
+
+               if (error) {
                   this._log.error({
                       message: error,
                       payload: body
@@ -60,8 +61,8 @@ class RegistrationFacade {
            this._awsCognito.getCognitoUser(body.email).confirmRegistration(body.verifyCode, true, (error: any, result: string) => {
               if (error) {
                   this._log.error({
-                     message: error,
-                     payload: body
+                      message: error,
+                      payload: body
                   });
 
                   if (error.code && (error.code === 'CodeMismatchException' || error.code === 'ExpiredCodeException')) {
@@ -90,12 +91,12 @@ class RegistrationFacade {
                }
                // other user attributes like phone_number or email themselves, etc
                ],
-               UserPoolId: process.env.AWS_COGNITO_POOL_ID,
+               UserPoolId: String(process.env.AWS_COGNITO_POOL_ID),
                Username: email
-           }, (error: string) => {
+           }, (error: Error) => {
                if (error) {
                    this._log.error({
-                       message: error,
+                       message: error.toString(),
                        payload: { email }
                    });
 
@@ -115,13 +116,13 @@ class RegistrationFacade {
     resendAccountConfirmationCode(email: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
             this._awsCognito.getAwsCognitoClient().resendConfirmationCode({
-                ClientId: process.env.AWS_COGNITO_APP_CLIENT_ID,
+                ClientId: String(process.env.AWS_COGNITO_APP_CLIENT_ID),
                 Username: email
-            }, (error) => {
+            }, (error?: Error) => {
                 if (error) {
                     this._log.error({
-                        message: error,
-                        payload: { email }
+                        message: error.toString(),
+                        payload: {email}
                     });
                     return reject(error);
                 } else {

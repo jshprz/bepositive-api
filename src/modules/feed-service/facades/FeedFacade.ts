@@ -44,9 +44,23 @@ class FeedFacade {
 
             const followings: string[] = [userCognitoSub]; // the current logged in user should also see their posts on their newsfeed
 
-            rawFollowings.map((following) => {
-                followings.push(following.user_relationships_user_id);
-            });
+            // If the rawFollowings is not an array, it should be an error.
+            if (Array.isArray(rawFollowings)) {
+                rawFollowings.map((following) => {
+                    followings.push(following.user_relationships_user_id);
+                });
+            } else {
+                this._log.error({
+                    function: 'getFeed()',
+                    message: `An error occurred while retrieving the rawFollowings: ${rawFollowings}`,
+                    payload: {userCognitoSub, pagination, followings}
+                });
+
+                return reject({
+                    message: 'An error occurred while retrieving the rawFollowings',
+                    code: 500
+                });
+            }
 
             const feed = await this._feedRepository.getFeed(pagination, followings).catch((error) => {
                 this._log.error({
