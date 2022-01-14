@@ -13,9 +13,9 @@ class PostShareRepository implements IPostShareRepository {
     /**
      * Creates post share  record.
      * @param item: { userId: string, postId: number, shareCaption: string }
-     * @returns Promise<number|undefined>
+     * @returns instance of PostShares
      */
-    create(item: { userId: string, postId: number, shareCaption: string }) {
+    create(item: { userId: string, postId: number, shareCaption: string }): PostShares {
 
         this._model.post_id = item.postId;
         this._model.user_id = item.userId;

@@ -26,10 +26,10 @@ class Password {
             const cognitoUser = this._awsCognito.getCognitoUser(email);
 
             cognitoUser.forgotPassword({
-                onSuccess: (result) => resolve(result),
-                onFailure: (error) => {
+                onSuccess: (result: string | PromiseLike<string>) => resolve(result),
+                onFailure: (error: any) => {
                     this._log.error({
-                        message: error.toString(),
+                        message: error,
                         payload: { email }
                     });
 
@@ -47,7 +47,7 @@ class Password {
     resetPassword(body: resetPasswordParamTypes): Promise<string> {
         return new Promise((resolve, reject) => {
             this._awsCognito.getCognitoUser(body.email).confirmPassword(body.verifyCode, body.newPassword, {
-                onSuccess: (result) => resolve(result),
+                onSuccess: (result: string | PromiseLike<string>) => resolve(result),
                 onFailure: (error: any) => {
                     this._log.error({
                         message: error,

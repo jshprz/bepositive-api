@@ -14,7 +14,7 @@ class PostLikeRepository implements IPostLikeRepository {
      * @param item: {userCognitoSub: string, postId: number}
      * @returns instance of PostLikes
      */
-    create(item: {userCognitoSub: string, postId: number}) {
+    create(item: {userCognitoSub: string, postId: number}): PostLikes {
 
             this._model.user_id = item.userCognitoSub;
             this._model.post_id = item.postId;

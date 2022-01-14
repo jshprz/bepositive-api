@@ -8,7 +8,7 @@ class CommentRepository implements ICommentRepository {
         this._model = new Comments();
     }
 
-    create(item: {userCognitoSub: string, postId: number, content: string}) {
+    create(item: {userCognitoSub: string, postId: number, content: string}): Comments {
 
         this._model.user_id = item.userCognitoSub;
         this._model.post_id = item.postId;

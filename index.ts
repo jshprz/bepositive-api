@@ -50,7 +50,7 @@ const main = async () => {
 
 main().catch(err => {
   logger.error({
-    message: err,
-    payload: {}
+      message: err,
+      payload: {}
   });
 });

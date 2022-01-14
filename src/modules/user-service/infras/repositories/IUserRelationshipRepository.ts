@@ -1,5 +1,12 @@
 interface IUserRelationshipRepository {
-    get(follower: boolean, userCognitoSub: string): Promise<any>;
+    get(follower: boolean, userCognitoSub: string): Promise<{
+        user_relationships_id: number,
+        user_relationships_user_id: string,
+        user_relationships_following_id: string,
+        user_relationships_created_at: number,
+        user_relationships_updated_at: number,
+        user_relationships_deleted_at: number
+    }[]>;
 }
 
 export default IUserRelationshipRepository;
