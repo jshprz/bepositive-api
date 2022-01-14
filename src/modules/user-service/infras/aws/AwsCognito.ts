@@ -19,9 +19,9 @@ class AwsCognito implements IAwsCognito{
    * @returns instance of CognitoUserPool from 'amazon-cognito-identity-js' library.
    */
   userPool(): CognitoUserPool {
-    const poolData: any = {
-      UserPoolId: process.env.AWS_COGNITO_POOL_ID,
-      ClientId: process.env.AWS_COGNITO_APP_CLIENT_ID
+    const poolData = {
+      UserPoolId: String(process.env.AWS_COGNITO_POOL_ID),
+      ClientId: String(process.env.AWS_COGNITO_APP_CLIENT_ID)
     };
 
     return new CognitoUserPool(poolData);
@@ -31,9 +31,9 @@ class AwsCognito implements IAwsCognito{
    * Sets AWS Cognito user attribute.
    * @param email string
    * @param name string
-   * @returns any[]
+   * @returns CognitoUserAttribute[]
    */
-  cognitoUserAttributeList(email: string, name: string): any[] {
+  cognitoUserAttributeList(email: string, name: string): CognitoUserAttribute[] {
     const attribute = (key: string, value: string) => {
       return {
         Name: key,
@@ -52,7 +52,7 @@ class AwsCognito implements IAwsCognito{
    * @param email string
    * @returns instance of CognitoUser from 'amazon-cognito-identity-js' library.
    */
-  getCognitoUser(email: string) {
+  getCognitoUser(email: string): CognitoUser {
     const userData = {
       Username: email,
       Pool: this.userPool()
@@ -66,7 +66,7 @@ class AwsCognito implements IAwsCognito{
    * @param body {email: string, password: string}
    * @returns instance of AuthenticationDetails from 'amazon-cognito-identity-js' library.
    */
-  getAuthenticationDetails(body: {email: string, password: string}) {
+  getAuthenticationDetails(body: {email: string, password: string}): AuthenticationDetails {
     const authenticationData = { Username: body.email, Password: body.password };
 
     return new AuthenticationDetails(authenticationData);
@@ -76,7 +76,7 @@ class AwsCognito implements IAwsCognito{
    * Gets AWS Cognito client instance.
    * @returns instance of cognitoIdentityServiceProvider
    */
-  getAwsCognitoClient() {
+  getAwsCognitoClient(): AWS.CognitoIdentityServiceProvider {
     return this._client;
   }
 }

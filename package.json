@@ -52,6 +52,7 @@
       "winston": "^3.3.3"
    },
    "devDependencies": {
+      "@types/uniqid": "^5.3.2",
       "nodemon": "^2.0.13"
    }
 }

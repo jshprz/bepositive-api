@@ -14,7 +14,7 @@ class PostRepository implements IPostRepository {
      * @param item: {userCognitoSub: string, caption: string, s3Files: {key: string, type: string}[] }
      * @returns instance of Posts
      */
-    create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }) {
+    create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Posts {
 
         this._model.user_id = item.userCognitoSub;
         this._model.caption = item.caption;

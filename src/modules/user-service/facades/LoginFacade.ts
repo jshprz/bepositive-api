@@ -31,10 +31,10 @@ class LoginFacade {
            const authenticationDetails = this._awsCognito.getAuthenticationDetails(body);
 
            this._awsCognito.getCognitoUser(body.email).authenticateUser(authenticationDetails, {
-               onSuccess: result => resolve(result),
-               onFailure: error => {
+               onSuccess: (result: CognitoUserSession | PromiseLike<CognitoUserSession>) => resolve(result),
+               onFailure: (error: { code: string; }) => {
                    this._log.error({
-                       message: error,
+                       message: error.toString(),
                        payload: body
                    });
                    if (error.code && (error.code === 'NotAuthorizedException' || error.code === 'UserNotConfirmedException')) {
@@ -57,11 +57,11 @@ class LoginFacade {
            const param = {
                AccessToken: req.session.accessToken,
            };
-           this._awsCognito.getAwsCognitoClient().globalSignOut(param, (error: string) => {
+           this._awsCognito.getAwsCognitoClient().globalSignOut(param, (error: Error) => {
               if (error) {
                   this._log.error({
-                     message: error,
-                     payload: req.session
+                      message: error.toString(),
+                      payload: req.session
                   });
 
                   return reject(Error.AWS_COGNITO_ERROR);

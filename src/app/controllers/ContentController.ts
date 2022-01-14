@@ -65,11 +65,13 @@ class ContentController {
             const userCognitoSub: string = req.session.user.sub;
             const { caption, files, googlemapsPlaceId } = req.body;
 
-            // We append which folder inside S3 bucket the file will be uploaded.
-            // We make the filename unique.
-            files.forEach((file) => {
-                file.key = `${config.POST_UPLOAD_FOLDER_PATH}/${uniqid()}_${file.key}`;
-            });
+            if (Array.isArray(files)) {
+                // We append which folder inside S3 bucket the file will be uploaded.
+                // We make the filename unique.
+                files.forEach((file) => {
+                    file.key = `${config.POST_UPLOAD_FOLDER_PATH}/${uniqid()}_${file.key}`;
+                });
+            }
 
             const uploadSignedUrls = await this._postFacade.createPost({userCognitoSub, caption, files, googlemapsPlaceId});
 
@@ -140,7 +142,8 @@ class ContentController {
         }
 
         try {
-            const post = await this._postFacade.getPostById(req.params.id);
+            const id = Number(req.params.id);
+            const post = await this._postFacade.getPostById(id);
 
             return res.status(200).json({
                 message: 'Post retrieved',
@@ -188,8 +191,10 @@ class ContentController {
         }
 
         try {
+            const id = Number(req.params.id);
+            const caption = String(req.body.caption);
 
-            await this._postFacade.updatePost(req.params.id, req.body.caption);
+            await this._postFacade.updatePost(id, caption);
 
             return res.status(200).json({
                 message: 'The post was updated successfully.',
@@ -228,8 +233,8 @@ class ContentController {
         }
 
         try {
-
-            await this._postFacade.removePost(req.params.id);
+            const id = Number(req.params.id);
+            await this._postFacade.removePost(id);
 
             return res.status(200).json({
                 message: 'The post was successfully deleted.',

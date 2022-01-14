@@ -31,41 +31,31 @@ const logger = createLogger({
     ]
 });
 
+type argsType = { function?: string, message: string, payload: any };
 
-function log(level, context, args) {
-    let msg = '[' + context + ']';
-    let err;
-    args.forEach(arg => {
-        msg += ' ';
-        if (typeof arg == "object") {
-            if (arg && arg.stack && arg.message) {
-                // Duck type for Error
-                err = arg;
-            } else {
-                msg += JSON.stringify(arg);
-            }
-        } else {
-            msg += arg;
-        }
-    })
+function log(level: string, context: string, args: argsType) {
+    let msg = '[' + context + '] ';
+    msg += (args.function)? `function: ${args.function}, `: ' ';
+    msg += `MESSAGE: ${JSON.stringify(args.message)}, `;
+    msg += `DATA: ${JSON.stringify(args.payload)}`;
 
-    logger.log(level, msg, err);
+    logger.log(level, msg);
 }
 
 const Logger = {
-    createLogger(context) {
+    createLogger(context: string) {
         if (!context) context = "???";
         return {
-            debug(...args) {
+            debug(args: argsType) {
                 log('debug', context, args);
             },
-            info(...args) {
+            info(args: argsType) {
                 log('info', context, args);
             },
-            warn(...args) {
+            warn(args: argsType) {
                 log('warn', context, args);
             },
-            error(...args) {
+            error(args: argsType) {
                 log('error', context, args);
             },
         }
