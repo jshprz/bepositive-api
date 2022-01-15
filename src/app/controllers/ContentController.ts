@@ -355,6 +355,68 @@ class ContentController {
         }
     }
 
+    async updateSharedPost(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.id) {
+            return res.status(400).json({
+                message: errors.id.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.shareCaption) {
+            return res.status(400).json({
+                message: errors.shareCaption.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (!req.session.user) {
+            return res.status(401).json({
+                message: 'Please login and try again.',
+                error: 'Unauthenticated',
+                status: 401
+            });
+        }
+
+        try {
+            const sharedPostId = Number(req.params.id);
+            const userCognitoSub = req.session.user.sub;
+            const shareCaption = req.body.shareCaption;
+
+            const updateSharedPostResult = await this._postShareFacade.updateSharedPost(sharedPostId, userCognitoSub, shareCaption);
+
+            return res.status(updateSharedPostResult.code).json({
+               message: updateSharedPostResult.message,
+               payload: updateSharedPostResult.data,
+               status: updateSharedPostResult.code
+            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
     async likeOrUnlikePost(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
@@ -383,7 +445,7 @@ class ContentController {
             return res.status(likeOrUnlikePostResult.code).json({
                 message: likeOrUnlikePostResult.message,
                 payload: likeOrUnlikePostResult.data,
-                code: likeOrUnlikePostResult.code
+                status: likeOrUnlikePostResult.code
             });
         } catch (error: any) {
             if (error.code && error.code === 500) {
