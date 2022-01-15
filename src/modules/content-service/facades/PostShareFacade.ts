@@ -121,6 +121,73 @@ class PostShareFacade {
             });
         });
     }
+
+    /**
+     * Checks the existence of the shared post via id and userCognitoSub and then updates it.
+     * @param id: number
+     * @param userCognitoSub: string
+     * @param shareCaption: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
+    updateSharedPost(id: number, userCognitoSub: string, shareCaption: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            // Check the existence of the shared post by getting it via its id and user_id.
+            const sharedPost = await this._postShareRepository.getByIdAndUserCognitoSub(id, userCognitoSub).catch((error) => {
+                this._log.error({
+                    function: 'updateSharedPost()',
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    payload: {
+                        id,
+                        userCognitoSub,
+                        shareCaption
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if ((sharedPost && !sharedPost.id) || !sharedPost) {
+                return reject({
+                    message: 'Shared post not found',
+                    code: 404
+                });
+            }
+
+            await this._postShareRepository.update(id, shareCaption).catch((error) => {
+                this._log.error({
+                    function: 'updateSharedPost()',
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    payload: {
+                        id,
+                        userCognitoSub,
+                        shareCaption
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.UPDATE,
+                    code: 500
+                });
+            });
+
+            return resolve({
+                message: 'The shared post has been updated successfully',
+                data: {},
+                code: 204
+            });
+        });
+    }
 }
 
 export default PostShareFacade;

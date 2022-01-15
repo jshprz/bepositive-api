@@ -2,6 +2,11 @@ import { check } from "express-validator";
 import path from 'path';
 import mime from 'mime';
 
+export const updateSharedPost = [
+  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
+  check('shareCaption').not().isEmpty().withMessage('shareCaption property is required.')
+];
+
 export const getSharedPostByIdApiValidation = [
   check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
 ];

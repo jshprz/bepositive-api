@@ -9,7 +9,8 @@ import {
   removePostApiValidation,
   sharePostByIdApiValidation,
   getSharedPostByIdApiValidation,
-  likeOrUnlikePostApiValidation
+  likeOrUnlikePostApiValidation,
+  updateSharedPost,
 } from '../middleware/PostApiValidationMiddleware';
 
 const router = express.Router();
@@ -22,6 +23,7 @@ router.patch('/update/:id', [authMiddleWare, ...updatePostApiValidation], (req: 
 router.patch('/remove/:id', [authMiddleWare, ...removePostApiValidation], (req: Request, res: Response) => contentController.removePost(req, res));
 router.post('/share/:id', [authMiddleWare, ...sharePostByIdApiValidation], (req: Request, res: Response) => contentController.sharePostById(req, res));
 router.get('/share/get/:id', [authMiddleWare, ...getSharedPostByIdApiValidation], (req: Request, res: Response) => contentController.getSharedPostById(req, res));
+router.patch('/share/update/:id', [authMiddleWare, ...updateSharedPost], (req: Request, res: Response) => contentController.updateSharedPost(req, res));
 router.post('/like', [authMiddleWare, ...likeOrUnlikePostApiValidation], (req: Request, res: Response) => contentController.likeOrUnlikePost(req, res));
 
 export default router;
