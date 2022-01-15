@@ -25,6 +25,7 @@
       "@types/mime": "^2.0.3",
       "@types/multer": "^1.4.7",
       "@types/node": "^8.0.29",
+      "@types/uniqid": "^5.3.2",
       "amazon-cognito-identity-js": "^5.1.0",
       "aws-sdk": "^2.971.0",
       "cognito-express": "^2.0.19",
@@ -51,7 +52,6 @@
       "winston": "^3.3.3"
    },
    "devDependencies": {
-      "@types/uniqid": "^5.3.2",
       "nodemon": "^2.0.13"
    }
 }
