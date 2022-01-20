@@ -78,6 +78,72 @@ class CommentController {
             }
         }
     }
+
+    async updateComment(req: Request, res: Response) {
+
+        const errors = validationResult(req).mapped();
+
+        if (errors.id) {
+            return res.status(400).json({
+                message: errors.id.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.content) {
+            return res.status(400).json({
+                message: errors.caption.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (!req.session.user) {
+            return res.status(401).json({
+                message: 'Please login and try again.',
+                error: 'Unauthenticated',
+                status: 401
+            });
+        }
+
+        try {
+            const id = Number(req.params.id);
+            const content = String(req.body.content);
+
+            const result = await this._commentFacade.updateComment(id, req.session.user.sub, content);
+
+            return res.status(200).json({
+                message: result.message,
+                payload: result.data,
+                status: result.code
+            });
+
+        } catch (error:any) {
+
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                    });
+                }
+            else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                    });
+                }
+            else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                    });
+            }
+        }
+    }
 }
 
 export default CommentController;
