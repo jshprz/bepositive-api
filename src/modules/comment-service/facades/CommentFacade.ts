@@ -64,6 +64,56 @@ class CommentFacade {
            });
         });
     }
+
+    /**
+     * Update the content of the post comment.
+     * @param id: number
+     * @param userId: string
+     * @param content: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
+    updateComment(id: number, userId: string, content: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            const comment = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        id,
+                        userId,
+                        content
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (!comment || (comment && !comment.id)) {
+                return reject({
+                    message: 'Comment not found.',
+                    code: 404
+                });
+            }
+
+            await this._commentRepository.update(id, userId, content);
+
+            return resolve({
+                message: 'The comment was updated successfully.',
+                data: {},
+                code: 204
+            });
+        });
+    }
 }
 
 export default CommentFacade;
