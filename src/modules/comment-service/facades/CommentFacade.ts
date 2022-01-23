@@ -114,6 +114,55 @@ class CommentFacade {
             });
         });
     }
+
+    /**
+     * Remove a post comment by ID.
+     * @param id: number
+     * @param userId: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
+    removeComment(id: number, userId: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+
+        return new Promise(async (resolve, reject) => {
+            const comment = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        id,
+                        userId
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.UPDATE,
+                    code: 500
+                });
+            });
+
+            if (!comment || (comment && !comment.id)) {
+                return reject({
+                    message: 'Comment not found.',
+                    code: 404
+                });
+            }
+
+            await this._commentRepository.removeCommentById(id);
+
+            return resolve({
+                message: 'The comment was removed successfully.',
+                data: {},
+                code: 204
+            });
+        });
+    }
 }
 
 export default CommentFacade;
