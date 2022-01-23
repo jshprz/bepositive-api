@@ -88,6 +88,24 @@ class CommentRepository implements ICommentRepository {
             .andWhere('status != :status', {status: 'deleted'})
             .execute();
     }
+
+    /**
+     * Removes a post comment by id.
+     * @param id: number
+     * @returns Promise<UpdateResult>
+     */
+    removeCommentById(id: number): Promise<UpdateResult> {
+
+        return getRepository(Comments)
+            .createQueryBuilder('comments')
+            .update(Comments)
+            .set({
+                status: 'deleted',
+                deleted_at: Number(Date.now())
+            })
+            .where('id = :id', {id})
+            .execute();
+    }
 }
 
 export default CommentRepository;
