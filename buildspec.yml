@@ -7,6 +7,7 @@ phases:
       - git clone https://github.com/aws/aws-elastic-beanstalk-cli-setup.git
       - apt update
       - apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev curl -y
+      - ls
       - tar -xf Python-3.?.?.tar.xz
       - cd Python-3.*
       - ./configure
