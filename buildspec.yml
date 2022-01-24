@@ -8,6 +8,10 @@ phases:
       - apt update
       - apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev curl -y
       - python --version
+      - echo 'export PATH="/root/.ebcli-virtual-env/executables:$PATH"' >> ~/.bash_profile && source ~/.bash_profile
+      - echo 'export PATH="/root/.ebcli-virtual-env/executables:$PATH"' >> ~/.zshenv && source ~/.zshenv
+      - echo 'export PATH=/root/.pyenv/versions/3.7.2/bin:$PATH' >> /root/.bash_profile && source /root/.bash_profile
+      - echo 'export PATH=/root/.pyenv/versions/3.7.2/bin:$PATH' >> /root/.zshrc && source /root/.zshrc
       - python ./aws-elastic-beanstalk-cli-setup/scripts/ebcli_installer.py
       - eb --version
       - npm i npm@latest -g
