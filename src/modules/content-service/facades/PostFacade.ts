@@ -10,6 +10,20 @@ import IFeedRepository from "../../feed-service/infras/repositories/IFeedReposit
 
 import { QueryFailedError } from "typeorm";
 
+type postType = {
+    id: number,
+    userId: string,
+    caption: string,
+    status: string,
+    viewCount: number,
+    googleMapsPlaceId: string,
+    locationDetails: string,
+    postMediaFiles: {key: string, type: string}[],
+    createdAt: number,
+    updatedAt: number,
+    deletedAt: number
+}
+
 class PostFacade {
     private _log;
     private _googleapis;
@@ -93,31 +107,54 @@ class PostFacade {
     /**
      * Get all the posts of the user by their cognito sub.
      * @param userCognitoSub: string
-     * @returns Promise<any[]>
+     * @returns Promise<{
+     *         message: string,
+     *         data: postType[],
+     *         code: number
+     *     }>
      */
-    getPostsByUser(userCognitoSub: string): Promise<any[]> {
+    getPostsByUser(userCognitoSub: string): Promise<{
+        message: string,
+        data: postType[],
+        code: number
+    }> {
         return new Promise(async (resolve, reject) => {
-            const posts = await this._postRepository.getPostsByUserCognitoSub(userCognitoSub).catch((error) => {
+            const posts = await this._postRepository.getPostsByUserCognitoSub(userCognitoSub).catch((error: QueryFailedError) => {
                 this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                    payload: {userCognitoSub}
+                    function: 'getPostsByUser()',
+                    message: error.toString(),
+                    payload: { userCognitoSub }
                 });
 
-                return reject(Error.DATABASE_ERROR.GET);
+                return reject({
+                    message: error,
+                    code: 500
+                });
             });
 
-            const processPosts = posts.map((post: { posts_id: number; posts_s3_files: { key: string }[]; }) => {
-                const { posts_id, posts_s3_files } = post;
+            // We expect the posts to be an array, other types are not allowed.
+            if (Array.isArray(posts)) {
 
-                posts_s3_files[0].key = `${process.env.AWS_S3_BUCKET_URL}/${posts_s3_files[0].key}`; // S3 object file URL.
+                const promises: Promise<postType>[] = [];
 
-                return {
-                    id: posts_id,
-                    post_media_file: posts_s3_files[0]
-                };
-            });
+                // To add a location details and complete URL of the S3 file key on each of the post within the post gallery.
+                posts.forEach((post) => {
+                    promises.push(this._processPostsLocationAndMediaFiles(post));
+                });
 
-            return resolve(processPosts);
+                Promise.all(promises).then((result) => {
+                    return resolve({
+                        message: 'Posts successfully retrieved',
+                        data: result,
+                        code: 200
+                    });
+                });
+            } else {
+                return reject({
+                    message: 'invalid type for posts gallery',
+                    code: 500
+                });
+            }
         });
     }
 
@@ -371,6 +408,34 @@ class PostFacade {
                 code: 200
             });
         });
+    }
+
+    /**
+     * To add a location details and complete URL of the S3 file key on a post object.
+     * @param post: postType
+     * @private Promise<postType>
+     */
+    private async _processPostsLocationAndMediaFiles(post: postType): Promise<postType> {
+        if (post.googleMapsPlaceId) {
+            // Retrieve post location details
+            const place = await this._googleapis.placeDetails({
+                params: {
+                    place_id: post.googleMapsPlaceId,
+                    key: `${process.env.GOOGLE_MAPS_API_KEY}`
+                }
+            }).catch((error) => {
+                throw error.stack;
+            });
+            post.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
+        }
+
+        if (post.postMediaFiles) {
+            post.postMediaFiles.forEach((file) => {
+                file.key = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+            });
+        }
+
+        return post;
     }
 }
 

@@ -22,7 +22,7 @@ class CommentRepository implements ICommentRepository {
 
     create(item: {userCognitoSub: string, postId: number, content: string}): Comments {
 
-        this._model.id = undefined;
+        this._model.id = undefined; // prevent overwriting existing comments from the same user
         this._model.user_id = item.userCognitoSub;
         this._model.post_id = item.postId;
         this._model.content = item.content;
