@@ -78,7 +78,7 @@ class ContentController {
             return res.status(200).json({
                 message: 'Post created successfully.',
                 payload: {
-                    upload_signed_urls: uploadSignedUrls,
+                    uploadSignedUrls,
                 },
                 status: 200
             });
@@ -95,7 +95,7 @@ class ContentController {
 
         if (!req.session.user) {
             return res.status(401).json({
-                message: 'please login and try again.',
+                message: 'Please login and try again.',
                 error: 'Unauthenticated',
                 status: 401
             });
@@ -107,18 +107,30 @@ class ContentController {
             const posts = await this._postFacade.getPostsByUser(userCognitoSub);
 
             return res.status(200).json({
-                message: 'Posts successfully retrieved',
-                payload: {
-                    posts
-                },
-                status: 200
+                message: posts.message,
+                payload: posts.data,
+                status: posts.code
             });
-        } catch (error) {
-            return res.status(500).json({
-                message: error,
-                error: 'Internal server error',
-                status: 500
-            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 

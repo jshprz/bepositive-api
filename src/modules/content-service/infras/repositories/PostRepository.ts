@@ -1,6 +1,20 @@
-import { getRepository, UpdateResult } from 'typeorm';
+import {getRepository, QueryFailedError, UpdateResult} from 'typeorm';
 import { Posts } from "../../../../database/postgresql/models/Posts";
 import IPostRepository from "./IPostRepository";
+
+type getPostsByUserCognitoSubReturnType = Promise<{
+    id: number,
+    userId: string,
+    caption: string,
+    status: string,
+    viewCount: number,
+    googleMapsPlaceId: string,
+    locationDetails: string,
+    postMediaFiles: { key: string, type: string }[],
+    createdAt: number,
+    updatedAt: number,
+    deletedAt: number
+}[]>;
 
 class PostRepository implements IPostRepository {
     private readonly _model;
@@ -16,6 +30,7 @@ class PostRepository implements IPostRepository {
      */
     create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Posts {
 
+        this._model.id = undefined; // prevent overwriting existing posts from the same user
         this._model.user_id = item.userCognitoSub;
         this._model.caption = item.caption;
         this._model.status = 'active';
@@ -28,16 +43,57 @@ class PostRepository implements IPostRepository {
     }
 
     /**
-     * Gets user posts.
+     * Get all the user posts.
      * @param userCognitoSub: string
-     * @returns Promise<any>
+     * @returns getPostsByUserCognitoSubReturnType
      */
-    getPostsByUserCognitoSub(userCognitoSub: string): Promise<any> {
-        return getRepository(Posts)
-            .createQueryBuilder('posts')
-            .select('posts')
-            .where('user_id = :userCognitoSub', { userCognitoSub })
-            .getRawMany();
+    getPostsByUserCognitoSub(userCognitoSub: string): getPostsByUserCognitoSubReturnType {
+        return new Promise(async (resolve, reject) => {
+            const posts = await getRepository(Posts)
+                .createQueryBuilder('posts')
+                .select('posts')
+                .where('user_id = :userCognitoSub', { userCognitoSub })
+                .getRawMany()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+
+            // We expect the posts to be an array, other types are not allowed.
+            if (Array.isArray(posts)) {
+
+                const newPosts = posts.map((post: {
+                    posts_id: number,
+                    posts_user_id: string,
+                    posts_caption: string,
+                    posts_status: string,
+                    posts_view_count: number,
+                    posts_google_maps_place_id: string,
+                    posts_location_details: string,
+                    posts_s3_files: { key: string, type: string }[],
+                    posts_created_at: number,
+                    posts_updated_at: number,
+                    posts_deleted_at: number
+                }) => {
+                    return {
+                        id: post.posts_id,
+                        userId: post.posts_user_id,
+                        caption: post.posts_caption,
+                        status: post.posts_status,
+                        viewCount: post.posts_view_count,
+                        googleMapsPlaceId: post.posts_google_maps_place_id,
+                        locationDetails: post.posts_location_details,
+                        postMediaFiles: post.posts_s3_files,
+                        createdAt: post.posts_created_at,
+                        updatedAt: post.posts_updated_at,
+                        deletedAt: post.posts_deleted_at
+                    }
+                });
+
+                return resolve(newPosts);
+            }
+
+            return reject('invalid type for posts gallery');
+        });
     }
 
     /**

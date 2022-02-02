@@ -21,6 +21,9 @@ export class Posts extends BaseEntity {
   @Column({type: "varchar", nullable: true})
   google_maps_place_id?: string;
 
+  @Column({type: "varchar", nullable: true, default: ""})
+  location_details?: string;
+
   @Column("jsonb", {array: false, nullable: false})
   s3_files?: { key: string, type: string }[];
 
