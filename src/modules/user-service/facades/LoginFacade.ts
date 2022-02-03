@@ -4,9 +4,7 @@ import IAccessTokenRepository from "../infras/repositories/IAccessTokenRepositor
 import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
 import { Request } from 'express';
-
-// Declaration merging on express-session
-import '../../../declarations/DExpressSession';
+import {QueryFailedError} from "typeorm";
 
 type normalLoginParam = {
   email: string,
@@ -55,30 +53,19 @@ class LoginFacade {
     logout(req: Request): Promise<boolean> {
         return new Promise((resolve, reject) => {
            const param = {
-               AccessToken: req.session.accessToken,
+               AccessToken: req.body.accessToken,
            };
            this._awsCognito.getAwsCognitoClient().globalSignOut(param, (error: Error) => {
               if (error) {
                   this._log.error({
                       message: error.toString(),
-                      payload: req.session
+                      payload: param
                   });
 
                   return reject(Error.AWS_COGNITO_ERROR);
-              } else {
-                  req.session.destroy((error: string) => {
-                     if (error) {
-                         this._log.error({
-                             message: error,
-                             payload: req.session
-                         });
-
-                         return reject(Error.APP_SESSION_ERROR);
-                     }
-
-                     return resolve(true);
-                  });
               }
+
+              return resolve(true);
            });
         });
     }
@@ -86,19 +73,19 @@ class LoginFacade {
     /**
      * Creates AccessTokens data
      * @param accessToken: string
-     * @param email: string
+     * @param userCognitoSub: string
      * @returns Promise<boolean>
      */
-    createAccessTokenItem(accessToken: string, email: string): Promise<boolean> {
+    createAccessTokenItem(accessToken: string, userCognitoSub: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
-            const item = { accessToken, email };
+            const item = { accessToken, userCognitoSub };
             await this._accessTokenRepository.create(item)
-                .catch((error) => {
+                .catch((error: QueryFailedError) => {
                     this._log.error({
-                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                         payload: {
                             accessToken,
-                            email
+                            userCognitoSub
                         }
                     });
                     return reject(Error.DATABASE_ERROR.CREATE);
@@ -109,17 +96,17 @@ class LoginFacade {
 
     /**
      * Deletes AccessTokens data by email
-     * @param email: string
+     * @param userCognitoSub: string
      * @returns Promise<boolean>
      */
-    deleteAccessTokenItem(email: string): Promise<boolean> {
+    deleteAccessTokenItem(userCognitoSub: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
-            await this._accessTokenRepository.delete(email)
-                .catch((error) => {
+            await this._accessTokenRepository.delete(userCognitoSub)
+                .catch((error: QueryFailedError) => {
                     this._log.error({
-                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                         payload: {
-                            email
+                            userCognitoSub
                         }
                     });
                     return reject(Error.DATABASE_ERROR.DELETE);

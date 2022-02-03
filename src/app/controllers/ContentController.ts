@@ -14,9 +14,6 @@ import { validationResult } from "express-validator";
 import { config } from "../../config";
 import uniqid from 'uniqid';
 
-// Declaration merging on express-session
-import '../../declarations/DExpressSession';
-
 class ContentController {
     private _postFacade;
     private _postShareFacade;
@@ -53,16 +50,8 @@ class ContentController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
-            const userCognitoSub: string = req.session.user.sub;
+            const userCognitoSub: string = req.body.userCognitoSub;
             const { caption, files, googlemapsPlaceId } = req.body;
 
             if (Array.isArray(files)) {
@@ -93,16 +82,8 @@ class ContentController {
 
     async getPostsByUser(req: Request, res: Response) {
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
-            const userCognitoSub: string = req.session.user.sub;
+            const userCognitoSub: string = req.body.userCognitoSub;
 
             const posts = await this._postFacade.getPostsByUser(userCognitoSub);
 
@@ -142,14 +123,6 @@ class ContentController {
                 message: errors.id.msg,
                 error: 'Bad request error',
                 status: 400
-            });
-        }
-
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
             });
         }
 
@@ -194,17 +167,9 @@ class ContentController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
-            const id = Number(req.params.id);
-            const caption = String(req.body.caption);
+            const id: number = Number(req.params.id);
+            const caption: string = String(req.body.caption);
 
             await this._postFacade.updatePost(id, caption);
 
@@ -233,14 +198,6 @@ class ContentController {
                 message: errors.id.msg,
                 error: 'Bad request error',
                 status: 400
-            });
-        }
-
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
             });
         }
 
@@ -284,17 +241,9 @@ class ContentController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
             const { shareCaption } = req.body;
-            const userId: string = req.session.user.sub;
+            const userId: string = req.body.userCognitoSub;
             const postId: number = Number(req.params.id);
 
             const sharedPost = await this._postShareFacade.createSharedPost(postId, {userId, postId, shareCaption});
@@ -330,14 +279,6 @@ class ContentController {
                 message: errors.id.msg,
                 error: 'Bad request error',
                 status: 400
-            });
-        }
-
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
             });
         }
 
@@ -386,18 +327,10 @@ class ContentController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
-            const sharedPostId = Number(req.params.id);
-            const userCognitoSub = req.session.user.sub;
-            const shareCaption = req.body.shareCaption;
+            const sharedPostId: number = Number(req.params.id);
+            const userCognitoSub: string = req.body.userCognitoSub;
+            const shareCaption: string = req.body.shareCaption;
 
             const updateSharedPostResult = await this._postShareFacade.updateSharedPost(sharedPostId, userCognitoSub, shareCaption);
 
@@ -440,17 +373,9 @@ class ContentController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
             const postId = req.body.postId;
-            const userCognitoSub: string = req.session.user.sub;
+            const userCognitoSub: string = req.body.userCognitoSub;
 
             const likeOrUnlikePostResult = await this._postFacade.likeOrUnlikePost(postId, userCognitoSub);
 

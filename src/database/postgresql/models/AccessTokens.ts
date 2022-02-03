@@ -6,10 +6,10 @@ export class AccessTokens extends BaseEntity {
   id?: number;
 
   @Column({type: "text", nullable: false})
-  accessToken?: string;
+  access_token?: string;
 
-  @Column({type: "varchar", length: 50, nullable: false})
-  email?: string;
+  @Column({type: "varchar", length: 255, nullable: false})
+  user_id?: string;
 
   @Column({type: "bigint", nullable: false})
   created_at?: number;

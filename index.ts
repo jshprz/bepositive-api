@@ -2,7 +2,6 @@ import express from 'express';
 import { getConnection } from './src/config/Database';
 import { apis } from './src/routes';
 import Logger from './src/config/Logger';
-import session from 'express-session';
 import multer from 'multer';
 
 const logger = Logger.createLogger('Main');
@@ -11,19 +10,6 @@ const main = async () => {
   getConnection();
   const app = express();
   const port = process.env.PORT;
-
-  if (process.env.NODE_ENV === 'local') {
-    app.use(session({
-      secret: 'keyboard cat',
-      resave: false,
-      saveUninitialized: true,
-      cookie: { secure: false }
-    }));
-  } else {
-    app.use(session({
-      secret: 'keyboard cat'
-    }));
-  }
 
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());

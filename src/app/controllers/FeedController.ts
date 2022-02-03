@@ -5,9 +5,6 @@ import feedFacade from "../../modules/feed-service/facades/FeedFacade";
 import {Request, Response} from "express";
 import { validationResult } from "express-validator";
 
-// Declaration merging on express-session
-import '../../declarations/DExpressSession';
-
 class FeedController {
 
     private _feedFacade;
@@ -27,16 +24,8 @@ class FeedController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
-            const userCognitoSub: string = req.session.user.sub;
+            const userCognitoSub: string = req.body.userCognitoSub;
             const { pagination } = req.body;
             const followings: string[] = [];
 
@@ -64,14 +53,6 @@ class FeedController {
                 message: errors.pagination.msg,
                 error: 'bad request error',
                 status: 400
-            });
-        }
-
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
             });
         }
 
