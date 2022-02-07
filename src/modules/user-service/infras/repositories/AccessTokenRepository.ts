@@ -8,34 +8,34 @@ class AccessTokenRepository implements IAccessTokenRepository {
 
     /**
      * Creates AccessTokens data.
-     * @param item: {accessToken: string, email: string}
+     * @param item: {accessToken: string, userCognitoSub: string}
      * @returns Promise<InsertResult>
      */
-    create(item: {accessToken: string, email: string}): Promise<InsertResult> {
-        const { accessToken, email } = item;
+    create(item: {accessToken: string, userCognitoSub: string}): Promise<InsertResult> {
+        const { accessToken, userCognitoSub } = item;
 
         return getConnection()
             .createQueryBuilder()
             .insert()
             .into(AccessTokens)
             .values([{
-                accessToken,
-                email,
+                access_token: accessToken,
+                user_id: userCognitoSub,
                 created_at: Number(Date.now())
             }]).execute();
     }
 
     /**
      * Deletes AccessTokens data by email.
-     * @param email: string
+     * @param userCognitoSub: string
      * @returns Promise<DeleteResult>
      */
-    delete(email: string): Promise<DeleteResult> {
+    delete(userCognitoSub: string): Promise<DeleteResult> {
         return getConnection()
             .createQueryBuilder()
             .delete()
             .from(AccessTokens)
-            .where('email = :email', { email })
+            .where('user_id = :userCognitoSub', { userCognitoSub })
             .execute();
     }
 }

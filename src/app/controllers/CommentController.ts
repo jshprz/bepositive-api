@@ -7,9 +7,6 @@ import commentFacade from "../../modules/comment-service/facades/CommentFacade";
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 
-// Declaration merging on express-session
-import '../../declarations/DExpressSession';
-
 class CommentController {
     private _commentFacade;
 
@@ -36,16 +33,8 @@ class CommentController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
-            const userCognitoSub: string = req.session.user.sub;
+            const userCognitoSub: string = req.body.userCognitoSub;
             const { postId, content } = req.body;
 
             const addCommentResult = await this._commentFacade.addComment({ userCognitoSub, postId, content });
@@ -99,19 +88,11 @@ class CommentController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
             const id = Number(req.params.id);
             const content = String(req.body.content);
 
-            const result = await this._commentFacade.updateComment(id, req.session.user.sub, content);
+            const result = await this._commentFacade.updateComment(id, req.body.userCognitoSub, content);
 
             return res.status(200).json({
                 message: result.message,
@@ -156,18 +137,10 @@ class CommentController {
             });
         }
 
-        if (!req.session.user) {
-            return res.status(401).json({
-                message: 'Please login and try again.',
-                error: 'Unauthenticated',
-                status: 401
-            });
-        }
-
         try {
             const id = Number(req.params.id);
 
-            const result = await this._commentFacade.removeComment(id, req.session.user.sub);
+            const result = await this._commentFacade.removeComment(id, req.body.userCognitoSub);
 
             return res.status(200).json({
                 message: result.message,

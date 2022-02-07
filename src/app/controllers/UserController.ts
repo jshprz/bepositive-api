@@ -12,8 +12,7 @@ import userAccountFacade from "../../modules/user-service/facades/UserAccountFac
 import { Request, Response } from 'express';
 import { validationResult } from "express-validator";
 
-// Declaration merging on express-session
-import '../../declarations/DExpressSession';
+// Declaration merging on aws-cognito-identity-js
 import '../../declarations/DAwsCognito'
 
 class UserController {
@@ -52,19 +51,10 @@ class UserController {
         try {
             const signin = await this._loginFacade.normalLogin(req.body);
             const accessToken: string = signin.accessToken.jwtToken;
-            const { sub, name, email_verified, email } = signin.idToken.payload;
+            const userCognitoSub: string = signin.idToken.payload.sub;
 
             // Creates accessToken record within the access_tokens table.
-            await this._loginFacade.createAccessTokenItem(accessToken, email);
-
-            req.session.user = {
-                sub,
-                name,
-                email_verified,
-                email
-            };
-
-            req.session.accessToken = accessToken;
+            await this._loginFacade.createAccessTokenItem(accessToken, userCognitoSub);
 
             return res.status(200).json({
                 message: 'Successfully logged in',
@@ -111,10 +101,10 @@ class UserController {
 
     async logout(req: Request, res: Response) {
         try {
-            const { email } = req.session.user;
+            const userCognitoSub: string = req.body.userCognitoSub;
 
             await this._loginFacade.logout(req);
-            await this._loginFacade.deleteAccessTokenItem(email);
+            await this._loginFacade.deleteAccessTokenItem(userCognitoSub);
 
             return res.status(200).json({
                 message: 'User successfully logged out',
