@@ -48,9 +48,11 @@ class PostFacade {
     createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<string[]> {
         return new Promise(async (resolve, reject) => {
             try {
-                const promises: any[] = [];
+                const preSignedURLPromises: any[] = [];
+
+                // Collect the pre-signed urls promises and resolve them later.
                 item.files.forEach((file: {key: string, type: string}) => {
-                    promises.push(this._awsS3.presignedPutUrl(file.key, file.type, 'public-read'));
+                    preSignedURLPromises.push(this._awsS3.presignedPutUrl(file.key, file.type, 'public-read'));
                 });
 
                 const post = await this._postRepository.create(item).save().catch((error: QueryFailedError) => {
@@ -73,10 +75,15 @@ class PostFacade {
 
                 // If the followers is not an array, it should be an error.
                 if (Array.isArray(followers) && post) {
+                    const createFeedPromises: any[] = [];
+
+                    // Collect follower's feed creation promises and resolve them later.
                     followers.forEach((follower) => {
                         const userId = follower.user_relationships_user_id;
-                        promises.push(this._feedRepository.create(userId, post.id));
+                        createFeedPromises.push(this._feedRepository.create(userId, post.id));
                     });
+
+                    await Promise.all(createFeedPromises);
                 } else {
                     this._log.error({
                         function: 'createPost()',
@@ -90,7 +97,7 @@ class PostFacade {
                     });
                 }
 
-                Promise.all(promises).then(async (result: string[]) => {
+                Promise.all(preSignedURLPromises).then(async (result: string[]) => {
                     return resolve(result);
                 });
             } catch (error: any) {
