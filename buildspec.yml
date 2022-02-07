@@ -16,8 +16,6 @@ phases:
       - eb --version
       - npm i npm@latest -g
       - npm install
-      - npm run build
-      - npm run typeorm:migrate:run
   build:
     commands:
       #- npm run build
