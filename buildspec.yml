@@ -19,6 +19,7 @@ phases:
     commands:
       - npm install
       - npm run build
+      - npm run typeorm:migrate:run
       - npm run test unit
   post_build:
     commands:
