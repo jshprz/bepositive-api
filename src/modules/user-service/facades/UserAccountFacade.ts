@@ -2,7 +2,6 @@ import IAwsCognito from '../infras/aws/IAwsCognito';
 import IUserRelationshipRepository from "../infras/repositories/IUserRelationshipRepository";
 import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
-import { AWSError } from "aws-sdk";
 import {GetUserResponse, ListUsersResponse} from "aws-sdk/clients/cognitoidentityserviceprovider";
 
 class UserAccountFacade {

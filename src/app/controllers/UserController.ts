@@ -50,7 +50,9 @@ class UserController {
 
         try {
             const signin = await this._loginFacade.normalLogin(req.body);
+
             const accessToken: string = signin.accessToken.jwtToken;
+            const accessTokenExpiration: number = signin.accessToken.payload.exp;
             const userCognitoSub: string = signin.idToken.payload.sub;
 
             // Creates accessToken record within the access_tokens table.
@@ -59,7 +61,8 @@ class UserController {
             return res.status(200).json({
                 message: 'Successfully logged in',
                 payload: {
-                    accessToken: signin.accessToken.jwtToken
+                    accessToken,
+                    accessTokenExpiration
                 },
                 status: 200
             });

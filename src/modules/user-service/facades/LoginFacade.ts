@@ -1,4 +1,3 @@
-import { CognitoUserSession } from "amazon-cognito-identity-js";
 import IAwsCognito from '../infras/aws/IAwsCognito';
 import IAccessTokenRepository from "../infras/repositories/IAccessTokenRepository";
 import Logger from '../../../config/Logger';
@@ -11,6 +10,24 @@ type normalLoginParam = {
   password: string
 };
 
+type authenticateUserResult = {
+    idToken: {
+        payload: {
+            sub: string,
+            name: string,
+            email_verified: boolean,
+            email: string,
+            exp: number
+        }
+    },
+    accessToken: {
+        jwtToken: string,
+        payload: {
+            exp: number
+        }
+    }
+}
+
 class LoginFacade {
 
     private _log;
@@ -22,14 +39,14 @@ class LoginFacade {
     /**
      * Signs in a user via AWS Cognito user pool.
      * @param body { email: string, password: string }
-     * @returns Promise<CognitoUserSession>
+     * @returns Promise<authenticateUserResult>
      */
-    normalLogin(body: normalLoginParam): Promise<CognitoUserSession> {
+    normalLogin(body: normalLoginParam): Promise<authenticateUserResult> {
         return new Promise((resolve, reject) => {
            const authenticationDetails = this._awsCognito.getAuthenticationDetails(body);
 
            this._awsCognito.getCognitoUser(body.email).authenticateUser(authenticationDetails, {
-               onSuccess: (result: CognitoUserSession | PromiseLike<CognitoUserSession>) => resolve(result),
+               onSuccess: (result: authenticateUserResult) => resolve(result),
                onFailure: (error: { message: string, code: string }) => {
                    this._log.error({
                        message: error.message,
