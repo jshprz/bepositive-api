@@ -30,9 +30,9 @@ class LoginFacade {
 
            this._awsCognito.getCognitoUser(body.email).authenticateUser(authenticationDetails, {
                onSuccess: (result: CognitoUserSession | PromiseLike<CognitoUserSession>) => resolve(result),
-               onFailure: (error: { code: string; }) => {
+               onFailure: (error: { message: string, code: string }) => {
                    this._log.error({
-                       message: error.toString(),
+                       message: error.message,
                        payload: body
                    });
                    if (error.code && (error.code === 'NotAuthorizedException' || error.code === 'UserNotConfirmedException')) {

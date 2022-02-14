@@ -27,6 +27,7 @@ class PostShareRepository implements IPostShareRepository {
      */
     create(item: { userId: string, postId: number, shareCaption: string }): PostShares {
 
+        this._model.id = undefined; // prevent overwriting existing comments from the same user
         this._model.post_id = item.postId;
         this._model.user_id = item.userId;
         this._model.share_caption = item.shareCaption;
