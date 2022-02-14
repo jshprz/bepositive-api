@@ -17,6 +17,7 @@ class FeedRepository {
      */
     create(userId: string, postId: number | undefined): Promise<UserFeeds> {
 
+        this._model.id = undefined; // prevent overwriting existing comments from the same user
         this._model.user_id = userId;
         this._model.post_id = postId;
         this._model.created_at = Number(Date.now());

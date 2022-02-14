@@ -16,11 +16,12 @@ class PostLikeRepository implements IPostLikeRepository {
      */
     create(item: {userCognitoSub: string, postId: number}): PostLikes {
 
-            this._model.user_id = item.userCognitoSub;
-            this._model.post_id = item.postId;
-            this._model.created_at = Number(Date.now());
+        this._model.id = undefined; // prevent overwriting existing comments from the same user
+        this._model.user_id = item.userCognitoSub;
+        this._model.post_id = item.postId;
+        this._model.created_at = Number(Date.now());
 
-            return this._model;
+        return this._model;
     }
 
     /**
