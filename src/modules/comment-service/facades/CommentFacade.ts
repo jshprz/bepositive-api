@@ -6,6 +6,16 @@ import IPostRepository from "../../content-service/infras/repositories/IPostRepo
 
 import { QueryFailedError } from "typeorm";
 
+type commentType = {
+    id: number,
+    userId: string,
+    postId: number,
+    content: string,
+    status: string,
+    createdAt: number,
+    updatedAt: number,
+}
+
 class CommentFacade {
     private _log;
 
@@ -62,6 +72,42 @@ class CommentFacade {
                data: {},
                code: 201
            });
+        });
+    }
+
+    /**
+     * Get all the comments under a post .
+     * @param postId: number
+     * @returns Promise<{
+     *         message: string,
+     *         data: commentType[],
+     *         code: number
+     *     }>
+     */
+    getCommentsByPostId(postId: number): Promise<{
+        message: string,
+        data: commentType[],
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            const comments = await this._commentRepository.getCommentsByPostId(postId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'getCommentsByPostId()',
+                    message: error.toString(),
+                    payload: { postId }
+                });
+
+                return reject({
+                    message: error,
+                    code: 500
+                });
+            });
+
+            return resolve({
+                message: 'Comments successfully retrieved',
+                data: comments || [],
+                code: 200
+            });
         });
     }
 
