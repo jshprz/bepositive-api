@@ -68,6 +68,52 @@ class CommentController {
         }
     }
 
+    async getCommentsByPostId(req: Request, res: Response) {
+
+        const errors = validationResult(req).mapped();
+
+        if (errors.postId) {
+            return res.status(400).json({
+                message: errors.postId.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const postId: number = Number(req.params.postId);
+
+            const comments = await this._commentFacade.getCommentsByPostId(postId);
+
+            return res.status(200).json({
+                message: comments.message,
+                payload: comments.data,
+                status: comments.code
+            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+
     async updateComment(req: Request, res: Response) {
 
         const errors = validationResult(req).mapped();
