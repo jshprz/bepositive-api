@@ -42,7 +42,6 @@ class UserAccountFacade {
      * @returns Promise<{
      *         username: string,
      *         sub: string,
-     *         email_verified: string,
      *         name: string,
      *         email: string,
      *         dateCreated: Date,
@@ -54,7 +53,6 @@ class UserAccountFacade {
     getUser(sub: string): Promise<{
         username: string,
         sub: string,
-        email_verified: string,
         name: string,
         email: string,
         dateCreated: Date,
@@ -103,9 +101,9 @@ class UserAccountFacade {
                         const user = {
                             username: '',
                             sub: '',
-                            email_verified: '',
                             name: '',
                             email: '',
+                            email_verified: false,
                             dateCreated: new Date(),
                             dateModified: new Date(),
                             enabled: false,
@@ -124,7 +122,10 @@ class UserAccountFacade {
                         user.enabled = rawUser[0].Enabled;
                         user.status = rawUser[0].UserStatus;
 
-                        return resolve(user);
+                        // Remove unnecessary object property in user data.
+                        const { email_verified, ...newUserData } = user;
+
+                        return resolve(newUserData);
                     }
                 }
             });
@@ -150,12 +151,12 @@ class UserAccountFacade {
     getFollowers(userCognitoSub: string): Promise<{
         message: string,
         data: {
-            user_relationships_id: number,
-            user_relationships_followee_id: string,
-            user_relationships_follower_id: string,
-            user_relationships_created_at: number,
-            user_relationships_updated_at: number,
-            user_relationships_deleted_at: number
+            id: number,
+            followeeId: string,
+            followerId: string,
+            createdAt: number,
+            updatedAt: number,
+            deletedAt: number
         }[],
         code: number
     }> {
@@ -203,12 +204,12 @@ class UserAccountFacade {
      * @returns Promise<{
      *         message: string,
      *         data: {
-     *             user_relationships_id: number,
-     *             user_relationships_followee_id: string,
-     *             user_relationships_follower_id: string,
-     *             user_relationships_created_at: number,
-     *             user_relationships_updated_at: number,
-     *             user_relationships_deleted_at: number
+     *             id: number,
+     *             followeeId: string,
+     *             followerId: string,
+     *             createdAt: number,
+     *             updatedAt: number,
+     *             deletedAt: number
      *         }[],
      *         code: number
      *     }>
@@ -216,12 +217,12 @@ class UserAccountFacade {
     getFollowings(userCognitoSub: string): Promise<{
         message: string,
         data: {
-            user_relationships_id: number,
-            user_relationships_followee_id: string,
-            user_relationships_follower_id: string,
-            user_relationships_created_at: number,
-            user_relationships_updated_at: number,
-            user_relationships_deleted_at: number
+            id: number,
+            followeeId: string,
+            followerId: string,
+            createdAt: number,
+            updatedAt: number,
+            deletedAt: number
         }[],
         code: number
     }> {

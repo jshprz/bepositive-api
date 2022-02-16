@@ -8,6 +8,22 @@ import UserAccountFacade from "../../user-service/facades/UserAccountFacade"; //
 import awsCognito from "../../user-service/infras/aws/AwsCognito"; // External
 import userRelationshipRepository from "../../user-service/infras/repositories/UserRelationshipRepository"; // External
 
+import { QueryFailedError } from "typeorm";
+
+type feedTypes = {
+    id: number,
+    userId: string,
+    caption: string,
+    status: string,
+    viewCount: number,
+    googleMapsPlaceId: string,
+    locationDetails: string,
+    postMediaFiles: { key: string, type: string }[],
+    createdAt: number,
+    updatedAt: number,
+    user: {}
+};
+
 class FeedFacade {
     private _log;
     private _googleapis;
@@ -23,68 +39,70 @@ class FeedFacade {
      * Get the feed/s dedicated to a specific user.
      * @param userCognitoSub: string
      * @param pagination: {page: number, size: number}
-     * @param followings: string[]
-     * @returns Promise<any[]>
+     * @returns Promise<{
+     *         message: string,
+     *         data: feedTypes[],
+     *         code: number
+     *     }>
      */
-    getFeed(userCognitoSub: string, pagination: {page: number, size: number}, followings: string[]): Promise<any[]> {
+    getFeed(userCognitoSub: string, pagination: {page: number, size: number}): Promise<{
+        message: string,
+        data: feedTypes[],
+        code: number
+    }> {
 
         return new Promise(async (resolve, reject) => {
-            const rawFollowings = await this._userRelationshipRepository.get(true, userCognitoSub).catch((error) => {
-                this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                    payload: {
-                        userCognitoSub,
-                        pagination,
-                        followings
-                    }
-                });
-
-                return reject(Error.DATABASE_ERROR.GET);
-            });
-
-            const followings: string[] = [userCognitoSub]; // the current logged in user should also see their posts on their newsfeed
-
-            // If the rawFollowings is not an array, it should be an error.
-            if (Array.isArray(rawFollowings)) {
-                rawFollowings.map((following) => {
-                    followings.push(following.user_relationships_followee_id);
-                });
-            } else {
+            const feeds = await this._feedRepository.getFeed(pagination, userCognitoSub).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'getFeed()',
-                    message: `An error occurred while retrieving the rawFollowings: ${rawFollowings}`,
-                    payload: {userCognitoSub, pagination, followings}
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        userCognitoSub,
+                        pagination
+                    }
                 });
 
                 return reject({
-                    message: 'An error occurred while retrieving the rawFollowings',
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (Array.isArray(feeds)) {
+                const feedBuilderPromises: Promise<feedTypes>[] = [];
+
+                feeds.forEach((feed) => {
+                    feedBuilderPromises.push(this._feedBuilder(feed));
+                });
+
+                const newFeedCollection = await Promise.all(feedBuilderPromises)
+                    .catch((error: string) => {
+                        this._log.error({
+                            function: 'getFeed()',
+                            message: error.toString(),
+                            payload: {
+                                userCognitoSub,
+                                pagination
+                            }
+                        });
+
+                        return reject({
+                            message: 'Error occured while generating a feed.',
+                            code: 500
+                        });
+                    });
+
+                return resolve({
+                    message: 'Feed successfully retrieved.',
+                    data: (Array.isArray(newFeedCollection))? newFeedCollection : [],
+                    code: 200
+                });
+            } else {
+                return reject({
+                    message: 'Invalid type for feed.',
                     code: 500
                 });
             }
-
-            const feed = await this._feedRepository.getFeed(pagination, followings).catch((error) => {
-                this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                    payload: {
-                        userCognitoSub,
-                        pagination,
-                        followings
-                    }
-                });
-
-                return reject(Error.DATABASE_ERROR.GET);
-            });
-
-            const feedHolder: any[] = [];
-
-            for (let i = 0; i < feed.length; i++) {
-                const feedBuilder = await this._feedBuilder(feed[i]).catch((error) => {
-                    feed.splice(i, 1);
-                });
-                feedHolder.push(feedBuilder);
-            }
-
-            return resolve(feedHolder);
         });
     }
 
@@ -92,58 +110,101 @@ class FeedFacade {
      * Get the trending feed/s.
      * @param pagination: {page: number, size: number}
      * @param popularityThreshold: number
-     * @returns Promise<any[]>
+     * @returns Promise<{
+     *         message: string,
+     *         data: feedTypes[],
+     *         code: number
+     *     }>
      */
-    getTrendingFeed(pagination: {page: number, size: number}, popularityThreshold: number): Promise<any[]> {
+    getTrendingFeed(pagination: {page: number, size: number}, popularityThreshold: number): Promise<{
+        message: string,
+        data: feedTypes[],
+        code: number
+    }> {
         return new Promise(async (resolve, reject) => {
-            const feed = await this._feedRepository.getTrendingFeed(pagination, popularityThreshold).catch((error) => {
+            const trendingFeeds = await this._feedRepository.getTrendingFeed(pagination, popularityThreshold).catch((error: QueryFailedError) => {
                 this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    function: 'getTrendingFeed()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         pagination,
                         popularityThreshold
                     }
                 });
 
-                return reject(Error.DATABASE_ERROR.GET);
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
             });
 
-            const feedHolder: any[] = [];
+            if (Array.isArray(trendingFeeds)) {
+                const feedBuilderPromises: Promise<feedTypes>[] = [];
 
-            for (let i = 0; i < feed.length; i++) {
-                const feedBuilder = await this._feedBuilder(feed[i]).catch(() => {
-                    feed.splice(i, 1);
+                trendingFeeds.forEach((trendingFeed) => {
+                    feedBuilderPromises.push(this._feedBuilder(trendingFeed));
                 });
-                feedHolder.push(feedBuilder);
-            }
 
-            return resolve(feedHolder);
+                const newTrendingFeedCollection = await Promise.all(feedBuilderPromises)
+                    .catch((error: string) => {
+                        this._log.error({
+                            function: 'getTrendingFeed()',
+                            message: error.toString(),
+                            payload: {
+                                pagination,
+                                popularityThreshold
+                            }
+                        });
+
+                        return reject({
+                            message: 'Error occured while generating a feed.',
+                            code: 500
+                        });
+                    });
+
+                return resolve({
+                    message: 'Trending feed successfully retrieved.',
+                    data: (Array.isArray(newTrendingFeedCollection))? newTrendingFeedCollection : [],
+                    code: 200
+                });
+            } else {
+                return reject({
+                    message: 'Invalid type for trendingFeeds.',
+                    code: 500
+                });
+            }
         });
     }
 
     /**
      * Build the feed/s location and user involvement.
-     * @param feed: any
-     * @returns Promise<any>
+     * @param feed: feedTypes
+     * @returns Promise<feedTypes>
      */
-    private _feedBuilder(feed: any): Promise<any> {
+    private _feedBuilder(feed: feedTypes): Promise<feedTypes> {
         return new Promise(async (resolve, reject) => {
             try {
-                feed.location_details = '';
-                if (feed.google_maps_place_id) {
+                if (feed.googleMapsPlaceId) {
                     // Retrieve post location details
                     const place = await this._googleapis.placeDetails({
                         params: {
-                            place_id: feed.google_maps_place_id,
+                            place_id: feed.googleMapsPlaceId,
                             key: `${process.env.GOOGLE_MAPS_API_KEY}`
                         }
                     }).catch((error) => {
                         throw error.stack;
                     });
-                    feed.location_details = `${place.data.result.name}, ${place.data.result.vicinity}`;
+                    feed.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
                 }
-                feed.user = await this._userAccountFacade.getUser(feed.user_id);
+                if (feed.postMediaFiles) {
+                    feed.postMediaFiles.forEach((file) => {
+                        file.key = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                    });
+                }
 
+                feed.user = await this._userAccountFacade.getUser(feed.userId).catch((error) => {
+                    throw error;
+                });
                 return resolve(feed)
             } catch(e) {
                 return reject(false);

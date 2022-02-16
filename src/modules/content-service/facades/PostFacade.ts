@@ -43,70 +43,111 @@ class PostFacade {
     /**
      * Creates a post.
      * @param item: { userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }
-     * @returns Promise<string[]>
+     * @returns Promise<{
+     *         message: string,
+     *         data: string[],
+     *         code: 200
+     *     }>
      */
-    createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<string[]> {
+    createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<{
+        message: string,
+        data: string[],
+        code: 200
+    }> {
         return new Promise(async (resolve, reject) => {
-            try {
-                const preSignedURLPromises: any[] = [];
+            const preSignedURLPromises: any[] = [];
 
-                // Collect the pre-signed urls promises and resolve them later.
-                item.files.forEach((file: {key: string, type: string}) => {
-                    preSignedURLPromises.push(this._awsS3.presignedPutUrl(file.key, file.type, 'public-read'));
-                });
+            // Collect the pre-signed urls promises and resolve them later.
+            item.files.forEach((file: {key: string, type: string}) => {
+                preSignedURLPromises.push(this._awsS3.presignedPutUrl(file.key, file.type, 'public-read'));
+            });
 
-                const post = await this._postRepository.create(item).save().catch((error: QueryFailedError) => {
-                    this._log.error({
-                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                        payload: item
-                    });
-
-                    return reject(Error.DATABASE_ERROR.CREATE);
-                });
-
-                const followers = await this._userRelationshipRepository.get(true, item.userCognitoSub).catch((error) => {
-                    this._log.error({
-                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                        payload: item
-                    });
-
-                    return reject(Error.DATABASE_ERROR.GET);
-                });
-
-                // If the followers is not an array, it should be an error.
-                if (Array.isArray(followers) && post) {
-                    const createFeedPromises: any[] = [];
-
-                    // Collect follower's feed creation promises and resolve them later.
-                    followers.forEach((follower) => {
-                        const userId = follower.user_relationships_followee_id;
-                        createFeedPromises.push(this._feedRepository.create(userId, post.id));
-                    });
-
-                    await Promise.all(createFeedPromises);
-                } else {
-                    this._log.error({
-                        function: 'createPost()',
-                        message: `An error occurred while retrieving the followers: ${followers}`,
-                        payload: item
-                    });
-
-                    return reject({
-                        message: 'An error occurred while retrieving the followers',
-                        code: 500
-                    });
-                }
-
-                Promise.all(preSignedURLPromises).then(async (result: string[]) => {
-                    return resolve(result);
-                });
-            } catch (error: any) {
+            const preSignedUrls = await Promise.all(preSignedURLPromises).catch((error: string) => {
                 this._log.error({
-                    message: error,
+                    function: 'createPost()',
+                    message: error.toString(),
                     payload: item
                 });
 
-                return reject('There was an error that occurred upon creating a post.');
+                return reject({
+                    message: 'Error in generating pre-signed URL/s.',
+                    code: 500
+                });
+            });
+
+            const post = await this._postRepository.create(item).save().catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'createPost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: item
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.CREATE,
+                    code: 500
+                });
+            });
+
+            const userRelationships = await this._userRelationshipRepository.get(false, item.userCognitoSub).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'createPost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: item
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            // If the followers is not an array, it should be an error.
+            if (Array.isArray(userRelationships) && post) {
+
+                // Allow users to see their own post within their feed.
+                userRelationships.push({
+                    id: 0,
+                    followeeId: '',
+                    followerId: item.userCognitoSub,
+                    createdAt: 0,
+                    updatedAt: 0,
+                    deletedAt: 0
+                });
+
+                // After creating the post we distribute it to the followers of the user who created it.
+                for (const userRelationship of userRelationships) {
+                    await this._feedRepository.create(userRelationship.followerId, Number(post.id))
+                        .save()
+                        .catch((error: QueryFailedError) => {
+                            this._log.error({
+                                function: 'createPost()',
+                                message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                                payload: item
+                            });
+
+                            return reject({
+                                message: Error.DATABASE_ERROR.CREATE,
+                                code: 500
+                            });
+                        });
+                }
+
+                return resolve({
+                    message: 'Post created successfully.',
+                    data: (Array.isArray(preSignedUrls))? preSignedUrls : [],
+                    code: 200
+                });
+            } else {
+                this._log.error({
+                    function: 'createPost()',
+                    message: `An error occurred while retrieving the user relationships: ${userRelationships}`,
+                    payload: item
+                });
+
+                return reject({
+                    message: 'An error occurred while retrieving the followers',
+                    code: 500
+                });
             }
         });
     }
