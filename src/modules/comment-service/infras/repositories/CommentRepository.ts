@@ -21,6 +21,7 @@ type getCommentsByPostIdReturnType = Promise<{
     status: string,
     createdAt: number,
     updatedAt: number,
+    user: {}
 }[]>;
 
 class CommentRepository implements ICommentRepository {
@@ -112,6 +113,7 @@ class CommentRepository implements ICommentRepository {
                         status: comment.comments_status,
                         createdAt: comment.comments_created_at,
                         updatedAt: comment.comments_updated_at,
+                        user: {}
                     }
                 });
 

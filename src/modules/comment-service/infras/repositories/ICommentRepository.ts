@@ -20,6 +20,7 @@ type getCommentsByPostIdReturnType = Promise<{
     status: string,
     createdAt: number,
     updatedAt: number,
+    user: {}
 }[]>;
 
 interface ICommentRepository {
