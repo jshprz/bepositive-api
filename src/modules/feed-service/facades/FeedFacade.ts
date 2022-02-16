@@ -47,7 +47,7 @@ class FeedFacade {
             // If the rawFollowings is not an array, it should be an error.
             if (Array.isArray(rawFollowings)) {
                 rawFollowings.map((following) => {
-                    followings.push(following.user_relationships_user_id);
+                    followings.push(following.user_relationships_followee_id);
                 });
             } else {
                 this._log.error({

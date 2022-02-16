@@ -1,10 +1,27 @@
-import { getRepository, QueryFailedError } from 'typeorm';
+import {getRepository, QueryFailedError} from 'typeorm';
 import { UserRelationships } from "../../../../database/postgresql/models/UserRelationships";
 import IUserRelationshipRepository from "./IUserRelationshipRepository";
 
 class UserRelationshipRepository implements IUserRelationshipRepository {
+    private readonly _model;
 
-    constructor() {}
+    constructor() {
+        this._model = new UserRelationships();
+    }
+
+    /**
+     * Create user relationship record in the database.
+     * @param followeeCognitoSub: string
+     * @param followerCognitoSub: string
+     * @returns instance of UserRelationships
+     */
+    create(followeeCognitoSub: string, followerCognitoSub: string): UserRelationships {
+        this._model.id = undefined; // prevent overwriting existing posts from the same user
+        this._model.followee_id = followeeCognitoSub;
+        this._model.follower_id = followerCognitoSub;
+
+        return this._model;
+    }
 
     /**
      * Gets user followers.
@@ -13,23 +30,23 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
      * @returns Promise<{
      *         user_relationships_id: number,
      *         user_relationships_user_id: string,
-     *         user_relationships_following_id: string,
-     *         user_relationships_created_at: number,
+     *         user_relationships_followee_id: string,
+     *         user_relationships_follower_id: number,
      *         user_relationships_updated_at: number,
      *         user_relationships_deleted_at: number
      *     }[]>
      */
     get(follower = false, userCognitoSub: string): Promise<{
         user_relationships_id: number,
-        user_relationships_user_id: string,
-        user_relationships_following_id: string,
+        user_relationships_followee_id: string,
+        user_relationships_follower_id: string,
         user_relationships_created_at: number,
         user_relationships_updated_at: number,
         user_relationships_deleted_at: number
     }[]> {
         return new Promise(async (resolve, reject) => {
             // if follower is false we get the user's followers otherwise we get the user's followings.
-            const whereClause = (follower)? 'user_id = :userCognitoSub' : 'following_id = :userCognitoSub';
+            const whereClause = (follower)? 'followee_id = :userCognitoSub' : 'follower_id = :userCognitoSub';
 
             const userRelationships = await getRepository(UserRelationships)
                 .createQueryBuilder('user_relationships')
@@ -45,8 +62,8 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
                 const newUserRelationships = userRelationships.map((userRelationship) => {
                     return {
                         user_relationships_id: userRelationship.user_relationships_id,
-                        user_relationships_user_id: userRelationship.user_relationships_user_id,
-                        user_relationships_following_id: userRelationship.user_relationships_following_id,
+                        user_relationships_followee_id: userRelationship.user_relationships_followee_id,
+                        user_relationships_follower_id: userRelationship.user_relationships_follower_id,
                         user_relationships_created_at: userRelationship.user_relationships_created_at,
                         user_relationships_updated_at: userRelationship.user_relationships_updated_at,
                         user_relationships_deleted_at: userRelationship.user_relationships_deleted_at
@@ -56,6 +73,82 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
                 return resolve(newUserRelationships);
             } else {
                 return reject('userRelationships is not array');
+            }
+        });
+    }
+
+    getByFolloweeIdAndFollowerId(followeeCognitoSub: string, followerCognitoSub: string): Promise<{
+        user_relationships_id: number,
+        user_relationships_followee_id: string,
+        user_relationships_follower_id: string,
+        user_relationships_created_at: number,
+        user_relationships_updated_at: number,
+        user_relationships_deleted_at: number
+    }[]> {
+        return new Promise(async (resolve, reject) => {
+
+            const userRelationships = await getRepository(UserRelationships)
+                .createQueryBuilder('user_relationships')
+                .select('user_relationships')
+                .where('followee_id = :followeeCognitoSub', { followeeCognitoSub })
+                .andWhere('follower_id = :followerCognitoSub', { followerCognitoSub })
+                .getRawMany()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+
+            if (Array.isArray(userRelationships)) {
+
+                const newUserRelationships = userRelationships.map((userRelationship) => {
+                    return {
+                        user_relationships_id: userRelationship.user_relationships_id,
+                        user_relationships_followee_id: userRelationship.user_relationships_followee_id,
+                        user_relationships_follower_id: userRelationship.user_relationships_follower_id,
+                        user_relationships_created_at: userRelationship.user_relationships_created_at,
+                        user_relationships_updated_at: userRelationship.user_relationships_updated_at,
+                        user_relationships_deleted_at: userRelationship.user_relationships_deleted_at
+                    }
+                });
+
+                return resolve(newUserRelationships);
+            } else {
+                return reject('userRelationships is not array');
+            }
+        });
+    }
+
+    softDelete(followeeCognitoSub: string, followerCognitoSub: string): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            await getRepository(UserRelationships)
+                .createQueryBuilder()
+                .where('followee_id = :followeeCognitoSub', { followeeCognitoSub })
+                .andWhere('follower_id = :followerCognitoSub', { followerCognitoSub })
+                .softDelete()
+                .execute()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+
+            return resolve(true);
+        });
+    }
+
+    restoreSoftDelete(followeeCognitoSub: string, followerCognitoSub: string): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            const restoreSoftDelete = await getRepository(UserRelationships)
+                .createQueryBuilder()
+                .where('followee_id = :followeeCognitoSub', { followeeCognitoSub })
+                .andWhere('follower_id = :followerCognitoSub', { followerCognitoSub })
+                .restore()
+                .execute()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+
+            if (restoreSoftDelete && typeof restoreSoftDelete.affected === 'number') {
+                return resolve((restoreSoftDelete.affected > 0)? true : false);
+            } else {
+                return reject('Invalid restoreSoftDelete type');
             }
         });
     }

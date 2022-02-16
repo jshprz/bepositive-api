@@ -3,6 +3,7 @@ import IUserRelationshipRepository from "../infras/repositories/IUserRelationshi
 import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
 import {GetUserResponse, ListUsersResponse} from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {QueryFailedError} from "typeorm";
 
 class UserAccountFacade {
     private _log;
@@ -68,14 +69,26 @@ class UserAccountFacade {
 
                 if (error) {
                     this._log.error({
+                        function: 'getUser()',
                         message: error.toString(),
-                        payload: {"sub": sub}
+                        payload: { sub }
                     });
 
-                    return reject(Error.AWS_COGNITO_ERROR);
+                    return reject({
+                        message: Error.AWS_COGNITO_ERROR,
+                        code: 500
+                    });
                 } else {
-                    if (!result.Users) {
-                        return reject(Error.AWS_COGNITO_ERROR);
+                    if (!result.Users || result.Users.length < 1) {
+                        this._log.warn({
+                            function: 'getUser()',
+                            message: 'Users not found.',
+                            payload: { sub }
+                        });
+                        return reject({
+                            message: `User: ${sub} not found.`,
+                            code: 404
+                        });
                     } else {
                         const rawUser = result.Users.map((user) => {
                             return {
@@ -125,8 +138,8 @@ class UserAccountFacade {
      *         message: string,
      *         data: {
      *             user_relationships_id: number,
-     *             user_relationships_user_id: string,
-     *             user_relationships_following_id: string,
+     *             user_relationships_followee_id: string,
+     *             user_relationships_follower_id: string,
      *             user_relationships_created_at: number,
      *             user_relationships_updated_at: number,
      *             user_relationships_deleted_at: number
@@ -138,8 +151,8 @@ class UserAccountFacade {
         message: string,
         data: {
             user_relationships_id: number,
-            user_relationships_user_id: string,
-            user_relationships_following_id: string,
+            user_relationships_followee_id: string,
+            user_relationships_follower_id: string,
             user_relationships_created_at: number,
             user_relationships_updated_at: number,
             user_relationships_deleted_at: number
@@ -191,8 +204,8 @@ class UserAccountFacade {
      *         message: string,
      *         data: {
      *             user_relationships_id: number,
-     *             user_relationships_user_id: string,
-     *             user_relationships_following_id: string,
+     *             user_relationships_followee_id: string,
+     *             user_relationships_follower_id: string,
      *             user_relationships_created_at: number,
      *             user_relationships_updated_at: number,
      *             user_relationships_deleted_at: number
@@ -204,8 +217,8 @@ class UserAccountFacade {
         message: string,
         data: {
             user_relationships_id: number,
-            user_relationships_user_id: string,
-            user_relationships_following_id: string,
+            user_relationships_followee_id: string,
+            user_relationships_follower_id: string,
             user_relationships_created_at: number,
             user_relationships_updated_at: number,
             user_relationships_deleted_at: number
@@ -243,6 +256,106 @@ class UserAccountFacade {
                     code: 500
                 });
             }
+        });
+    }
+
+    followUser(followeeCognitoSub: string, followerCognitoSub: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            if (followeeCognitoSub === followerCognitoSub) {
+                return reject({
+                    message: 'Users are not allowed to follow themselves.',
+                    code: 400
+                });
+            }
+
+            // We retrieve the existence of user relationship based on the provided followeeCognitoSub and followerCognitoSub
+            // to be able to skip the follow process if a specific record is already existing.
+            const userRelationships = await this._userRelationshipRepository.getByFolloweeIdAndFollowerId(followeeCognitoSub, followerCognitoSub)
+                .catch((error: string) => {
+                    this._log.error({
+                        function: 'followUser()',
+                        message: error.toString(),
+                        payload: {
+                            followeeCognitoSub,
+                            followerCognitoSub
+                        }
+                    });
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
+
+            if (Array.isArray(userRelationships) && userRelationships.length <= 0) {
+                // If the restoration of soft delete cannot be applied, we create a new user relationship record.
+                const restoreSoftDelete = await this._userRelationshipRepository.restoreSoftDelete(followeeCognitoSub, followerCognitoSub);
+
+                if (!restoreSoftDelete) {
+                    await this._userRelationshipRepository.create(followeeCognitoSub, followerCognitoSub)
+                        .save()
+                        .catch((error: QueryFailedError) => {
+                            this._log.error({
+                                function: 'followUserById()',
+                                message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                                payload: {
+                                    followeeCognitoSub,
+                                    followerCognitoSub
+                                }
+                            });
+
+                            return reject({
+                                message: Error.DATABASE_ERROR.CREATE,
+                                code: 500
+                            });
+                        });
+                }
+
+                return resolve({
+                    message: `${followeeCognitoSub} successfully followed by ${followerCognitoSub}`,
+                    data: {},
+                    code: 201
+                });
+            } else {
+                return reject({
+                    message: `This user was already been followed.`,
+                    code: 409
+                });
+            }
+        });
+    }
+
+    unfollowUser(followeeCognitoSub: string, followerCognitoSub: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            await this._userRelationshipRepository.softDelete(followeeCognitoSub, followerCognitoSub).catch((error: string) => {
+                this._log.error({
+                    function: 'unfollowUser()',
+                    message: error,
+                    payload: {
+                        followeeCognitoSub,
+                        followerCognitoSub
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.DELETE,
+                    code: 500
+                })
+            });
+
+            return resolve({
+                message: `${followerCognitoSub} successfully unfollowed ${followeeCognitoSub}`,
+                data: {},
+                code: 204
+            });
         });
     }
 }

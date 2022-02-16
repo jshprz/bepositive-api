@@ -79,7 +79,7 @@ class PostFacade {
 
                     // Collect follower's feed creation promises and resolve them later.
                     followers.forEach((follower) => {
-                        const userId = follower.user_relationships_user_id;
+                        const userId = follower.user_relationships_followee_id;
                         createFeedPromises.push(this._feedRepository.create(userId, post.id));
                     });
 

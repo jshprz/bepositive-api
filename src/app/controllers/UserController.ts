@@ -399,6 +399,126 @@ class UserController {
             });
         }
     }
+
+    async followUser(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.followeeCognitoSub) {
+            return res.status(400).json({
+                message: errors.followeeCognitoSub.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const followeeCognitoSub: string = req.params.followeeCognitoSub;
+            const followerCognitoSub: string = req.body.userCognitoSub;
+
+            // Check the existence of the followeeCognitoSub and followerCognitoSub first.
+            for (const item of [followeeCognitoSub, followerCognitoSub]) {
+                await this._userAccountFacade.getUser(item);
+            }
+
+            const followUserResult = await this._userAccountFacade.followUser(followeeCognitoSub, followerCognitoSub);
+
+            return res.status(followUserResult.code).json({
+                message: followUserResult.message,
+                payload: followUserResult.data,
+                status: followUserResult.code
+            });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 409) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Conflict',
+                    status: 409
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async unfollowUser(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.followeeCognitoSub) {
+            return res.status(400).json({
+                message: errors.followeeCognitoSub.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const followeeCognitoSub: string = req.params.followeeCognitoSub;
+            const followerCognitoSub: string = req.body.userCognitoSub;
+
+            // Check the existence of the followeeCognitoSub and followerCognitoSub first.
+            for (const item of [followeeCognitoSub, followerCognitoSub]) {
+                await this._userAccountFacade.getUser(item);
+            }
+
+            const followUserResult = await this._userAccountFacade.unfollowUser(followeeCognitoSub, followerCognitoSub);
+
+            return res.status(followUserResult.code).json({
+                message: followUserResult.message,
+                payload: followUserResult.data,
+                status: followUserResult.code
+            });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
 }
 
 export default UserController;
