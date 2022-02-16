@@ -13,6 +13,16 @@ type getCommentByIdResult = {
     deletedAt: number
 };
 
+type getCommentsByPostIdReturnType = Promise<{
+    id: number,
+    userId: string,
+    postId: number,
+    content: string,
+    status: string,
+    createdAt: number,
+    updatedAt: number,
+}[]>;
+
 class CommentRepository implements ICommentRepository {
     private readonly _model;
 
@@ -63,6 +73,52 @@ class CommentRepository implements ICommentRepository {
                 updatedAt: query?.updated_at || 0,
                 deletedAt: query?.deleted_at || 0
             });
+        });
+    }
+
+    /**
+     * Get all the comments under a post.
+     * @param postId: number
+     * @returns getCommentsByPostIdReturnType
+     */
+    getCommentsByPostId(postId: number): getCommentsByPostIdReturnType {
+        return new Promise(async (resolve, reject) => {
+            const comments = await getRepository(Comments)
+                .createQueryBuilder('comments')
+                .select('comments')
+                .where('post_id = :postId', { postId })
+                .getRawMany()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+
+            // We expect the comments to be an array, other types are not allowed.
+            if (Array.isArray(comments)) {
+
+                const newComments = comments.map((comment: {
+                    comments_id: number,
+                    comments_user_id: string,
+                    comments_post_id: number,
+                    comments_content: string,
+                    comments_status: string,
+                    comments_created_at: number,
+                    comments_updated_at: number,
+                }) => {
+                    return {
+                        id: comment.comments_id,
+                        userId: comment.comments_user_id,
+                        postId: comment.comments_post_id,
+                        content: comment.comments_content,
+                        status: comment.comments_status,
+                        createdAt: comment.comments_created_at,
+                        updatedAt: comment.comments_updated_at,
+                    }
+                });
+
+                return resolve(newComments);
+            }
+
+            return reject('invalid type for comments');
         });
     }
 
