@@ -46,13 +46,13 @@ class PostFacade {
      * @returns Promise<{
      *         message: string,
      *         data: string[],
-     *         code: 200
+     *         code: number
      *     }>
      */
     createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<{
         message: string,
         data: string[],
-        code: 200
+        code: number
     }> {
         return new Promise(async (resolve, reject) => {
             const preSignedURLPromises: any[] = [];
