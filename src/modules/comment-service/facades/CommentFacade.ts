@@ -3,8 +3,12 @@ import Logger from '../../../config/Logger';
 import Error from '../../../config/Error';
 
 import IPostRepository from "../../content-service/infras/repositories/IPostRepository"; // External
+import IAwsCognito from "../../user-service/infras/aws/IAwsCognito";
+import UserRelationshipRepository from "../../user-service/infras/repositories/UserRelationshipRepository";
+import UserAccountFacade from "../../user-service/facades/UserAccountFacade";
 
 import { QueryFailedError } from "typeorm";
+import AwsCognito from "../../user-service/infras/aws/AwsCognito";
 
 type commentType = {
     id: number,
@@ -18,8 +22,11 @@ type commentType = {
 
 class CommentFacade {
     private _log;
+    private _userAccountFacade;
 
     constructor(private _commentRepository: ICommentRepository, private _postRepository: IPostRepository) {
+        this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new UserRelationshipRepository());
+
         this._log = Logger.createLogger('CommentFacade.ts');
     }
 
@@ -103,11 +110,22 @@ class CommentFacade {
                 });
             });
 
-            return resolve({
-                message: 'Comments successfully retrieved',
-                data: comments || [],
-                code: 200
-            });
+            if (Array.isArray(comments)) {
+                for (let i = 0; i < comments.length; i++) {
+                    comments[i].user = await this._userAccountFacade.getUser(comments[i].userId);
+                }
+
+                return resolve({
+                    message: 'Comments successfully retrieved',
+                    data: comments || [],
+                    code: 200
+                });
+            } else {
+                return reject({
+                    message: 'Invalid type for comments.',
+                    code: 500
+                });
+            }
         });
     }
 
