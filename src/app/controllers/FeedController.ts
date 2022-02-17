@@ -16,9 +16,17 @@ class FeedController {
     async getFeed(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
-        if (errors.pagination) {
+        if (errors.page) {
             return res.status(400).json({
-                message: errors.pagination.msg,
+                message: errors.page.msg,
+                error: 'bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.size) {
+            return res.status(400).json({
+                message: errors.size.msg,
                 error: 'bad request error',
                 status: 400
             });
@@ -26,7 +34,10 @@ class FeedController {
 
         try {
             const userCognitoSub: string = req.body.userCognitoSub;
-            const { pagination } = req.body;
+            const pagination = {
+                page: Number(req.query.page),
+                size: Number(req.query.size)
+            };
 
             const feed = await this._feedFacade.getFeed(userCognitoSub, pagination);
 
@@ -67,16 +78,27 @@ class FeedController {
     async getTrendingFeed(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
-        if (errors.pagination) {
+        if (errors.page) {
             return res.status(400).json({
-                message: errors.pagination.msg,
+                message: errors.page.msg,
+                error: 'bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.size) {
+            return res.status(400).json({
+                message: errors.size.msg,
                 error: 'bad request error',
                 status: 400
             });
         }
 
         try {
-            const { pagination } = req.body;
+            const pagination = {
+                page: Number(req.query.page),
+                size: Number(req.query.size)
+            };
             const popularityThreshold = 20;
             const trendingFeed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold);
 
