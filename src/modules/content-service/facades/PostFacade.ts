@@ -51,7 +51,7 @@ class PostFacade {
      */
     createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<{
         message: string,
-        data: string[],
+        data: { uploadSignedURLs: string[] },
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
@@ -134,7 +134,7 @@ class PostFacade {
 
                 return resolve({
                     message: 'Post created successfully.',
-                    data: (Array.isArray(preSignedUrls))? preSignedUrls : [],
+                    data: { uploadSignedURLs: (Array.isArray(preSignedUrls))? preSignedUrls : [] },
                     code: 200
                 });
             } else {
