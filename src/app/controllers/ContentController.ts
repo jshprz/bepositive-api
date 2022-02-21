@@ -62,21 +62,33 @@ class ContentController {
                 });
             }
 
-            const uploadSignedUrls = await this._postFacade.createPost({userCognitoSub, caption, files, googlemapsPlaceId});
+            const createPostResult = await this._postFacade.createPost({userCognitoSub, caption, files, googlemapsPlaceId});
 
-            return res.status(200).json({
-                message: 'Post created successfully.',
-                payload: {
-                    uploadSignedUrls,
-                },
-                status: 200
+            return res.status(createPostResult.code).json({
+                message: createPostResult.message,
+                payload: createPostResult.data,
+                status: createPostResult.code
             });
-        } catch (error) {
-            return res.status(500).json({
-                message: error,
-                error: 'Internal server error',
-                status: 500
-            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 

@@ -1,12 +1,20 @@
+import { UserRelationships } from "../../../../database/postgresql/models/UserRelationships";
+
+type userRelationshipTypes = {
+    id: number,
+    followeeId: string,
+    followerId: string,
+    createdAt: number,
+    updatedAt: number,
+    deletedAt: number
+}
+
 interface IUserRelationshipRepository {
-    get(follower: boolean, userCognitoSub: string): Promise<{
-        user_relationships_id: number,
-        user_relationships_user_id: string,
-        user_relationships_following_id: string,
-        user_relationships_created_at: number,
-        user_relationships_updated_at: number,
-        user_relationships_deleted_at: number
-    }[]>;
+    create(followeeCognitoSub: string, followerCognitoSub: string): UserRelationships;
+    get(byFollower: boolean, userCognitoSub: string): Promise<userRelationshipTypes[]>;
+    getByFolloweeIdAndFollowerId(followeeCognitoSub: string, followerCognitoSub: string): Promise<userRelationshipTypes[]>;
+    softDelete(followeeCognitoSub: string, followerCognitoSub: string): Promise<boolean>;
+    restoreSoftDelete(followeeCognitoSub: string, followerCognitoSub: string): Promise<boolean>;
 }
 
 export default IUserRelationshipRepository;
