@@ -1,4 +1,12 @@
-import { Entity, Column, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Entity,
+  Column,
+  BaseEntity,
+  PrimaryGeneratedColumn,
+  DeleteDateColumn,
+  UpdateDateColumn,
+  CreateDateColumn
+} from "typeorm";
 
 @Entity({name: "user_relationships"})
 export class UserRelationships extends BaseEntity {
@@ -7,17 +15,17 @@ export class UserRelationships extends BaseEntity {
   id?: number;
 
   @Column({type: "varchar", length: 255, nullable: false})
-  user_id?: string;
+  followee_id?: string;
 
   @Column({type: "varchar", length: 255, nullable: false})
-  following_id?: string;
+  follower_id?: string;
 
-  @Column({type: "bigint", nullable: false})
+  @CreateDateColumn()
   created_at?: number;
 
-  @Column({type: "bigint", nullable: true})
+  @UpdateDateColumn()
   updated_at?: number;
 
-  @Column({type: "bigint", nullable: true})
+  @DeleteDateColumn()
   deleted_at?: number;
 }

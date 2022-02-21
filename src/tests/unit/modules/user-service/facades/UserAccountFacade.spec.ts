@@ -311,4 +311,54 @@ describe('Facades :: UserAccountFacade', () => {
             });
         });
     });
+
+    describe(':: followUserById', () => {
+        describe('#execute', () => {
+            it('should call the followUserById() once with the expected arguments', () => {
+                // To show that mockClear() is working:
+                expect(userAccountFacadeMock).not.toHaveBeenCalled();
+                expect(awsCognitoMock).not.toHaveBeenCalled();
+                expect(userRelationshipRepositoryMock).not.toHaveBeenCalled();
+
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new UserRelationshipRepository());
+                expect(userAccountFacadeMock).toHaveBeenCalledTimes(1);
+
+                const followeeCognitoSub: string = 'ef0a9ab4-7e11-4518-98e8-ca9bf52c1a2b';
+                const followerCognitoSub: string = 'a442d70f-53e1-4b6b-84a4-b76589d74772';
+
+                userAccountFacadeInstance.followUser(followeeCognitoSub, followerCognitoSub);
+
+                expect(userAccountFacadeMock.prototype.followUser).toHaveBeenCalledWith('ef0a9ab4-7e11-4518-98e8-ca9bf52c1a2b', 'a442d70f-53e1-4b6b-84a4-b76589d74772');
+                expect(userAccountFacadeMock.prototype.followUser).toHaveBeenCalledTimes(1);
+            });
+
+            it('should return a resolved promise with expected object', async () => {
+                // To show that mockClear() is working:
+                expect(userAccountFacadeMock).not.toHaveBeenCalled();
+                expect(awsCognitoMock).not.toHaveBeenCalled();
+                expect(userRelationshipRepositoryMock).not.toHaveBeenCalled();
+
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new UserRelationshipRepository());
+
+                jest.spyOn(userAccountFacadeInstance, 'followUser').mockImplementation((followeeUserCognitoSub: string, followerUserCognitoSub: string) => {
+                    return new Promise((resolve, reject) => {
+                        resolve({
+                           message: `${followeeUserCognitoSub} successfully followed by ${followerUserCognitoSub}`,
+                           data: {},
+                           code: 201
+                       })
+                    });
+                });
+
+                const followeeCognitoSub: string = 'ef0a9ab4-7e11-4518-98e8-ca9bf52c1a2b';
+                const followerCognitoSub: string = 'a442d70f-53e1-4b6b-84a4-b76589d74772';
+
+                await expect(userAccountFacadeInstance.followUser(followeeCognitoSub, followerCognitoSub)).resolves.toEqual({
+                    'code': 201,
+                    'data': {},
+                    'message': 'ef0a9ab4-7e11-4518-98e8-ca9bf52c1a2b successfully followed by a442d70f-53e1-4b6b-84a4-b76589d74772'
+                });
+            });
+        });
+    });
 });

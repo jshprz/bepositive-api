@@ -16,9 +16,17 @@ class FeedController {
     async getFeed(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
-        if (errors.pagination) {
+        if (errors.page) {
             return res.status(400).json({
-                message: errors.pagination.msg,
+                message: errors.page.msg,
+                error: 'bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.size) {
+            return res.status(400).json({
+                message: errors.size.msg,
                 error: 'bad request error',
                 status: 400
             });
@@ -26,52 +34,105 @@ class FeedController {
 
         try {
             const userCognitoSub: string = req.body.userCognitoSub;
-            const { pagination } = req.body;
-            const followings: string[] = [];
+            const pagination = {
+                page: Number(req.query.page),
+                size: Number(req.query.size)
+            };
 
-            const feed = await this._feedFacade.getFeed(userCognitoSub, pagination, followings);
+            const feed = await this._feedFacade.getFeed(userCognitoSub, pagination);
 
-            return res.status(200).json({
-                message: 'Posts retrieved successfully',
-                payload: feed,
-                status: 200
+            return res.status(feed.code).json({
+                message: feed.message,
+                payload: feed.data,
+                status: feed.code
             });
         } catch (error: any) {
-            res.status(500).json({
-                message: 'An error occurred in retrieving posts',
-                error: 'Internal server error',
-                status: 500
-            });
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 
     async getTrendingFeed(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
-        if (errors.pagination) {
+        if (errors.page) {
             return res.status(400).json({
-                message: errors.pagination.msg,
+                message: errors.page.msg,
+                error: 'bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.size) {
+            return res.status(400).json({
+                message: errors.size.msg,
                 error: 'bad request error',
                 status: 400
             });
         }
 
         try {
-            const { pagination } = req.body;
+            const pagination = {
+                page: Number(req.query.page),
+                size: Number(req.query.size)
+            };
             const popularityThreshold = 20;
-            const feed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold);
+            const trendingFeed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold);
 
-            return res.status(200).json({
-                message: 'Posts retrieved successfully',
-                payload: feed,
-                status: 200
+            return res.status(trendingFeed.code).json({
+                message: trendingFeed.message,
+                payload: trendingFeed.data,
+                status: trendingFeed.code
             });
         } catch (error: any) {
-            res.status(500).json({
-                message: 'An error occurred in retrieving posts',
-                error: 'Internal server error',
-                status: 500
-            });
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 }
