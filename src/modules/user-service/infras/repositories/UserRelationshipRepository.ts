@@ -72,6 +72,13 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
         });
     }
 
+
+    /**
+     * To get a record in user_relationships table by followee id and follower id.
+     * @param followeeCognitoSub
+     * @param followerCognitoSub
+     * @returns Promise<userRelationshipTypes[]>
+     */
     getByFolloweeIdAndFollowerId(followeeCognitoSub: string, followerCognitoSub: string): Promise<userRelationshipTypes[]> {
         return new Promise(async (resolve, reject) => {
 
@@ -105,6 +112,13 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
         });
     }
 
+
+    /**
+     * To perform a soft delete in user_relationships table records.
+     * @param followeeCognitoSub
+     * @param followerCognitoSub
+     * @returns Promise<boolean>
+     */
     softDelete(followeeCognitoSub: string, followerCognitoSub: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
             await getRepository(UserRelationships)
@@ -121,6 +135,13 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
         });
     }
 
+
+    /**
+     * To restore the soft deleted records in user_relationships table.
+     * @param followeeCognitoSub
+     * @param followerCognitoSub
+     * @returns Promise<boolean>
+     */
     restoreSoftDelete(followeeCognitoSub: string, followerCognitoSub: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
             const restoreSoftDelete = await getRepository(UserRelationships)

@@ -260,6 +260,17 @@ class UserAccountFacade {
         });
     }
 
+
+    /**
+     * To follow a user.
+     * @param followeeCognitoSub: string
+     * @param followerCognitoSub: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
     followUser(followeeCognitoSub: string, followerCognitoSub: string): Promise<{
         message: string,
         data: {},
@@ -330,6 +341,17 @@ class UserAccountFacade {
         });
     }
 
+
+    /**
+     * To unfollow a user.
+     * @param followeeCognitoSub: string
+     * @param followerCognitoSub: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
     unfollowUser(followeeCognitoSub: string, followerCognitoSub: string): Promise<{
         message: string,
         data: {},
