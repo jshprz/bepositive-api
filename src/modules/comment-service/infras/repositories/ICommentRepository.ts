@@ -28,7 +28,7 @@ interface ICommentRepository {
     getCommentById(id: number, userId: string): Promise<getCommentByIdResult>;
     getCommentsByPostId(postId: number): getCommentsByPostIdReturnType;
     update(id: number, userId: string, content: string): Promise<UpdateResult>;
-    removeCommentById(id: number): Promise<UpdateResult>;
+    softDelete(id: number): Promise<boolean>;
 }
 
 export default ICommentRepository;
