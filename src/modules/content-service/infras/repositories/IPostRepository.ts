@@ -20,7 +20,7 @@ interface IPostRepository {
     getPostsByUserCognitoSub(userCognitoSub: string): getPostsByUserCognitoSubReturnType;
     getPostById(id: number): Promise<any>;
     update(id: number, caption: string): Promise<UpdateResult>;
-    removePostById(id: number): Promise<UpdateResult>;
+    softDelete(id: number): Promise<boolean>;
 }
 
 export default IPostRepository;

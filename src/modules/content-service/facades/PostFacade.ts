@@ -282,9 +282,9 @@ class PostFacade {
      */
     removePost(id: number): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
-            await this._postRepository.removePostById(id).catch((error) => {
+            await this._postRepository.softDelete(id).catch((error) => {
                 this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {id}
                 });
 

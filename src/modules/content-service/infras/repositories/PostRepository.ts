@@ -37,7 +37,6 @@ class PostRepository implements IPostRepository {
         this._model.view_count = 0;
         this._model.google_maps_place_id = item.googlemapsPlaceId;
         this._model.s3_files = item.files;
-        this._model.created_at = Number(Date.now());
 
         return this._model;
     }
@@ -107,8 +106,6 @@ class PostRepository implements IPostRepository {
             .createQueryBuilder('posts')
             .select('posts')
             .where('id = :id', {id})
-            .andWhere('deleted_at IS NULL')
-            .andWhere('status != :status', {status: 'deleted'})
             .getOne();
     }
 
@@ -123,32 +120,29 @@ class PostRepository implements IPostRepository {
         return getRepository(Posts)
             .createQueryBuilder('posts')
             .update(Posts)
-            .set({
-                caption,
-                updated_at: Number(Date.now())
-            })
+            .set({caption})
             .where('id = :id', {id})
             .andWhere('deleted_at IS NULL')
-            .andWhere('status != :status', {status: 'deleted'})
             .execute();
     }
 
     /**
-     * Removes a post by id.
+     * Performs soft delete for Posts
      * @param id: number
-     * @returns Promise<UpdateResult>
+     * @returns Promise<boolean>
      */
-    removePostById(id: number): Promise<UpdateResult> {
-
-        return getRepository(Posts)
-            .createQueryBuilder('posts')
-            .update(Posts)
-            .set({
-                status: 'deleted',
-                deleted_at: Number(Date.now())
-            })
-            .where('id = :id', {id})
-            .execute();
+    softDelete(id: number): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            await getRepository(Posts)
+                .createQueryBuilder()
+                .where("id = :id", {id})
+                .softDelete()
+                .execute()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+            return resolve(true);
+        })
     }
 }
 

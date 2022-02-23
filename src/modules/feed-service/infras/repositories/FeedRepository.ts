@@ -60,8 +60,10 @@ class FeedRepository implements IFeedRepository{
                         .from(UserFeeds, "user_feeds")
                         .where("user_feeds.user_id = :userCognitoSub", {userCognitoSub})
                         .getQuery();
-                    return "posts.id IN " + subQuery + " order by posts.created_at desc";
-                }).getMany()
+                    return "posts.id IN " + subQuery;
+                })
+                .orderBy('posts.created_at', 'DESC')
+                .getMany()
                 .catch((error: QueryFailedError) => {
                     return reject(error);
                 });
