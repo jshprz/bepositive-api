@@ -21,9 +21,9 @@ export class Comments extends BaseEntity {
   @CreateDateColumn()
   created_at?: number;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({nullable: true})
   updated_at?: number;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({nullable: true})
   deleted_at?: number;
 }
