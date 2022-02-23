@@ -1,4 +1,4 @@
-import { Entity, Column, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, Column, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from "typeorm";
 
 @Entity({name: "comments"})
 export class Comments extends BaseEntity {
@@ -18,12 +18,12 @@ export class Comments extends BaseEntity {
   @Column({type: "varchar", length: 50, nullable: false})
   status?: string;
 
-  @Column({type: "bigint", nullable: false})
+  @CreateDateColumn()
   created_at?: number;
 
-  @Column({type: "bigint", nullable: true})
+  @UpdateDateColumn()
   updated_at?: number;
 
-  @Column({type: "bigint", nullable: true})
+  @DeleteDateColumn()
   deleted_at?: number;
 }

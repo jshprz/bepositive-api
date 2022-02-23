@@ -218,7 +218,7 @@ class CommentFacade {
                 });
             }
 
-            await this._commentRepository.removeCommentById(id);
+            await this._commentRepository.softDelete(id);
 
             return resolve({
                 message: 'The comment was removed successfully.',

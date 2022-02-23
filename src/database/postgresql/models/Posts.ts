@@ -1,4 +1,4 @@
-import { Entity, Column, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, Column, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from "typeorm";
 
 @Entity({name: "posts"})
 export class Posts extends BaseEntity {
@@ -27,12 +27,12 @@ export class Posts extends BaseEntity {
   @Column("jsonb", {array: false, nullable: false})
   s3_files?: { key: string, type: string }[];
 
-  @Column({type: "bigint", nullable: false})
+  @CreateDateColumn()
   created_at?: number;
 
-  @Column({type: "bigint", nullable: true})
+  @UpdateDateColumn()
   updated_at?: number;
 
-  @Column({type: "bigint", nullable: true})
+  @DeleteDateColumn()
   deleted_at?: number;
 }

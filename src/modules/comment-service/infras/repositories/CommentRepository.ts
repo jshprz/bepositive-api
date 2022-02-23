@@ -38,7 +38,6 @@ class CommentRepository implements ICommentRepository {
         this._model.post_id = item.postId;
         this._model.content = item.content;
         this._model.status = 'active';
-        this._model.created_at = Number(Date.now());
 
         return this._model;
     }
@@ -57,8 +56,6 @@ class CommentRepository implements ICommentRepository {
                 .select('comments')
                 .where('id = :id', {id})
                 .andWhere('user_id = :userId', {userId})
-                .andWhere('deleted_at IS NULL')
-                .andWhere('status != :status', {status: 'deleted'})
                 .getOne()
                 .catch((error: QueryFailedError) => {
                    return reject(error);
@@ -136,33 +133,30 @@ class CommentRepository implements ICommentRepository {
         return getRepository(Comments)
             .createQueryBuilder('comments')
             .update(Comments)
-            .set({
-                content,
-                updated_at: Number(Date.now())
-            })
+            .set({content})
             .where('id = :id', {id})
             .andWhere('user_id = :userId', {userId})
             .andWhere('deleted_at IS NULL')
-            .andWhere('status != :status', {status: 'deleted'})
             .execute();
     }
 
     /**
-     * Removes a post comment by id.
+     * Performs soft delete for Comments
      * @param id: number
-     * @returns Promise<UpdateResult>
+     * @returns Promise<boolean>
      */
-    removeCommentById(id: number): Promise<UpdateResult> {
-
-        return getRepository(Comments)
-            .createQueryBuilder('comments')
-            .update(Comments)
-            .set({
-                status: 'deleted',
-                deleted_at: Number(Date.now())
-            })
-            .where('id = :id', {id})
-            .execute();
+     softDelete(id: number): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            await getRepository(Comments)
+                .createQueryBuilder()
+                .where("id = :id", {id})
+                .softDelete()
+                .execute()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+            return resolve(true);
+        })
     }
 }
 
