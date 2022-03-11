@@ -20,8 +20,7 @@ class AccessTokenRepository implements IAccessTokenRepository {
             .into(AccessTokens)
             .values([{
                 access_token: accessToken,
-                user_id: userCognitoSub,
-                created_at: Number(Date.now())
+                user_id: userCognitoSub
             }]).execute();
     }
 

@@ -20,12 +20,12 @@ export class UserRelationships extends BaseEntity {
   @Column({type: "varchar", length: 255, nullable: false})
   follower_id?: string;
 
-  @CreateDateColumn()
-  created_at?: number;
+  @CreateDateColumn({type: 'timestamptz'})
+  created_at?: Date;
 
-  @UpdateDateColumn({nullable: true})
-  updated_at?: number;
+  @UpdateDateColumn({type: 'timestamptz', nullable: true})
+  updated_at?: Date;
 
-  @DeleteDateColumn({nullable: true})
-  deleted_at?: number;
+  @DeleteDateColumn({type: 'timestamptz', nullable: true})
+  deleted_at?: Date;
 }

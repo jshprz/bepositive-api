@@ -9,20 +9,7 @@ import IUserRelationshipRepository from "../../user-service/infras/repositories/
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-
-type postType = {
-    id: number,
-    userId: string,
-    caption: string,
-    status: string,
-    viewCount: number,
-    googleMapsPlaceId: string,
-    locationDetails: string,
-    postMediaFiles: {key: string, type: string}[],
-    createdAt: number,
-    updatedAt: number,
-    deletedAt: number
-}
+import type { postType } from '../../types';
 
 class PostFacade {
     private _log;
@@ -109,9 +96,9 @@ class PostFacade {
                     id: 0,
                     followeeId: '',
                     followerId: item.userCognitoSub,
-                    createdAt: 0,
-                    updatedAt: 0,
-                    deletedAt: 0
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    deletedAt: new Date()
                 });
 
                 // After creating the post we distribute it to the followers of the user who created it.
@@ -209,39 +196,68 @@ class PostFacade {
     /**
      * Get a post by its ID.
      * @param id: number
-     * @returns Promise<any>
+     * @returns Promise<{
+     *   message: string,
+     *   data: postType,
+     *   code: number
+     * }>
      */
-    getPostById(id: number): Promise<any> {
+    getPostById(id: number): Promise<{
+        message: string,
+        data: postType,
+        code: number
+    }> {
         return new Promise(async (resolve, reject) => {
-            const post = await this._postRepository.getPostById(id).catch((error) => {
+            const post = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
                 this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    function: 'getPostById()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {id}
                 });
 
-                return reject(Error.DATABASE_ERROR.GET);
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
             });
 
-            if (post?.google_maps_place_id) {
-                // Retrieve post location details
-                const place = await this._googleapis.placeDetails({
-                    params: {
-                        place_id: post.google_maps_place_id,
-                        key: `${process.env.GOOGLE_MAPS_API_KEY}`
-                    }
-                }).catch((error) => {
-                    throw error.stack;
-                });
-                post.location_details = `${place.data.result.name}, ${place.data.result.vicinity}`;
-            }
+            if (post && post.id && post.id !== 0) {
+                if (post.googleMapsPlaceId) {
+                    // Retrieve post location details
+                    const place = await this._googleapis.placeDetails({
+                        params: {
+                            place_id: post.googleMapsPlaceId,
+                            key: `${process.env.GOOGLE_MAPS_API_KEY}`
+                        }
+                    }).catch((error) => {
+                        throw error.stack;
+                    });
+                    post.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
+                }
 
-            if (post?.s3_files) {
-                post.s3_files.forEach((file: { key: string; }) => {
-                    file.key = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                if (post.postMediaFiles) {
+                    post.postMediaFiles.forEach((file: { key: string; }) => {
+                        file.key = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                    });
+                }
+
+                return resolve({
+                    message: 'Post retrieved',
+                    data: post,
+                    code: 200
+                });
+            } else {
+                this._log.info({
+                    function: 'getPostById()',
+                    message: 'Post retrieval info',
+                    payload: {id}
+                });
+                return reject({
+                    message: 'Post retrieved',
+                    data: {},
+                    code: 200
                 });
             }
-
-            return resolve(post);
         });
     }
 
@@ -249,9 +265,17 @@ class PostFacade {
      * Update the caption of the post.
      * @param id: number
      * @param caption: string
-     * @returns Promise<string>
+     * @returns Promise<{
+     *   message: string,
+     *   data: {},
+     *   code: number
+     * }>
      */
-    updatePost(id: number, caption: string): Promise<string> {
+    updatePost(id: number, caption: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
         return new Promise(async (resolve, reject) => {
             const post = await this._postRepository.getPostById(id).catch((error) => {
                 this._log.error({
@@ -262,25 +286,43 @@ class PostFacade {
                     }
                 });
 
-                return reject(Error.DATABASE_ERROR.GET);
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
             });
 
             if (!post) {
-                return reject('Post not found.');
+                return reject({
+                    message: 'Post not found.',
+                    code: 404
+                });
             }
 
             await this._postRepository.update(id, caption);
 
-            return resolve('The post was updated successfully.');
+            return resolve({
+                message: 'The post was updated successfully.',
+                data: {},
+                code: 200
+            });
         });
     }
 
     /**
      * Remove a post by ID.
      * @param id
-     * @returns Promise<boolean>
+     * @returns Promise<{
+     *   message: string,
+     *   data: {},
+     *   code: number
+     * }>
      */
-    removePost(id: number): Promise<boolean> {
+    removePost(id: number): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
         return new Promise(async (resolve, reject) => {
             await this._postRepository.softDelete(id).catch((error) => {
                 this._log.error({
@@ -288,10 +330,17 @@ class PostFacade {
                     payload: {id}
                 });
 
-                return reject(Error.DATABASE_ERROR.UPDATE);
+                return reject({
+                    message: Error.DATABASE_ERROR.UPDATE,
+                    code: 500
+                });
             });
 
-            return resolve(true);
+            return resolve({
+                message: 'The post was successfully deleted.',
+                data: {},
+                code: 200
+            });
         });
     }
 

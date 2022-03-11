@@ -27,12 +27,12 @@ export class Posts extends BaseEntity {
   @Column("jsonb", {array: false, nullable: false})
   s3_files?: { key: string, type: string }[];
 
-  @CreateDateColumn()
-  created_at?: number;
+  @CreateDateColumn({type: 'timestamptz'})
+  created_at?: Date;
 
-  @UpdateDateColumn({nullable: true})
-  updated_at?: number;
+  @UpdateDateColumn({type: 'timestamptz', nullable: true})
+  updated_at?: Date;
 
-  @DeleteDateColumn({nullable: true})
-  deleted_at?: number;
+  @DeleteDateColumn({type: 'timestamptz', nullable: true})
+  deleted_at?: Date;
 }

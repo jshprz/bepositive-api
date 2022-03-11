@@ -4,9 +4,9 @@ type userRelationshipTypes = {
     id: number,
     followeeId: string,
     followerId: string,
-    createdAt: number,
-    updatedAt: number,
-    deletedAt: number
+    createdAt: Date,
+    updatedAt: Date,
+    deletedAt: Date
 }
 
 interface IUserRelationshipRepository {

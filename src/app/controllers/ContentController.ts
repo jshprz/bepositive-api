@@ -14,13 +14,18 @@ import { validationResult } from "express-validator";
 import { config } from "../../config";
 import uniqid from 'uniqid';
 
+import ResponseMutator from "../../utils/ResponseMutator";
+import type { timestampsType } from '../../modules/types';
+
 class ContentController {
     private _postFacade;
     private _postShareFacade;
+    private _utilResponseMutator;
 
     constructor() {
         this._postFacade = new postFacade(new awsS3(), new postRepository(), new postLikeRepository(), new userRelationshipRepository(), new feedRepository());
         this._postShareFacade = new postShareFacade(new postShareRepository(), new postRepository());
+        this._utilResponseMutator = new ResponseMutator();
     }
 
     async createPost(req: Request, res: Response) {
@@ -99,7 +104,20 @@ class ContentController {
 
             const posts = await this._postFacade.getPostsByUser(userCognitoSub);
 
-            return res.status(200).json({
+            // Change the createdAt and updatedAt datetime format to unix timestamp
+            // We do this as format convention for createdAt and updatedAt
+            posts.data.forEach((post) => {
+                const timestamps = {
+                    createdAt: post.createdAt,
+                    updatedAt: post.updatedAt
+                }
+                const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+
+                post.createdAt = unixTimestamps.createdAt;
+                post.updatedAt = unixTimestamps.updatedAt;
+            });
+
+            return res.status(posts.code).json({
                 message: posts.message,
                 payload: posts.data,
                 status: posts.code
@@ -142,20 +160,47 @@ class ContentController {
             const id = Number(req.params.id);
             const post = await this._postFacade.getPostById(id);
 
-            return res.status(200).json({
-                message: 'Post retrieved',
-                payload: {
-                    post
-                },
-                status: 200
+            // Change the createdAt and updatedAt datetime format to unix timestamp
+            // We do this as format convention for createdAt and updatedAt
+            const timestamps = {
+                createdAt: post.data.createdAt,
+                updatedAt: post.data.updatedAt
+            }
+            const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+            post.data.createdAt = unixTimestamps.createdAt;
+            post.data.updatedAt = unixTimestamps.updatedAt;
+
+            return res.status(post.code).json({
+                message: post.message,
+                payload: post.data,
+                status: post.code
             });
         } catch (error: any) {
-
-            return res.status(500).json({
-                message: error,
-                error: 'Internal server error',
-                status: 500
-            });
+            if (error.code && error.code === 200) {
+                return res.status(200).json({
+                    message: error.message,
+                    payload: error.data,
+                    status: 200
+                });
+            } else if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 
@@ -183,21 +228,34 @@ class ContentController {
             const id: number = Number(req.params.id);
             const caption: string = String(req.body.caption);
 
-            await this._postFacade.updatePost(id, caption);
+            const updatePostResult = await this._postFacade.updatePost(id, caption);
 
-            return res.status(200).json({
-                message: 'The post was updated successfully.',
-                payload: {},
-                status: 200
+            return res.status(updatePostResult.code).json({
+                message: updatePostResult.message,
+                payload: updatePostResult.data,
+                status: updatePostResult.code
             });
 
-        } catch (error) {
-
-            return res.status(500).json({
-                message: error,
-                error: 'Internal server error',
-                status: 500
-            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 
@@ -215,21 +273,34 @@ class ContentController {
 
         try {
             const id = Number(req.params.id);
-            await this._postFacade.removePost(id);
+            const removePostResult = await this._postFacade.removePost(id);
 
-            return res.status(200).json({
-                message: 'The post was successfully deleted.',
-                payload: {},
-                status: 200
+            return res.status(removePostResult.code).json({
+                message: removePostResult.message,
+                payload: removePostResult.data,
+                status: removePostResult.code
             });
 
-        } catch (error) {
-
-            return res.status(500).json({
-                message: error,
-                error: 'Internal server error',
-                status: 500
-            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 
@@ -260,9 +331,9 @@ class ContentController {
 
             const sharedPost = await this._postShareFacade.createSharedPost(postId, {userId, postId, shareCaption});
 
-            return res.status(200).json({
+            return res.status(sharedPost.code).json({
                 message: sharedPost.message,
-                payload: {},
+                payload: sharedPost.data,
                 status: sharedPost.code
             });
         } catch (error: any) {
@@ -271,6 +342,12 @@ class ContentController {
                     message: error.message,
                     error: 'Internal server error',
                     status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
                 });
             } else {
                 return res.status(520).json({
@@ -298,7 +375,17 @@ class ContentController {
             const sharedPostId = Number(req.params.id);
             const sharedPost = await this._postShareFacade.getSharedPostById(sharedPostId);
 
-            return res.status(200).json({
+            // Change the createdAt and updatedAt datetime format to unix timestamp
+            // We do this as format convention for createdAt and updatedAt
+            const timestamps = {
+                createdAt: sharedPost.data.createdAt,
+                updatedAt: sharedPost.data.updatedAt
+            }
+            const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+            sharedPost.data.createdAt = unixTimestamps.createdAt;
+            sharedPost.data.updatedAt = unixTimestamps.updatedAt;
+
+            return res.status(sharedPost.code).json({
                 message: sharedPost.message,
                 payload: sharedPost.data,
                 status: sharedPost.code
@@ -309,6 +396,12 @@ class ContentController {
                     message: error.message,
                     error: 'Internal server error',
                     status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
                 });
             } else {
                 return res.status(520).json({

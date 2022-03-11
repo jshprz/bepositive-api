@@ -1,20 +1,7 @@
 import {getRepository, QueryFailedError, UpdateResult} from 'typeorm';
 import { Posts } from "../../../../database/postgresql/models/Posts";
+import type { postType } from '../../../types';
 import IPostRepository from "./IPostRepository";
-
-type getPostsByUserCognitoSubReturnType = Promise<{
-    id: number,
-    userId: string,
-    caption: string,
-    status: string,
-    viewCount: number,
-    googleMapsPlaceId: string,
-    locationDetails: string,
-    postMediaFiles: { key: string, type: string }[],
-    createdAt: number,
-    updatedAt: number,
-    deletedAt: number
-}[]>;
 
 class PostRepository implements IPostRepository {
     private readonly _model;
@@ -44,9 +31,9 @@ class PostRepository implements IPostRepository {
     /**
      * Get all the user posts.
      * @param userCognitoSub: string
-     * @returns getPostsByUserCognitoSubReturnType
+     * @returns Promise<postType[]>
      */
-    getPostsByUserCognitoSub(userCognitoSub: string): getPostsByUserCognitoSubReturnType {
+    getPostsByUserCognitoSub(userCognitoSub: string): Promise<postType[]> {
         return new Promise(async (resolve, reject) => {
             const posts = await getRepository(Posts)
                 .createQueryBuilder('posts')
@@ -69,9 +56,8 @@ class PostRepository implements IPostRepository {
                     posts_google_maps_place_id: string,
                     posts_location_details: string,
                     posts_s3_files: { key: string, type: string }[],
-                    posts_created_at: number,
-                    posts_updated_at: number,
-                    posts_deleted_at: number
+                    posts_created_at: Date,
+                    posts_updated_at: Date
                 }) => {
                     return {
                         id: post.posts_id,
@@ -83,8 +69,7 @@ class PostRepository implements IPostRepository {
                         locationDetails: post.posts_location_details,
                         postMediaFiles: post.posts_s3_files,
                         createdAt: post.posts_created_at,
-                        updatedAt: post.posts_updated_at,
-                        deletedAt: post.posts_deleted_at
+                        updatedAt: post.posts_updated_at
                     }
                 });
 
@@ -98,15 +83,34 @@ class PostRepository implements IPostRepository {
     /**
      * Get a post by id.
      * @param id: number
-     * @returns Promise<any>
+     * @returns Promise<postType>
      */
-    getPostById(id: number): Promise<any> {
+    getPostById(id: number): Promise<postType> {
+        return new Promise(async (resolve, reject) => {
+            const post = await getRepository(Posts)
+                .createQueryBuilder('posts')
+                .select('posts')
+                .where('id = :id', {id})
+                .getOne()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
 
-        return getRepository(Posts)
-            .createQueryBuilder('posts')
-            .select('posts')
-            .where('id = :id', {id})
-            .getOne();
+            const newPost = {
+                id: post?.id || 0,
+                userId: post?.user_id || '',
+                caption: post?.caption || '',
+                status: post?.status || '',
+                viewCount: post?.view_count || 0,
+                googleMapsPlaceId: post?.google_maps_place_id || '',
+                locationDetails: post?.location_details || '',
+                postMediaFiles: post?.s3_files || [],
+                createdAt: post?.created_at || 0,
+                updatedAt: post?.updated_at || 0
+            }
+
+            return resolve(newPost);
+        });
     }
 
     /**
