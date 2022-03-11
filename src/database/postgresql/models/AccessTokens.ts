@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn, BaseEntity } from "typeorm";
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  BaseEntity,
+  CreateDateColumn, UpdateDateColumn, DeleteDateColumn
+} from "typeorm";
 
 @Entity({name: "access_tokens"})
 export class AccessTokens extends BaseEntity {
@@ -11,12 +17,12 @@ export class AccessTokens extends BaseEntity {
   @Column({type: "varchar", length: 255, nullable: false})
   user_id?: string;
 
-  @Column({type: "bigint", nullable: false})
-  created_at?: number;
+  @CreateDateColumn({type: 'timestamptz'})
+  created_at?: Date;
 
-  @Column({type: "bigint", nullable: true})
-  updated_at?: number;
+  @UpdateDateColumn({type: 'timestamptz', nullable: true})
+  updated_at?: Date;
 
-  @Column({type: "bigint", nullable: true})
-  deleted_at?: number;
+  @DeleteDateColumn({type: 'timestamptz', nullable: true})
+  deleted_at?: Date;
 }

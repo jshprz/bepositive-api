@@ -7,11 +7,16 @@ import commentFacade from "../../modules/comment-service/facades/CommentFacade";
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 
+import ResponseMutator from "../../utils/ResponseMutator";
+import type { timestampsType } from '../../modules/types';
+
 class CommentController {
     private _commentFacade;
+    private _utilResponseMutator;
 
     constructor() {
         this._commentFacade = new commentFacade(new CommentRepository(), new PostRepository());
+        this._utilResponseMutator = new ResponseMutator();
     }
 
     async addComment(req: Request, res: Response) {
@@ -85,7 +90,20 @@ class CommentController {
 
             const comments = await this._commentFacade.getCommentsByPostId(postId);
 
-            return res.status(200).json({
+            // Change the createdAt and updatedAt datetime format to unix timestamp
+            // We do this as format convention for createdAt and updatedAt
+            comments.data.forEach((comment) => {
+                const timestamps = {
+                    createdAt: comment.createdAt,
+                    updatedAt: comment.updatedAt
+                }
+                const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+
+                comment.createdAt = unixTimestamps.createdAt;
+                comment.updatedAt = unixTimestamps.updatedAt;
+            });
+
+            return res.status(comments.code).json({
                 message: comments.message,
                 payload: comments.data,
                 status: comments.code
@@ -140,7 +158,7 @@ class CommentController {
 
             const result = await this._commentFacade.updateComment(id, req.body.userCognitoSub, content);
 
-            return res.status(200).json({
+            return res.status(result.code).json({
                 message: result.message,
                 payload: result.data,
                 status: result.code
@@ -188,7 +206,7 @@ class CommentController {
 
             const result = await this._commentFacade.removeComment(id, req.body.userCognitoSub);
 
-            return res.status(200).json({
+            return res.status(result.code).json({
                 message: result.message,
                 payload: result.data,
                 status: result.code

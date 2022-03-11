@@ -2,20 +2,7 @@ import {getRepository, QueryFailedError} from 'typeorm';
 import { UserFeeds } from "../../../../database/postgresql/models/UserFeeds";
 import { Posts } from "../../../../database/postgresql/models/Posts";
 import IFeedRepository from "./IFeedRepository";
-
-type feedTypes = {
-    id: number,
-    userId: string,
-    caption: string,
-    status: string,
-    viewCount: number,
-    googleMapsPlaceId: string,
-    locationDetails: string,
-    postMediaFiles: { key: string, type: string }[],
-    createdAt: number,
-    updatedAt: number,
-    user: {}
-};
+import type { feedTypes } from '../../../types';
 
 class FeedRepository implements IFeedRepository{
     private readonly _model;
@@ -35,7 +22,6 @@ class FeedRepository implements IFeedRepository{
         this._model.id = undefined; // prevent overwriting existing comments from the same user
         this._model.user_id = followeeId;
         this._model.post_id = postId;
-        this._model.created_at = Number(Date.now());
 
         return this._model;
     }
@@ -79,8 +65,8 @@ class FeedRepository implements IFeedRepository{
                         googleMapsPlaceId: feed?.google_maps_place_id || '',
                         locationDetails: feed?.location_details || '',
                         postMediaFiles: feed?.s3_files || [{key: '', type: ''}],
-                        createdAt: feed?.created_at || 0,
-                        updatedAt: feed?.updated_at || 0,
+                        createdAt: feed?.created_at || new Date(),
+                        updatedAt: feed?.updated_at || new Date(),
                         user: {}
                     }
                 });
@@ -129,8 +115,8 @@ class FeedRepository implements IFeedRepository{
                         googleMapsPlaceId: trendingFeed?.google_maps_place_id || '',
                         locationDetails: trendingFeed?.location_details || '',
                         postMediaFiles: trendingFeed?.s3_files || [{key: '', type: ''}],
-                        createdAt: trendingFeed?.created_at || 0,
-                        updatedAt: trendingFeed?.updated_at || 0,
+                        createdAt: trendingFeed?.created_at || new Date(),
+                        updatedAt: trendingFeed?.updated_at || new Date(),
                         user: {}
                     }
                 });

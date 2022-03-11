@@ -19,7 +19,6 @@ class PostLikeRepository implements IPostLikeRepository {
         this._model.id = undefined; // prevent overwriting existing comments from the same user
         this._model.user_id = item.userCognitoSub;
         this._model.post_id = item.postId;
-        this._model.created_at = Number(Date.now());
 
         return this._model;
     }

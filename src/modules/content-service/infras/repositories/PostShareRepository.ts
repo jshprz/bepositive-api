@@ -7,9 +7,9 @@ type getByIdAndUserCognitoSubReturnTypes = {
     postId: number,
     userId: string,
     shareCaption: string,
-    createdAt: bigint | number,
-    updatedAt: bigint | number,
-    deletedAt: bigint | number
+    createdAt: Date,
+    updatedAt: Date,
+    deletedAt: Date
 }
 
 class PostShareRepository implements IPostShareRepository {
@@ -31,7 +31,6 @@ class PostShareRepository implements IPostShareRepository {
         this._model.post_id = item.postId;
         this._model.user_id = item.userId;
         this._model.share_caption = item.shareCaption;
-        this._model.created_at = Number(Date.now());
 
         return this._model;
     }
@@ -74,9 +73,9 @@ class PostShareRepository implements IPostShareRepository {
                 postId: sharedPost?.post_id || 0,
                 userId: sharedPost?.user_id || '',
                 shareCaption: sharedPost?.share_caption || '',
-                createdAt: sharedPost?.created_at || 0,
-                updatedAt: sharedPost?.updated_at || 0,
-                deletedAt: sharedPost?.deleted_at || 0
+                createdAt: sharedPost?.created_at || new Date(),
+                updatedAt: sharedPost?.updated_at || new Date(),
+                deletedAt: sharedPost?.deleted_at || new Date()
             });
         });
     }

@@ -1,4 +1,12 @@
-import { Entity, Column, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Entity,
+  Column,
+  BaseEntity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn
+} from "typeorm";
 
 @Entity({name: "post_likes"})
 export class PostLikes extends BaseEntity {
@@ -12,13 +20,13 @@ export class PostLikes extends BaseEntity {
   @Column({type: "varchar", length: 255, nullable: false})
   user_id?: string;
 
-  @Column({type: "bigint", nullable: false})
-  created_at?: number;
+  @CreateDateColumn({type: 'timestamptz'})
+  created_at?: Date;
 
-  @Column({type: "bigint", nullable: true})
-  updated_at?: number;
+  @UpdateDateColumn({type: 'timestamptz', nullable: true})
+  updated_at?: Date;
 
-  @Column({type: "bigint", nullable: true})
-  deleted_at?: number;
+  @DeleteDateColumn({type: 'timestamptz', nullable: true})
+  deleted_at?: Date;
 
 }

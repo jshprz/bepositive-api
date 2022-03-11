@@ -7,9 +7,9 @@ type getCommentByIdResult = {
     postId: number,
     content: string,
     status: string,
-    createdAt: number,
-    updatedAt: number,
-    deletedAt: number
+    createdAt: Date,
+    updatedAt: Date,
+    deletedAt: Date
 };
 
 type getCommentsByPostIdReturnType = Promise<{
@@ -18,8 +18,8 @@ type getCommentsByPostIdReturnType = Promise<{
     postId: number,
     content: string,
     status: string,
-    createdAt: number,
-    updatedAt: number,
+    createdAt: Date,
+    updatedAt: Date,
     user: {}
 }[]>;
 

@@ -1,4 +1,12 @@
-import { Entity, Column, BaseEntity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Entity,
+  Column,
+  BaseEntity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn
+} from "typeorm";
 
 @Entity({name: "user_feeds"})
 export class UserFeeds extends BaseEntity {
@@ -12,12 +20,12 @@ export class UserFeeds extends BaseEntity {
   @Column({type: "int", unsigned: true, nullable: false})
   post_id?: number;
 
-  @Column({type: "bigint", nullable: false})
-  created_at?: number;
+  @CreateDateColumn({type: 'timestamptz'})
+  created_at?: Date;
 
-  @Column({type: "bigint", nullable: true})
-  updated_at?: number;
+  @UpdateDateColumn({type: 'timestamptz', nullable: true})
+  updated_at?: Date;
 
-  @Column({type: "bigint", nullable: true})
-  deleted_at?: number;
+  @DeleteDateColumn({type: 'timestamptz', nullable: true})
+  deleted_at?: Date;
 }

@@ -1,18 +1,5 @@
 import { UserFeeds } from "../../../../database/postgresql/models/UserFeeds";
-
-type feedTypes = {
-    id: number,
-    userId: string,
-    caption: string,
-    status: string,
-    viewCount: number,
-    googleMapsPlaceId: string,
-    locationDetails: string,
-    postMediaFiles: { key: string, type: string }[],
-    createdAt: number,
-    updatedAt: number,
-    user: {}
-};
+import type { feedTypes } from '../../../types';
 
 interface IFeedRepository {
     create(userId: string, postId: number): UserFeeds;

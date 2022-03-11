@@ -24,18 +24,23 @@ class PostShareFacade {
     }> {
 
         return new Promise(async (resolve, reject) => {
-            const post = await this._postRepository.getPostById(postId).catch((error) => {
+            const post = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
                 this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    function: 'createSharedPost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
-                        postId
+                        postId,
+                        sharedPostAttr
                     }
                 });
 
-                return reject(Error.DATABASE_ERROR.GET);
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
             });
 
-            if (!post.id) {
+            if (post && !post.id) {
                 return reject({
                     message: 'Post not found',
                     code: 404
@@ -81,10 +86,11 @@ class PostShareFacade {
         message: string,
         data: {
             id: number,
-            post_id: number,
-            user_id: string,
-            share_caption: string,
-            created_at: number
+            postId: number,
+            userId: string,
+            shareCaption: string,
+            createdAt: Date | number,
+            updatedAt: Date | number
         },
         code: number
     }> {
@@ -112,10 +118,11 @@ class PostShareFacade {
                 message: `Shared post with an id of ${postId} has been successfully retrieved`,
                 data: {
                     id: sharedPost.id,
-                    post_id: sharedPost.post_id,
-                    user_id: sharedPost.user_id,
-                    share_caption: sharedPost.share_caption,
-                    created_at: sharedPost.created_at
+                    postId: sharedPost.post_id,
+                    userId: sharedPost.user_id,
+                    shareCaption: sharedPost.share_caption,
+                    createdAt: sharedPost.created_at,
+                    updatedAt: sharedPost.updated_at
                 },
                 code: 200
             });

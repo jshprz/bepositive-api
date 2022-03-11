@@ -8,9 +8,9 @@ type getCommentByIdResult = {
     postId: number,
     content: string,
     status: string,
-    createdAt: number,
-    updatedAt: number,
-    deletedAt: number
+    createdAt: Date,
+    updatedAt: Date,
+    deletedAt: Date
 };
 
 type getCommentsByPostIdReturnType = Promise<{
@@ -19,8 +19,8 @@ type getCommentsByPostIdReturnType = Promise<{
     postId: number,
     content: string,
     status: string,
-    createdAt: number,
-    updatedAt: number,
+    createdAt: Date,
+    updatedAt: Date,
     user: {}
 }[]>;
 
@@ -67,9 +67,9 @@ class CommentRepository implements ICommentRepository {
                 postId: query?.post_id || 0,
                 content: query?.content || '',
                 status: query?.status || '',
-                createdAt: query?.created_at || 0,
-                updatedAt: query?.updated_at || 0,
-                deletedAt: query?.deleted_at || 0
+                createdAt: query?.created_at || new Date(),
+                updatedAt: query?.updated_at || new Date(),
+                deletedAt: query?.deleted_at || new Date()
             });
         });
     }
@@ -99,8 +99,8 @@ class CommentRepository implements ICommentRepository {
                     comments_post_id: number,
                     comments_content: string,
                     comments_status: string,
-                    comments_created_at: number,
-                    comments_updated_at: number,
+                    comments_created_at: Date,
+                    comments_updated_at: Date,
                 }) => {
                     return {
                         id: comment.comments_id,

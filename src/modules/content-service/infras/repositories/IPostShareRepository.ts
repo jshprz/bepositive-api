@@ -6,9 +6,9 @@ type getByIdAndUserCognitoSubReturnTypes = {
     postId: number,
     userId: string,
     shareCaption: string,
-    createdAt: bigint | number,
-    updatedAt: bigint | number,
-    deletedAt: bigint | number
+    createdAt: Date,
+    updatedAt: Date,
+    deletedAt: Date
 }
 
 interface IPostShareRepository {

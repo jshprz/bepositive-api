@@ -3,22 +3,13 @@ import Logger from '../../../config/Logger';
 import Error from '../../../config/Error';
 
 import IPostRepository from "../../content-service/infras/repositories/IPostRepository"; // External
-import IAwsCognito from "../../user-service/infras/aws/IAwsCognito";
 import UserRelationshipRepository from "../../user-service/infras/repositories/UserRelationshipRepository";
 import UserAccountFacade from "../../user-service/facades/UserAccountFacade";
 
 import { QueryFailedError } from "typeorm";
 import AwsCognito from "../../user-service/infras/aws/AwsCognito";
 
-type commentType = {
-    id: number,
-    userId: string,
-    postId: number,
-    content: string,
-    status: string,
-    createdAt: number,
-    updatedAt: number,
-}
+import type { commentType } from '../../types';
 
 class CommentFacade {
     private _log;
@@ -53,7 +44,10 @@ class CommentFacade {
                    }
                });
 
-               return reject(Error.DATABASE_ERROR.GET);
+               return reject({
+                   message: Error.DATABASE_ERROR.GET,
+                   code: 500
+               });
            });
 
            if (!post) {
@@ -71,7 +65,10 @@ class CommentFacade {
                    }
                });
 
-               return reject(Error.DATABASE_ERROR.CREATE);
+               return reject({
+                   message: Error.DATABASE_ERROR.CREATE,
+                   code: 500
+               });
            });
 
            return resolve({

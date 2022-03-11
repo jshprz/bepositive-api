@@ -9,21 +9,7 @@ import awsCognito from "../../user-service/infras/aws/AwsCognito"; // External
 import userRelationshipRepository from "../../user-service/infras/repositories/UserRelationshipRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-
-type feedTypes = {
-    id: number,
-    userId: string,
-    caption: string,
-    status: string,
-    viewCount: number,
-    googleMapsPlaceId: string,
-    locationDetails: string,
-    postMediaFiles: { key: string, type: string }[],
-    createdAt: number,
-    updatedAt: number,
-    user: {}
-};
-
+import type { feedTypes } from '../../types';
 class FeedFacade {
     private _log;
     private _googleapis;
