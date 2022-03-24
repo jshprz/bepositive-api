@@ -1,7 +1,10 @@
 import IAwsCognito from '../infras/aws/IAwsCognito';
+import IUserProfileRepository from "../infras/repositories/IUserProfileRepository";
 import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
 import { ISignUpResult } from "amazon-cognito-identity-js";
+import { QueryFailedError } from "typeorm";
+import IUserPrivacyRepository from '../infras/repositories/IUserPrivacyRepository';
 
 type registerParamTypes = {
     email: string;
@@ -18,35 +21,61 @@ class RegistrationFacade {
 
     private _log;
 
-    constructor(private _awsCognito: IAwsCognito) {
+    constructor(private _awsCognito: IAwsCognito, private _userProfileRepository: IUserProfileRepository, private _userPrivacyRepository: IUserPrivacyRepository) {
         this._log = Logger.createLogger('RegistrationFacade.ts');
     }
 
     /**
      * User registration through AWS Cognito.
      * @param body: { email: string, verifyCode: string }
-     * @returns Promise<ISignUpResult|void>
+     * @returns Promise<{
+     *         message: string,
+     *         data: ISignUpResult,
+     *         code: number
+     *     }>
      */
-    register(body: registerParamTypes): Promise<ISignUpResult | void> {
+    register(body: registerParamTypes): Promise<{
+        message: string,
+        data: ISignUpResult,
+        code: number
+    }> {
         return new Promise((resolve, reject) => {
            const cognitoAttributeList = this._awsCognito.cognitoUserAttributeList(body.email, body.name);
 
-           this._awsCognito.userPool().signUp(body.email, body.password, cognitoAttributeList, [], (error: any, result?: ISignUpResult) => {
+           this._awsCognito.userPool().signUp(body.email, body.password, cognitoAttributeList, [], async (error: any, result?: ISignUpResult) => {
 
                if (error) {
                   this._log.error({
+                      function: 'register()',
                       message: error,
                       payload: body
                   });
 
                   if (error.code && error.code === 'UsernameExistsException') {
-                      return reject(error);
+                      return reject({
+                          message: error,
+                          code: 409
+                      });
                   }
 
-                  return reject(Error.AWS_COGNITO_ERROR);
+                  return reject({
+                      message: Error.AWS_COGNITO_ERROR,
+                      code: 500
+                  });
               }
 
-              return resolve(result);
+               if (result) {
+                   return resolve({
+                       message: `User successfully registered. The verification code has been sent to this email: ${body.email}`,
+                       data: result,
+                       code: 200
+                   });
+               } else {
+                   return reject({
+                       message: `AWS Cognito register result is empty: ${result}`,
+                       code: 500
+                   });
+               }
            });
         });
     }
@@ -128,6 +157,62 @@ class RegistrationFacade {
                 } else {
                     return resolve(true);
                 }
+            });
+        });
+    }
+
+    /**
+     * To create user profile data in user_profiles table.
+     * @param item: {userId: string, email: string, name: string}
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
+    createUserProfileData(item: {userId: string, email: string, name: string}): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            const checkUserProfileData = await this._userProfileRepository.getUserProfileByEmail(item.email).catch((error: string) => {
+                this._log.error({
+                    function: 'createUserProfileData()',
+                    message: error,
+                    payload: {
+                        item
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                })
+            });
+
+            // If a user profile is already existing in the record we create it.
+            if (checkUserProfileData === 0) {
+                await this._userProfileRepository.create(item).catch((error: QueryFailedError) => {
+                    this._log.error({
+                        function: 'createUserProfileData()',
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                        payload: {
+                            item
+                        }
+                    });
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.CREATE,
+                        code: 500
+                    });
+                });
+            }
+
+            return resolve({
+                message: 'user profile data was created successfully',
+                data: {},
+                code: 201
             });
         });
     }

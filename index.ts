@@ -2,7 +2,6 @@ import express from 'express';
 import { getConnection } from './src/config/Database';
 import { apis } from './src/routes';
 import Logger from './src/config/Logger';
-import multer from 'multer';
 
 const logger = Logger.createLogger('Main');
 
@@ -13,7 +12,6 @@ const main = async () => {
 
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());
-  app.use(multer().any());
 
   app.get('/', (req, res) => {
     res.end('Bepositive API');

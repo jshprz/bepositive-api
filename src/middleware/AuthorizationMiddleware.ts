@@ -19,7 +19,7 @@ export = async (req: any, res: any, next: any) => {
     // Check the validity of the provided accessToken by checking existence of the access token within the access_tokens table.
     if (accessToken.length > 0) {
       // Check the validity of the access token via aws cognito.
-      cognitoExpress.validate(token, (error: any) => {
+      cognitoExpress.validate(token, async (error: any) => {
         if (error) {
           res.status(401).json({
             message: error,
@@ -27,7 +27,7 @@ export = async (req: any, res: any, next: any) => {
             status: 401
           });
         } else {
-          const decodedJwt: { sub: string } = JwtDecode(token);
+          const decodedJwt: { sub: string } = await JwtDecode(token);
           req.body.userCognitoSub = decodedJwt.sub;
           req.body.accessToken = token;
           next();

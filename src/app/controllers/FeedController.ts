@@ -8,14 +8,23 @@ import { validationResult } from "express-validator";
 import ResponseMutator from "../../utils/ResponseMutator";
 import type { timestampsType } from '../../modules/types';
 
+import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository"; // External
+import UserAccountFacade from "../../modules/user-service/facades/UserAccountFacade"; // External
+import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // External
+import AwsS3 from "../../modules/user-service/infras/aws/AwsS3"; // External
+import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
+import UserPrivacyRepository from "../../modules/user-service/infras/repositories/UserPrivacyRepository";
+
 class FeedController {
 
     private _feedFacade;
     private _utilResponseMutator;
+    private _userAccountFacade;
 
     constructor() {
         this._feedFacade = new feedFacade(new feedRepository(), new userRelationshipRepository());
         this._utilResponseMutator = new ResponseMutator();
+        this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
     }
 
     async getFeed(req: Request, res: Response) {
@@ -46,17 +55,22 @@ class FeedController {
 
             const feed = await this._feedFacade.getFeed(userCognitoSub, pagination);
 
-            // Change the createdAt and updatedAt datetime format to unix timestamp
-            // We do this as format convention for createdAt and updatedAt
-            feed.data.forEach((f) => {
+            for (const f of feed.data) {
+                // Get the user profile data every post in the feed.
+                const userProfileData = await this._userAccountFacade.getUserProfile(f.userId);
+                f.user = userProfileData.data;
+
                 const timestamps = {
                     createdAt: f.createdAt,
                     updatedAt: f.updatedAt
                 }
-                const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+
+                // Change the createdAt and updatedAt datetime format to unix timestamp
+                // We do this as format convention for createdAt and updatedAt
+                const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
                 f.createdAt = unixTimestamps.createdAt;
                 f.updatedAt = unixTimestamps.updatedAt;
-            });
+            }
 
             return res.status(feed.code).json({
                 message: feed.message,
@@ -121,7 +135,12 @@ class FeedController {
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
-            trendingFeed.data.forEach((f) => {
+            for (const f of trendingFeed.data) {
+
+                // Get the user profile data every post in the feed.
+                const userProfileData = await this._userAccountFacade.getUserProfile(f.userId);
+                f.user = userProfileData.data;
+
                 const timestamps = {
                     createdAt: f.createdAt,
                     updatedAt: f.updatedAt
@@ -129,7 +148,7 @@ class FeedController {
                 const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
                 f.createdAt = unixTimestamps.createdAt;
                 f.updatedAt = unixTimestamps.updatedAt;
-            });
+            }
 
             return res.status(trendingFeed.code).json({
                 message: trendingFeed.message,

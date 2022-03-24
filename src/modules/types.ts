@@ -1,3 +1,31 @@
+export type userProfileType = {
+  id: number,
+  userId: string,
+  email: string,
+  name: string,
+  avatar: string,
+  gender: string,
+  profileTitle: string,
+  profileDescription: string,
+  dateOfBirth: string,
+  website: string,
+  city: string,
+  state: string,
+  zipcode: string,
+  country: string,
+  phoneNumber: string,
+  createdAt: Date | number,
+  updatedAt: Date | number
+}
+
+export type s3UploadParamsType = {
+  Bucket: string,
+  Key: string,
+  ContentType: string,
+  Body: Buffer,
+  ACL: string
+};
+
 export type timestampsType = {
   createdAt: Date | number,
   updatedAt: Date | number
@@ -11,6 +39,7 @@ export type commentType = {
   status: string,
   createdAt: Date | number,
   updatedAt: Date | number,
+  user: {}
 };
 
 export type postType = {

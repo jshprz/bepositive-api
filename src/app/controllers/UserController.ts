@@ -1,7 +1,14 @@
+import multer from "multer";
+import mime from "mime";
+import path from "path";
+
 // Infras
-import awsCognito from "../../modules/user-service/infras/aws/AwsCognito";
-import accessTokenRepository from "../../modules/user-service/infras/repositories/AccessTokenRepository";
-import userRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository";
+import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito";
+import AwsS3 from "../../modules/user-service/infras/aws/AwsS3";
+import AccessTokenRepository from "../../modules/user-service/infras/repositories/AccessTokenRepository";
+import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository";
+import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository";
+import UserPrivacyRepository from "../../modules/user-service/infras/repositories/UserPrivacyRepository";
 
 // Facades
 import loginFacade from "../../modules/user-service/facades/LoginFacade";
@@ -14,6 +21,14 @@ import { validationResult } from "express-validator";
 
 // Declaration merging on aws-cognito-identity-js
 import '../../declarations/DAwsCognito'
+import {timestampsType} from "../../modules/types";
+
+import ResponseMutator from "../../utils/ResponseMutator";
+
+type validateFileMimeTypeType = {
+    isFailed: boolean,
+    message: string | null
+}
 
 class UserController {
 
@@ -21,12 +36,16 @@ class UserController {
     private _passwordFacade;
     private _registrationFacade;
     private _userAccountFacade;
+    private _upload;
+    private _utilResponseMutator;
 
     constructor() {
-        this._loginFacade = new loginFacade(new awsCognito, new accessTokenRepository());
-        this._passwordFacade = new passwordFacade(new awsCognito());
-        this._registrationFacade = new registrationFacade(new awsCognito());
-        this._userAccountFacade = new userAccountFacade(new awsCognito(), new userRelationshipRepository());
+        this._loginFacade = new loginFacade(new AwsCognito, new AccessTokenRepository());
+        this._passwordFacade = new passwordFacade(new AwsCognito());
+        this._registrationFacade = new registrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+        this._userAccountFacade = new userAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+        this._upload = multer().single('avatarFile');
+        this._utilResponseMutator = new ResponseMutator();
     }
 
     async normalLogin(req: Request, res: Response) {
@@ -253,23 +272,44 @@ class UserController {
         try {
             const { email, name, password } = req.body;
 
-            await this._registrationFacade.register({
+            const registerResult = await this._registrationFacade.register({
                 email,
                 name,
                 password
             });
+            // We create user profile data in user_profiles table every user registration
+            // so that we don't need to rely on AWS Cognito when we need to retrieve a user profile data.
+            const createUserProfileData = await this._registrationFacade.createUserProfileData({
+                userId: registerResult.data.userSub,
+                email,
+                name
+            });
 
-            return res.status(200).json({
-                message: `User successfully registered. The verification code has been sent to this email: ${email}`,
-                payload: {},
-                status: 200
+            return res.status(createUserProfileData.code).json({
+                message: createUserProfileData.message,
+                payload: createUserProfileData.data,
+                status: createUserProfileData.code
             });
         } catch (error: any) {
-            return res.status((error.code && error.code === 'UsernameExistsException')? 409 : 500).json({
-                message: (error.code && error.code === 'UsernameExistsException')? error.message : error,
-                error: (error.code && error.code === 'UsernameExistsException')? 'Conflict' : 'Internal server error',
-                status: (error.code && error.code === 'UsernameExistsException')? 409 : 500
-            });
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 409) {
+                return res.status(409).json({
+                    message: error.message.message,
+                    error: 'Conflict',
+                    status: 409
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 
@@ -368,35 +408,60 @@ class UserController {
 
     async getUserProfile(req: Request, res: Response) {
         try {
-            const accessToken = req.headers.authorization?.split(' ')[1];
-            const profile = await this._userAccountFacade.getUserProfile(accessToken || '');
-            const userProfile = {
-                username: profile.Username,
-                sub: '',
-                email_verified: '',
-                name: '',
-                email: ''
+            const userId: string = req.body.userCognitoSub;
+            const userProfile = await this._userAccountFacade.getUserProfile(userId);
+
+            // Change the createdAt and updatedAt datetime format to unix timestamp
+            // We do this as format convention for createdAt and updatedAt
+            const timestamps = {
+                createdAt: userProfile.data.createdAt,
+                updatedAt: userProfile.data.updatedAt
             }
 
-            profile.UserAttributes.forEach(attr => {
-                // @ts-ignore
-                userProfile[attr.Name] = attr.Value;
-            });
+            const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
 
-            return res.status(200).json({
-                message: 'User profile successfully retrieved',
+            userProfile.data.createdAt = unixTimestamps.createdAt;
+            userProfile.data.updatedAt = unixTimestamps.updatedAt;
+
+            return res.status(userProfile.code).json({
+                message: userProfile.message,
                 payload: {
-                    profile: userProfile
+                    profile: userProfile.data
                 },
-                status: 200
+                status: userProfile.code
             });
-        } catch (error) {
-
-            return res.status(500).json({
-                message: error,
-                error: 'Internal server error',
-                status: 500
-            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 409) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Conflict',
+                    status: 409
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
         }
     }
 
@@ -490,6 +555,129 @@ class UserController {
                 payload: followUserResult.data,
                 status: followUserResult.code
             });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async uploadProfileAvatar(req: Request, res: Response) {
+
+        const userId: string = req.body.userCognitoSub;
+
+        this._upload(req, res, async (error) => {
+            if (error instanceof multer.MulterError) {
+                return res.status(400).json({
+                    message: 'A Multer error occurred when uploading',
+                    error: 'Bad request error',
+                    status: 400
+                });
+            } else if (error) {
+                return res.status(520).json({
+                    message: 'An unknown error occurred when uploading',
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            } else {
+                if (req.file) {
+                    const fileExtension = path.extname(req.file.originalname);
+                    const mimeType = req.file.mimetype;
+
+                    if (this._validateFileMimeType(mimeType).isFailed) {
+                        return res.status(400).json({
+                            message: this._validateFileMimeType(mimeType).message,
+                            error: 'Bad request error',
+                            status: 400
+                        });
+                    }
+
+                    // To check if the avatar filename extension is equal to the extension generated based on the mime type of the avatar file
+                    // for recognizing whether the avatar extension is valid or not.
+                    if (`.${this._validateFileMimeType(mimeType).message}` !== fileExtension && `${this._validateFileMimeType(mimeType).message}` !== 'jpeg') {
+                        return res.status(400).json({
+                            message: `invalid file extension: ${fileExtension} - ${this._validateFileMimeType(mimeType).message}`,
+                            error: 'Bad request error',
+                            status: 400
+                        });
+                    }
+
+                    try {
+                        if (req.file?.buffer) {
+                            const uploadProfileAvatarResult = await this._userAccountFacade.uploadProfileAvatar(userId, req.file.originalname, req.file.mimetype, req.file.buffer);
+
+                            return res.status(uploadProfileAvatarResult.code).json({
+                                message: uploadProfileAvatarResult.message,
+                                payload: {
+                                    location: uploadProfileAvatarResult.data.Location
+                                },
+                                status: uploadProfileAvatarResult.code
+                            });
+                        }
+                    } catch (error: any) {
+                        return res.status(500).json({
+                            message: error.message,
+                            error: 'Internal server error',
+                            status: 500
+                        });
+                    }
+
+                } else {
+                    return res.status(400).json({
+                        message: 'form-data key avatarFile is required',
+                        error: 'Bad request error',
+                        status: 400
+                    });
+                }
+            }
+        });
+    }
+
+    private _validateFileMimeType(mimeType: string): validateFileMimeTypeType {
+        switch (mimeType) {
+            case 'image/jpeg':
+            case 'image/png':
+                return {
+                    isFailed: false,
+                    message: mime.getExtension(mimeType)
+                }
+            case '':
+            default:
+                return {
+                    isFailed: true,
+                    message: 'unsupported file extension. This API only accepts (jpg/jpeg, png)'
+                }
+        }
+    }
+
+    async updatePrivacy(req: Request, res: Response) {
+
+        try {
+
+            // Implementation here;
 
         } catch (error: any) {
             if (error.code && error.code === 500) {
