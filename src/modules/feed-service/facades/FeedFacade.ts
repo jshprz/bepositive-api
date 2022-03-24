@@ -4,21 +4,17 @@ import Error from "../../../config/Error";
 import { Client } from '@googlemaps/google-maps-services-js';
 
 import IUserRelationshipRepository from "../../user-service/infras/repositories/IUserRelationshipRepository"; // External
-import UserAccountFacade from "../../user-service/facades/UserAccountFacade"; // External
-import awsCognito from "../../user-service/infras/aws/AwsCognito"; // External
-import userRelationshipRepository from "../../user-service/infras/repositories/UserRelationshipRepository"; // External
 
 import { QueryFailedError } from "typeorm";
 import type { feedTypes } from '../../types';
+
 class FeedFacade {
     private _log;
     private _googleapis;
-    private _userAccountFacade;
 
     constructor(private _feedRepository: IFeedRepository, private _userRelationshipRepository: IUserRelationshipRepository) {
         this._log = Logger.createLogger('FeedFacade.ts');
         this._googleapis = new Client({});
-        this._userAccountFacade = new UserAccountFacade(new awsCognito(), new userRelationshipRepository());
     }
 
     /**
@@ -188,10 +184,7 @@ class FeedFacade {
                     });
                 }
 
-                feed.user = await this._userAccountFacade.getUser(feed.userId).catch((error) => {
-                    throw error;
-                });
-                return resolve(feed)
+                return resolve(feed);
             } catch(e) {
                 return reject(false);
             }

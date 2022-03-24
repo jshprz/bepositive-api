@@ -1,38 +1,130 @@
 import IAwsCognito from '../infras/aws/IAwsCognito';
+import IAwsS3 from '../infras/aws/IAwsS3';
 import IUserRelationshipRepository from "../infras/repositories/IUserRelationshipRepository";
+import IUserPrivacyRepository from "../infras/repositories/IUserPrivacyRepository";
+import IUserProfileRepository from "../infras/repositories/IUserProfileRepository";
 import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
-import {GetUserResponse, ListUsersResponse} from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {ListUsersResponse} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import {QueryFailedError} from "typeorm";
+import {ManagedUpload} from "aws-sdk/lib/s3/managed_upload";
+import SendData = ManagedUpload.SendData;
+import moment from "moment";
+import type { userProfileType } from '../../types';
+
+type userPrivacyType = {
+    id: number,
+    userId: string,
+    status: string,
+    createdAt: number,
+    updatedAt: number,
+    deletedAt: number
+};
 
 class UserAccountFacade {
     private _log;
 
-    constructor(private _awsCognito: IAwsCognito, private _userRelationshipRepository: IUserRelationshipRepository) {
+    constructor(
+        private _awsCognito: IAwsCognito,
+        private _awsS3: IAwsS3,
+        private _userRelationshipRepository: IUserRelationshipRepository,
+        private _userProfileRepository: IUserProfileRepository,
+        private _userPrivacyRepository: IUserPrivacyRepository
+    ) {
         this._log = Logger.createLogger('UserAccountFacade.ts');
     }
 
     /**
-     * Gets user information from AWS Cognito using access token
+     * Gets user information from AWS Cognito using access token.
      * @param accessToken: string
-     * @returns Promise<{Username: string, UserAttributes: {}[]}>
+     * @returns Promise<{
+     *         message: string,
+     *         data: UserProfiles,
+     *         code: number
+     *     }>
      */
-    getUserProfile(accessToken: string): Promise<{Username: string, UserAttributes: {}[]}> {
-
+    getUserProfile(userId: string): Promise<{
+        message: string,
+        data: userProfileType,
+        code: number
+    }> {
         return new Promise(async (resolve, reject) => {
-            const params = { AccessToken: accessToken};
-            this._awsCognito.getAwsCognitoClient().getUser(params, (error: Error, result: GetUserResponse) => {
-                if (error) {
+            const userProfileData = await this._userProfileRepository.getUserProfileByUserId(userId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'getUserProfile()',
+                    message: error.toString(),
+                    payload: userId
+                });
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (userProfileData) {
+                const newUserProfileData = {
+                    id: (userProfileData.id)? userProfileData.id : 0,
+                    userId: (userProfileData.user_id)? userProfileData.user_id : '',
+                    email: (userProfileData.email)? userProfileData.email : '',
+                    name: (userProfileData.name)? userProfileData.name : '',
+                    avatar: (userProfileData.avatar)? userProfileData.avatar : '',
+                    gender: (userProfileData.gender)? userProfileData.gender : '',
+                    profileTitle: (userProfileData.profile_title)? userProfileData.profile_title : '',
+                    profileDescription: (userProfileData.profile_description)? userProfileData.profile_description : '',
+                    dateOfBirth: (userProfileData.date_of_birth)? userProfileData.date_of_birth : '',
+                    website: (userProfileData.website)? userProfileData.website : '',
+                    city: (userProfileData.city)? userProfileData.city : '',
+                    state: (userProfileData.state)? userProfileData.state : '',
+                    zipcode: (userProfileData.zipcode)? userProfileData.zipcode : '',
+                    country: (userProfileData.country)? userProfileData.country : '',
+                    phoneNumber: (userProfileData.phone_number)? userProfileData.phone_number : '',
+                    createdAt: (userProfileData.created_at)? userProfileData.created_at : 0,
+                    updatedAt: (userProfileData.updated_at)? userProfileData.updated_at : 0
+                }
+
+                return resolve({
+                    message: 'User profile successfully retrieved',
+                    data: newUserProfileData,
+                    code: 200
+                });
+            }
+        });
+    }
+
+    /**
+     * Gets user's privacy settings
+     * @param userCognitoSub: string
+     * @returns Promise<{
+     *  message: string,
+     *  data: userPrivacyType,
+     *  code: number
+     *  }>
+     */
+    getPrivacyStatus(userCognitoSub: string): Promise<{
+        message: string,
+        data: userPrivacyType,
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            const userSettings = await this._userPrivacyRepository.getPrivacyStatus(userCognitoSub)
+                .catch((error) => {
                     this._log.error({
-                        message: error.toString(),
-                        payload: accessToken
+                        function: 'getPrivacyStatus()',
+                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        payload: { userCognitoSub }
                     });
 
-                    return reject(Error.AWS_COGNITO_ERROR);
-                } else {
-                    return resolve(result);
-                }
-            });
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
+
+                return resolve({
+                    message: 'User privacy settings retrieved',
+                    data: userSettings,
+                    code: 200
+                });
         });
     }
 
@@ -371,7 +463,7 @@ class UserAccountFacade {
                 return reject({
                     message: Error.DATABASE_ERROR.DELETE,
                     code: 500
-                })
+                });
             });
 
             return resolve({
@@ -379,6 +471,78 @@ class UserAccountFacade {
                 data: {},
                 code: 204
             });
+        });
+    }
+
+    /**
+     * Upload profile avatar to S3 and update the user profile avatar in the database record.
+     * @param userId: string
+     * @param originalName: string
+     * @param mimeType: string
+     * @param data: Buffer
+     * @returns Promise<{
+     *     message: string,
+     *     data: SendData,
+     *     code: number
+     * }>
+     */
+    uploadProfileAvatar(userId: string, originalName: string, mimeType: string, data: Buffer): Promise<{
+        message: string,
+        data: SendData,
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            const unixTimeNow = moment().unix();
+            const params = {
+                Bucket: `${process.env.AWS_S3_BUCKET}`,
+                Key: `avatars/${unixTimeNow}_${originalName}`,
+                ContentType: mimeType,
+                Body: data,
+                ACL: 'public-read'
+            }
+
+            const s3Upload = await this._awsS3.upload(params).promise().catch((error: Error) => {
+                this._log.error({
+                    function: 'uploadProfileAvatar()',
+                    message: error.message,
+                    payload: {
+                        originalName,
+                        mimeType,
+                        data
+                    }
+                });
+
+                return reject({
+                    message: Error.AWS_S3_ERROR,
+                    code: 500
+                });
+            });
+
+            if (s3Upload) {
+                await this._userProfileRepository.updateUserAvatar(userId, s3Upload.Location).catch((error: QueryFailedError) => {
+                    this._log.error({
+                        function: 'uploadProfileAvatar()',
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                        payload: {
+                            userId,
+                            originalName,
+                            mimeType,
+                            data
+                        }
+                    });
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.UPDATE,
+                        code: 500
+                    });
+                });
+
+                return resolve({
+                    message: 'profile avatar was successfully uploaded.',
+                    data: s3Upload,
+                    code: 200
+                });
+            }
         });
     }
 }

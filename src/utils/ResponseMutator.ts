@@ -6,7 +6,6 @@ class ResponseMutator {
 
   mutateApiResponseTimestamps<T extends timestampsType>(response: T): T {
 
-
         response.createdAt = Number(moment.unix(this._timestampToUnixDateTime(new Date(response.createdAt))));
         response.updatedAt = Number(moment.unix(this._timestampToUnixDateTime(new Date(response.updatedAt))));
 
