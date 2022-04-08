@@ -16,6 +16,8 @@ services:
 
   postgres:
     image: postgres:13
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     environment:
       POSTGRES_USER: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

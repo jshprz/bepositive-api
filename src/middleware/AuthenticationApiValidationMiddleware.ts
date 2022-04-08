@@ -1,5 +1,10 @@
 import { check } from 'express-validator';
 
+export const refreshAccessTokenApiValidation = [
+    check('accessToken').not().isEmpty().withMessage('accessToken property is required.').isString().withMessage('accessToken should be a type of string.'),
+    check('refreshToken').not().isEmpty().withMessage('refreshToken property is required.').isString().withMessage('refreshToken should be a type of string.')
+];
+
 export const resendAccountConfirmationCodeApiValidation = [
   check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.')
 ];

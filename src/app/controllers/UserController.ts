@@ -24,6 +24,8 @@ import '../../declarations/DAwsCognito'
 import {timestampsType} from "../../modules/types";
 
 import ResponseMutator from "../../utils/ResponseMutator";
+import jwtDecode from "jwt-decode";
+import moment from "moment";
 
 type validateFileMimeTypeType = {
     isFailed: boolean,
@@ -71,6 +73,7 @@ class UserController {
             const signin = await this._loginFacade.normalLogin(req.body);
 
             const accessToken: string = signin.accessToken.jwtToken;
+            const refreshToken: string = signin.refreshToken.token;
             const accessTokenExpiration: number = signin.accessToken.payload.exp;
             const userCognitoSub: string = signin.idToken.payload.sub;
 
@@ -81,6 +84,7 @@ class UserController {
                 message: 'Successfully logged in',
                 payload: {
                     accessToken,
+                    refreshToken,
                     accessTokenExpiration
                 },
                 status: 200
@@ -679,6 +683,91 @@ class UserController {
 
             // Implementation here;
 
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async refreshAccessToken(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.accessToken) {
+            return res.status(400).json({
+                message: errors.accessToken.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.refreshToken) {
+            return res.status(400).json({
+                message: errors.refreshToken.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        try {
+            const accessToken: string = req.body.accessToken;
+            const refreshToken: string = req.body.refreshToken;
+            const decodedAccessToken: { sub: string } = await jwtDecode(accessToken);
+            const generateNewAccessTokenResult = await this._loginFacade.generateNewAccessToken(refreshToken);
+
+            if (generateNewAccessTokenResult.data.AuthenticationResult && generateNewAccessTokenResult.data.AuthenticationResult.AccessToken) {
+                const newAccessToken: string = generateNewAccessTokenResult.data.AuthenticationResult.AccessToken;
+                const decodedNewAccessToken: { sub: string } = await jwtDecode(newAccessToken);
+
+                if (decodedAccessToken.sub !== decodedNewAccessToken.sub) {
+                    throw {
+                        message: 'Mismatch AWS cognito sub in old and new access token',
+                        code: 500
+                    };
+                }
+                // Revoke the access token.
+                await this._loginFacade.deleteAccessTokenItem(decodedAccessToken.sub);
+
+                // We store the access token in our database, so we can manipulate it.
+                await this._loginFacade.createAccessTokenItem(newAccessToken, decodedNewAccessToken.sub);
+
+                const accessTokenExpiration: number = Number(moment().unix()) + Number(generateNewAccessTokenResult.data.AuthenticationResult.ExpiresIn);
+
+                return res.status(200).json({
+                    message: generateNewAccessTokenResult.message,
+                    payload: {
+                        accessToken: generateNewAccessTokenResult.data.AuthenticationResult.AccessToken,
+                        accessTokenExpiration
+                    },
+                    status: 200
+                });
+            }
+
+            throw {
+                message: 'Missing new access token',
+                code: 500
+            }
         } catch (error: any) {
             if (error.code && error.code === 500) {
                 return res.status(500).json({
