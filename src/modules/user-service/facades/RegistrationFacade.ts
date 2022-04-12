@@ -4,7 +4,6 @@ import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
 import { ISignUpResult } from "amazon-cognito-identity-js";
 import { QueryFailedError } from "typeorm";
-import IUserPrivacyRepository from '../infras/repositories/IUserPrivacyRepository';
 
 type registerParamTypes = {
     email: string;
@@ -21,7 +20,7 @@ class RegistrationFacade {
 
     private _log;
 
-    constructor(private _awsCognito: IAwsCognito, private _userProfileRepository: IUserProfileRepository, private _userPrivacyRepository: IUserPrivacyRepository) {
+    constructor(private _awsCognito: IAwsCognito, private _userProfileRepository: IUserProfileRepository) {
         this._log = Logger.createLogger('RegistrationFacade.ts');
     }
 

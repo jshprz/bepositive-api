@@ -15,7 +15,6 @@ import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // Ex
 import AwsS3 from "../../modules/user-service/infras/aws/AwsS3"; // External
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
 import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository"; // External
-import UserPrivacyRepository from "../../modules/user-service/infras/repositories/UserPrivacyRepository";
 
 class CommentController {
     private _commentFacade;
@@ -25,7 +24,7 @@ class CommentController {
     constructor() {
         this._commentFacade = new commentFacade(new CommentRepository(), new PostRepository());
         this._utilResponseMutator = new ResponseMutator();
-        this._userAccountFacade = new userAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+        this._userAccountFacade = new userAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
     }
 
     async addComment(req: Request, res: Response) {

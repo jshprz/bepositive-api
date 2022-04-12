@@ -1,17 +1,14 @@
 import RegistrationFacade from "../../../../../modules/user-service/facades/RegistrationFacade";
 import AwsCognito from "../../../../../modules/user-service/infras/aws/AwsCognito";
 import UserProfileRepository from "../../../../../modules/user-service/infras/repositories/UserProfileRepository";
-import UserPrivacyRepository from "../../../../../modules/user-service/infras/repositories/UserPrivacyRepository";
 
 jest.mock('../../../../../modules/user-service/facades/RegistrationFacade');
 jest.mock('../../../../../modules/user-service/infras/aws/AwsCognito');
 jest.mock('../../../../../modules/user-service/infras/repositories/UserProfileRepository');
-jest.mock('../../../../../modules/user-service/infras/repositories/UserPrivacyRepository');
 
 const registrationFacadeMock = RegistrationFacade as jest.MockedClass<typeof RegistrationFacade>;
 const awsCognitoMock = AwsCognito as jest.MockedClass<typeof AwsCognito>;
 const userProfileRepositoryMock = UserProfileRepository as jest.MockedClass<typeof UserProfileRepository>;
-const userPrivacyRepositoryMock = UserPrivacyRepository as jest.MockedClass<typeof UserPrivacyRepository>;
 
 describe('Facades :: RegistrationFacade', () => {
     beforeEach(() => {
@@ -19,11 +16,10 @@ describe('Facades :: RegistrationFacade', () => {
         registrationFacadeMock.mockClear();
         awsCognitoMock.mockClear();
         userProfileRepositoryMock.mockClear();
-        userPrivacyRepositoryMock.mockClear();
     });
 
     it('should call the instance of class RegistrationFacade once', () => {
-        const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+        const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
         expect(registrationFacadeMock).toHaveBeenCalledTimes(1);
     });
 
@@ -37,11 +33,6 @@ describe('Facades :: RegistrationFacade', () => {
         expect(userProfileRepositoryMock).toHaveBeenCalledTimes(1);
     });
 
-    it('should call the instance of class UserPrivacyRepository once', () => {
-        const userPrivacyRepositoryInstance = new UserPrivacyRepository();
-        expect(userPrivacyRepositoryMock).toHaveBeenCalledTimes(1);
-    });
-
     describe(':: register', () => {
         describe('#execute', () => {
             it('should call the register() once with the expected arguments', () => {
@@ -49,9 +40,8 @@ describe('Facades :: RegistrationFacade', () => {
                 expect(registrationFacadeMock).not.toHaveBeenCalled();
                 expect(awsCognitoMock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
                 expect(registrationFacadeMock).toHaveBeenCalledTimes(1);
 
                 const body = {
@@ -69,7 +59,7 @@ describe('Facades :: RegistrationFacade', () => {
                 expect(registrationFacadeMock.prototype.register).toHaveBeenCalledTimes(1);
             });
             it('should return a string', () => {
-                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
 
                 const body = {
                     email: 'test@test.com',
@@ -126,9 +116,8 @@ describe('Facades :: RegistrationFacade', () => {
                 expect(registrationFacadeMock).not.toHaveBeenCalled();
                 expect(awsCognitoMock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
                 expect(registrationFacadeMock).toHaveBeenCalledTimes(1);
 
                 const body = {
@@ -144,7 +133,7 @@ describe('Facades :: RegistrationFacade', () => {
                 expect(registrationFacadeMock.prototype.verifyUser).toHaveBeenCalledTimes(1);
             });
             it('should return a string', () => {
-                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
@@ -173,9 +162,8 @@ describe('Facades :: RegistrationFacade', () => {
                 expect(registrationFacadeMock).not.toHaveBeenCalled();
                 expect(awsCognitoMock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
                 expect(registrationFacadeMock).toHaveBeenCalledTimes(1);
 
                 const email = 'test@test.com';
@@ -188,7 +176,7 @@ describe('Facades :: RegistrationFacade', () => {
                 expect(registrationFacadeMock.prototype.updateEmailVerifiedToTrue).toHaveBeenCalledTimes(1);
             });
             it('should return a string', () => {
-                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
@@ -214,9 +202,8 @@ describe('Facades :: RegistrationFacade', () => {
                 expect(registrationFacadeMock).not.toHaveBeenCalled();
                 expect(awsCognitoMock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
                 expect(registrationFacadeMock).toHaveBeenCalledTimes(1);
 
                 const email = 'test@test.com';
@@ -229,7 +216,7 @@ describe('Facades :: RegistrationFacade', () => {
                 expect(registrationFacadeMock.prototype.resendAccountConfirmationCode).toHaveBeenCalledTimes(1);
             });
             it('should return a string', () => {
-                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
+                const registrationFacadeInstance = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
