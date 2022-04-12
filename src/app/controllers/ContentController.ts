@@ -98,9 +98,20 @@ class ContentController {
     }
 
     async getPostsByUser(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.userId) {
+            return res.status(400).json({
+                message: errors.userId.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
 
         try {
-            const userCognitoSub: string = req.body.userCognitoSub;
+            // We'll first consider if a userId param is provided, which means that our intention is to retrieve the profile of another user.
+            // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
+            const userCognitoSub: string = req.params.userId || req.body.userCognitoSub;
 
             const posts = await this._postFacade.getPostsByUser(userCognitoSub);
 

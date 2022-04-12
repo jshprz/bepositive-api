@@ -177,10 +177,27 @@ class PostFacade {
                     promises.push(this._processPostsLocationAndMediaFiles(post));
                 });
 
-                Promise.all(promises).then((result) => {
+                Promise.allSettled(promises).then((results) => {
+                    const tempPostData = {
+                        id: 0,
+                        userId: '',
+                        caption: '',
+                        status: '',
+                        viewCount: 0,
+                        googleMapsPlaceId: '',
+                        locationDetails: '',
+                        postMediaFiles: [{
+                            key: '',
+                            type: ''
+                        }],
+                        createdAt: 0,
+                        updatedAt: 0
+                    };
+                    const resultsMap = results.map(r => r.status !== 'rejected'? r.value : tempPostData);
+
                     return resolve({
                         message: 'Posts successfully retrieved',
-                        data: result,
+                        data: resultsMap.filter(r => r.id !== 0 && r.userId !== ''),
                         code: 200
                     });
                 });
