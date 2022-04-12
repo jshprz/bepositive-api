@@ -1,7 +1,6 @@
 import IAwsCognito from '../infras/aws/IAwsCognito';
 import IAwsS3 from '../infras/aws/IAwsS3';
 import IUserRelationshipRepository from "../infras/repositories/IUserRelationshipRepository";
-import IUserPrivacyRepository from "../infras/repositories/IUserPrivacyRepository";
 import IUserProfileRepository from "../infras/repositories/IUserProfileRepository";
 import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
@@ -12,15 +11,6 @@ import SendData = ManagedUpload.SendData;
 import moment from "moment";
 import type { userProfileType } from '../../types';
 
-type userPrivacyType = {
-    id: number,
-    userId: string,
-    status: string,
-    createdAt: number,
-    updatedAt: number,
-    deletedAt: number
-};
-
 class UserAccountFacade {
     private _log;
 
@@ -29,7 +19,6 @@ class UserAccountFacade {
         private _awsS3: IAwsS3,
         private _userRelationshipRepository: IUserRelationshipRepository,
         private _userProfileRepository: IUserProfileRepository,
-        private _userPrivacyRepository: IUserPrivacyRepository
     ) {
         this._log = Logger.createLogger('UserAccountFacade.ts');
     }
@@ -49,7 +38,14 @@ class UserAccountFacade {
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const userProfileData = await this._userProfileRepository.getUserProfileByUserId(userId).catch((error: QueryFailedError) => {
+            const userProfileData = await this._userProfileRepository.getUserProfileByUserId(userId).catch((error: QueryFailedError | string) => {
+                if (String(error) === 'NOT_FOUND') {
+                    return reject({
+                        message: 'User not found',
+                        code: 404
+                    });
+                }
+
                 this._log.error({
                     function: 'getUserProfile()',
                     message: error.toString(),
@@ -78,6 +74,7 @@ class UserAccountFacade {
                     zipcode: (userProfileData.zipcode)? userProfileData.zipcode : '',
                     country: (userProfileData.country)? userProfileData.country : '',
                     phoneNumber: (userProfileData.phone_number)? userProfileData.phone_number : '',
+                    isPublic: (userProfileData.is_public)? userProfileData.is_public : false,
                     createdAt: (userProfileData.created_at)? userProfileData.created_at : 0,
                     updatedAt: (userProfileData.updated_at)? userProfileData.updated_at : 0
                 }
@@ -87,30 +84,32 @@ class UserAccountFacade {
                     data: newUserProfileData,
                     code: 200
                 });
+
             }
         });
     }
 
     /**
-     * Gets user's privacy settings
+     * Updates user's privacy settings
      * @param userCognitoSub: string
+     * @param isPublic: boolean
      * @returns Promise<{
      *  message: string,
-     *  data: userPrivacyType,
+     *  data: {},
      *  code: number
      *  }>
      */
-    getPrivacyStatus(userCognitoSub: string): Promise<{
+    updatePrivacyStatus(userCognitoSub: string, isPublic: boolean): Promise<{
         message: string,
-        data: userPrivacyType,
+        data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const userSettings = await this._userPrivacyRepository.getPrivacyStatus(userCognitoSub)
-                .catch((error) => {
+            await this._userProfileRepository.updatePrivacyStatus(userCognitoSub, isPublic)
+                .catch((error: QueryFailedError) => {
                     this._log.error({
-                        function: 'getPrivacyStatus()',
-                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        function: 'updatePrivacyStatus()',
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                         payload: { userCognitoSub }
                     });
 
@@ -121,8 +120,8 @@ class UserAccountFacade {
                 });
 
                 return resolve({
-                    message: 'User privacy settings retrieved',
-                    data: userSettings,
+                    message: 'User privacy settings updated',
+                    data: {},
                     code: 200
                 });
         });

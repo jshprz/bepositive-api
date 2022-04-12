@@ -3,21 +3,19 @@ import AwsCognito from "../../../../../modules/user-service/infras/aws/AwsCognit
 import UserRelationshipRepository from "../../../../../modules/user-service/infras/repositories/UserRelationshipRepository";
 import AwsS3 from "../../../../../modules/user-service/infras/aws/AwsS3";
 import UserProfileRepository from "../../../../../modules/user-service/infras/repositories/UserProfileRepository";
-import UserPrivacyRepository from "../../../../../modules/user-service/infras/repositories/UserPrivacyRepository";
 
 jest.mock('../../../../../modules/user-service/facades/UserAccountFacade');
 jest.mock('../../../../../modules/user-service/infras/aws/AwsCognito');
 jest.mock('../../../../../modules/user-service/infras/repositories/UserRelationshipRepository');
 jest.mock('../../../../../modules/user-service/infras/aws/AwsS3');
 jest.mock('../../../../../modules/user-service/infras/repositories/UserProfileRepository');
-jest.mock('../../../../../modules/user-service/infras/repositories/UserPrivacyRepository');
 
 const userAccountFacadeMock = UserAccountFacade as jest.MockedClass<typeof UserAccountFacade>;
 const awsCognitoMock = AwsCognito as jest.MockedClass<typeof AwsCognito>;
 const userRelationshipRepositoryMock = UserRelationshipRepository as jest.MockedClass<typeof UserRelationshipRepository>;
 const awsS3Mock = AwsS3 as jest.MockedClass<typeof AwsS3>;
 const userProfileRepositoryMock = UserProfileRepository as jest.MockedClass<typeof UserProfileRepository>;
-const userPrivacyRepositoryMock = UserPrivacyRepository as jest.MockedClass<typeof UserPrivacyRepository>;
+// const userPrivacyRepositoryMock = UserPrivacyRepository as jest.MockedClass<typeof UserPrivacyRepository>;
 
 describe('Facades :: UserAccountFacade', () => {
     beforeEach(() => {
@@ -27,11 +25,10 @@ describe('Facades :: UserAccountFacade', () => {
         userRelationshipRepositoryMock.mockClear();
         awsS3Mock.mockClear();
         userProfileRepositoryMock.mockClear();
-        userPrivacyRepositoryMock.mockClear();
     });
 
     it('should call the instance of class UserAccountFacade once', () => {
-        const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+        const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
         expect(userAccountFacadeMock).toHaveBeenCalledTimes(1);
     });
 
@@ -55,10 +52,6 @@ describe('Facades :: UserAccountFacade', () => {
         expect(userProfileRepositoryMock).toHaveBeenCalledTimes(1);
     });
 
-    it('should call the instance of class UserPrivacyRepository once', () => {
-        const userPrivacyRepositoryInstance = new UserPrivacyRepository();
-        expect(userPrivacyRepositoryMock).toHaveBeenCalledTimes(1);
-    });
 
     describe(':: getUserProfile', () => {
         describe('#execute', () => {
@@ -69,9 +62,8 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userRelationshipRepositoryMock).not.toHaveBeenCalled();
                 expect(awsS3Mock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
                 expect(userAccountFacadeMock).toHaveBeenCalledTimes(1);
 
                 const userId = '87d28326-6ce8-4f68-a30e-dc7cf84df9b7';
@@ -85,7 +77,7 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userAccountFacadeMock.prototype.getUserProfile).toHaveBeenCalledTimes(1);
             });
             it('should return expected object data', () => {
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
@@ -158,9 +150,8 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userRelationshipRepositoryMock).not.toHaveBeenCalled();
                 expect(awsS3Mock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
                 expect(userAccountFacadeMock).toHaveBeenCalledTimes(1);
 
                 const sub = 'sub test';
@@ -174,7 +165,7 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userAccountFacadeMock.prototype.getUser).toHaveBeenCalledTimes(1);
             });
             it('should return getUser object', () => {
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
@@ -233,9 +224,8 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userRelationshipRepositoryMock).not.toHaveBeenCalled();
                 expect(awsS3Mock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
                 expect(userAccountFacadeMock).toHaveBeenCalledTimes(1);
 
                 const userCognitoSub = 'test user cognito sub';
@@ -249,7 +239,7 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userAccountFacadeMock.prototype.getFollowers).toHaveBeenCalledTimes(1);
             });
             it('should return getFollowers array', () => {
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
@@ -299,9 +289,8 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userRelationshipRepositoryMock).not.toHaveBeenCalled();
                 expect(awsS3Mock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
                 expect(userAccountFacadeMock).toHaveBeenCalledTimes(1);
 
                 const userCognitoSub = 'test user cognito sub';
@@ -315,7 +304,7 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userAccountFacadeMock.prototype.getFollowings).toHaveBeenCalledTimes(1);
             });
             it('should return getFollowings array', () => {
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
@@ -365,9 +354,8 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userRelationshipRepositoryMock).not.toHaveBeenCalled();
                 expect(awsS3Mock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
                 expect(userAccountFacadeMock).toHaveBeenCalledTimes(1);
 
                 const followeeCognitoSub: string = 'ef0a9ab4-7e11-4518-98e8-ca9bf52c1a2b';
@@ -386,9 +374,8 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userRelationshipRepositoryMock).not.toHaveBeenCalled();
                 expect(awsS3Mock).not.toHaveBeenCalled();
                 expect(userProfileRepositoryMock).not.toHaveBeenCalled();
-                expect(userPrivacyRepositoryMock).not.toHaveBeenCalled();
 
-                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+                const userAccountFacadeInstance = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
 
                 jest.spyOn(userAccountFacadeInstance, 'followUser').mockImplementation((followeeUserCognitoSub: string, followerUserCognitoSub: string) => {
                     return new Promise((resolve, reject) => {

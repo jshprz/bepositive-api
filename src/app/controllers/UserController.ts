@@ -8,7 +8,6 @@ import AwsS3 from "../../modules/user-service/infras/aws/AwsS3";
 import AccessTokenRepository from "../../modules/user-service/infras/repositories/AccessTokenRepository";
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository";
 import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository";
-import UserPrivacyRepository from "../../modules/user-service/infras/repositories/UserPrivacyRepository";
 
 // Facades
 import loginFacade from "../../modules/user-service/facades/LoginFacade";
@@ -44,8 +43,8 @@ class UserController {
     constructor() {
         this._loginFacade = new loginFacade(new AwsCognito, new AccessTokenRepository());
         this._passwordFacade = new passwordFacade(new AwsCognito());
-        this._registrationFacade = new registrationFacade(new AwsCognito(), new UserProfileRepository(), new UserPrivacyRepository());
-        this._userAccountFacade = new userAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+        this._registrationFacade = new registrationFacade(new AwsCognito(), new UserProfileRepository());
+        this._userAccountFacade = new userAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
         this._upload = multer().single('avatarFile');
         this._utilResponseMutator = new ResponseMutator();
     }
@@ -412,28 +411,41 @@ class UserController {
 
     async getUserProfile(req: Request, res: Response) {
         try {
-            const userId: string = req.body.userCognitoSub;
+            // We'll first consider if a userId param is provided, which means that our intention is to retrieve the profile of another user.
+            // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
+            const userId: string = req.params.userId || req.body.userCognitoSub;
             const userProfile = await this._userAccountFacade.getUserProfile(userId);
 
-            // Change the createdAt and updatedAt datetime format to unix timestamp
-            // We do this as format convention for createdAt and updatedAt
-            const timestamps = {
-                createdAt: userProfile.data.createdAt,
-                updatedAt: userProfile.data.updatedAt
+            // Logged-in users can access their own profiles whether their privacy is set to public or not.
+            // Logged-in users can only access other users' profiles that are set to public.
+            if (userProfile.data.isPublic || userProfile.data.userId === req.body.userCognitoSub) {
+
+                // Change the createdAt and updatedAt datetime format to unix timestamp
+                // We do this as format convention for createdAt and updatedAt
+                const timestamps = {
+                    createdAt: userProfile.data.createdAt,
+                    updatedAt: userProfile.data.updatedAt
+                }
+
+                const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+
+                userProfile.data.createdAt = unixTimestamps.createdAt;
+                userProfile.data.updatedAt = unixTimestamps.updatedAt;
+
+                return res.status(userProfile.code).json({
+                    message: userProfile.message,
+                    payload: {
+                        profile: userProfile.data
+                    },
+                    status: userProfile.code
+                });
+            } else {
+                return res.status(404).json({
+                    message: `User profile is set to private.`,
+                    error: 'Not Found',
+                    status: 404
+                });
             }
-
-            const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
-
-            userProfile.data.createdAt = unixTimestamps.createdAt;
-            userProfile.data.updatedAt = unixTimestamps.updatedAt;
-
-            return res.status(userProfile.code).json({
-                message: userProfile.message,
-                payload: {
-                    profile: userProfile.data
-                },
-                status: userProfile.code
-            });
         } catch (error: any) {
             if (error.code && error.code === 500) {
                 return res.status(500).json({
@@ -679,10 +691,27 @@ class UserController {
 
     async updatePrivacy(req: Request, res: Response) {
 
+        const errors = validationResult(req).mapped();
+
+        if (errors.isPublic) {
+            return res.status(400).json({
+                message: errors.isPublic.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
         try {
+            const userId: string = req.body.userCognitoSub;
+            const isPublic: boolean = req.body.isPublic;
 
-            // Implementation here;
+            const updatePrivacyResult = await this._userAccountFacade.updatePrivacyStatus(userId, isPublic);
 
+            return res.status(200).json({
+                message: updatePrivacyResult.message,
+                payload: updatePrivacyResult.data,
+                status: 200
+            });
         } catch (error: any) {
             if (error.code && error.code === 500) {
                 return res.status(500).json({

@@ -14,6 +14,7 @@ export type userProfileType = {
   zipcode: string,
   country: string,
   phoneNumber: string,
+  isPublic: boolean,
   createdAt: Date | number,
   updatedAt: Date | number
 }

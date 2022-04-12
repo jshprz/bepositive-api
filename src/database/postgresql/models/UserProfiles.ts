@@ -56,6 +56,9 @@ export class UserProfiles extends BaseEntity {
     @Column({type: "varchar", length: 50, nullable: true})
     phone_number?: string
 
+    @Column({type: "boolean", default: true})
+    is_public?: boolean
+
     @CreateDateColumn({type: 'timestamptz'})
     created_at?: Date;
 

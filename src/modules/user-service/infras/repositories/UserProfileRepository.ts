@@ -67,7 +67,7 @@ class UserProfileRepository implements IUserProfileRepository {
             if (userProfile) {
                 return resolve(userProfile);
             } else {
-                return reject(`invalid type of user profile data: ${userProfile}`);
+                return reject('NOT_FOUND');
             }
         });
     }
@@ -88,6 +88,21 @@ class UserProfileRepository implements IUserProfileRepository {
             })
             .where('user_id = :userId', {userId})
             .execute();
+    }
+
+    /**
+     * Update the user privacy setting.
+     * @param userId: string
+     * @param isPublic: boolean
+     * @returns Promise<UpdateResult>
+     */
+    updatePrivacyStatus(userId: string, isPublic: boolean): Promise<UpdateResult> {
+        return getRepository(UserProfiles)
+        .createQueryBuilder('user_profiles')
+        .update(UserProfiles)
+        .set({is_public: isPublic})
+        .where('user_id = :userId', {userId})
+        .execute();
     }
 }
 

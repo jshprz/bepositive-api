@@ -13,7 +13,6 @@ import UserAccountFacade from "../../modules/user-service/facades/UserAccountFac
 import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // External
 import AwsS3 from "../../modules/user-service/infras/aws/AwsS3"; // External
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
-import UserPrivacyRepository from "../../modules/user-service/infras/repositories/UserPrivacyRepository";
 
 class FeedController {
 
@@ -24,7 +23,7 @@ class FeedController {
     constructor() {
         this._feedFacade = new feedFacade(new feedRepository(), new userRelationshipRepository());
         this._utilResponseMutator = new ResponseMutator();
-        this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository(), new UserPrivacyRepository());
+        this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
     }
 
     async getFeed(req: Request, res: Response) {
