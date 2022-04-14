@@ -280,6 +280,7 @@ class PostFacade {
 
     /**
      * Update the caption of the post.
+     * @param userId: string
      * @param id: number
      * @param caption: string
      * @returns Promise<{
@@ -288,16 +289,18 @@ class PostFacade {
      *   code: number
      * }>
      */
-    updatePost(id: number, caption: string): Promise<{
+    updatePost(userId: string, id: number, caption: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const post = await this._postRepository.getPostById(id).catch((error) => {
+            const post = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
                 this._log.error({
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    function: 'updatePost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
+                        userId,
                         id,
                         caption
                     }
@@ -309,7 +312,7 @@ class PostFacade {
                 });
             });
 
-            if (!post) {
+            if (!post || (post && (!post.id || post.id == 0)) || userId !== post.userId) {
                 return reject({
                     message: 'Post not found.',
                     code: 404
@@ -328,23 +331,51 @@ class PostFacade {
 
     /**
      * Remove a post by ID.
-     * @param id
+     * @param userId: string
+     * @param id: number
      * @returns Promise<{
      *   message: string,
      *   data: {},
      *   code: number
      * }>
      */
-    removePost(id: number): Promise<{
+    removePost(userId: string, id: number): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            await this._postRepository.softDelete(id).catch((error) => {
+            const post = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
                 this._log.error({
+                    function: 'removePost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                    payload: {id}
+                    payload: {
+                        userId,
+                        id
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (!post || (post && (!post.id || post.id == 0)) || userId !== post.userId) {
+                return reject({
+                    message: 'Post not found.',
+                    code: 404
+                });
+            }
+
+            await this._postRepository.softDelete(id).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'removePost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        userId,
+                        id
+                    }
                 });
 
                 return reject({

@@ -136,6 +136,7 @@ class CommentFacade {
         return new Promise(async (resolve, reject) => {
             const comment = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
                 this._log.error({
+                    function: 'updateComment()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         id,
@@ -150,7 +151,7 @@ class CommentFacade {
                 });
             });
 
-            if (!comment || (comment && !comment.id)) {
+            if (!comment || (comment && (!comment.id || comment.id == 0))) {
                 return reject({
                     message: 'Comment not found.',
                     code: 404
@@ -186,6 +187,7 @@ class CommentFacade {
         return new Promise(async (resolve, reject) => {
             const comment = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
                 this._log.error({
+                    function: 'removeComment()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         id,
@@ -199,7 +201,7 @@ class CommentFacade {
                 });
             });
 
-            if (!comment || (comment && !comment.id)) {
+            if (!comment || (comment && (!comment.id || comment.id == 0))) {
                 return reject({
                     message: 'Comment not found.',
                     code: 404

@@ -239,7 +239,7 @@ class ContentController {
             const id: number = Number(req.params.id);
             const caption: string = String(req.body.caption);
 
-            const updatePostResult = await this._postFacade.updatePost(id, caption);
+            const updatePostResult = await this._postFacade.updatePost(req.body.userCognitoSub, id, caption);
 
             return res.status(updatePostResult.code).json({
                 message: updatePostResult.message,
@@ -284,7 +284,7 @@ class ContentController {
 
         try {
             const id = Number(req.params.id);
-            const removePostResult = await this._postFacade.removePost(id);
+            const removePostResult = await this._postFacade.removePost(req.body.userCognitoSub, id);
 
             return res.status(removePostResult.code).json({
                 message: removePostResult.message,
