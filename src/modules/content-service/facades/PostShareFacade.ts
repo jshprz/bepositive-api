@@ -147,10 +147,10 @@ class PostShareFacade {
     }> {
         return new Promise(async (resolve, reject) => {
             // Check the existence of the shared post by getting it via its id and user_id.
-            const sharedPost = await this._postShareRepository.getByIdAndUserCognitoSub(id, userCognitoSub).catch((error) => {
+            const sharedPost = await this._postShareRepository.getByIdAndUserCognitoSub(id, userCognitoSub).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'updateSharedPost()',
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         id,
                         userCognitoSub,
@@ -164,17 +164,17 @@ class PostShareFacade {
                 });
             });
 
-            if ((sharedPost && !sharedPost.id) || !sharedPost) {
+            if (!sharedPost || (sharedPost && (!sharedPost.id || sharedPost.id == 0)) || userCognitoSub !== sharedPost.userId) {
                 return reject({
                     message: 'Shared post not found',
                     code: 404
                 });
             }
 
-            await this._postShareRepository.update(id, shareCaption).catch((error) => {
+            await this._postShareRepository.update(id, shareCaption).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'updateSharedPost()',
-                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         id,
                         userCognitoSub,
