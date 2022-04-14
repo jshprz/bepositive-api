@@ -6,6 +6,7 @@ interface IUserProfileRepository {
     getUserProfileByEmail(email: string): Promise<UserProfiles | number>;
     getUserProfileByUserId(userId: string): Promise<UserProfiles>;
     updateUserAvatar(userId: string, avatar: string): Promise<UpdateResult>;
+    updateUserProfile(attributes: {}, userId: string): Promise<UpdateResult>;
     updatePrivacyStatus(userId: string, isPublic: boolean): Promise<UpdateResult>;
 }
 

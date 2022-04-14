@@ -544,6 +544,101 @@ class UserAccountFacade {
             }
         });
     }
+
+    /**
+     * Update name in AWS Cognito
+     * @param userAttributeList: { Name: string; Value: any; }[]
+     * @param userId: string
+     * @returns Promise<{
+     *     message: string,
+     *     data: {},
+     *     code: number
+     * }>
+     */
+    updateNameInCognito(userAttributeList: { Name: string; Value: any; }[], userId: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            const params = {
+                Username: userId,
+                UserAttributes: userAttributeList,
+                UserPoolId: `${process.env.AWS_COGNITO_POOL_ID}`
+            }
+
+            await this._awsCognito.getAwsCognitoClient().adminUpdateUserAttributes(params).promise().catch((error: Error) => {
+                this._log.error({
+                    function: 'updateNameInCognito()',
+                    message: error.message,
+                    payload: {}
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.UPDATE,
+                    code: 500
+                });
+            })
+
+            return resolve({
+                message: 'User attribute updated successfully.',
+                data: {},
+                code: 200
+            });
+        })
+    }
+
+    /**
+     * Updates a user profile.
+     * @params attributes: {},
+     * @params userId: string,
+     * @returns Promise<{
+     *  message: string,
+     *  data: {},
+     *  code: number
+     * }>
+     */
+    updateProfile(attributes: any = {}, userId: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            const newAttributesList: any = {}
+
+            // change the case to match the case of the database fields
+            if (attributes.name) newAttributesList.name =  attributes.name;
+            if (attributes.gender) newAttributesList.gender =  attributes.gender;
+            if (attributes.profileTitle) newAttributesList.profile_title =  attributes.profileTitle;
+            if (attributes.profileDescription) newAttributesList.profile_description =  attributes.profileDescription;
+            if (attributes.dateOfBirth) newAttributesList.date_of_birth =  attributes.dateOfBirth;
+            if (attributes.website) newAttributesList.website =  attributes.website;
+            if (attributes.city) newAttributesList.city =  attributes.city;
+            if (attributes.state) newAttributesList.state =  attributes.state;
+            if (attributes.zipcode) newAttributesList.zipcode =  attributes.zipcode;
+            if (attributes.country) newAttributesList.country =  attributes.country;
+            if (attributes.phoneNumber) newAttributesList.phone_number =  attributes.phoneNumber;
+
+            await this._userProfileRepository.updateUserProfile(newAttributesList, userId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'updateProfile()',
+                    message: error.message,
+                    payload: {}
+                });
+
+                return reject({
+                    message: error.message,
+                    code: 500
+                });
+            })
+
+            return resolve({
+                message: 'Profile updated successfully.',
+                data: {},
+                code: 200
+            });
+        })
+    }
 }
 
 export default UserAccountFacade;
