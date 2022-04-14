@@ -15,7 +15,6 @@ const awsCognitoMock = AwsCognito as jest.MockedClass<typeof AwsCognito>;
 const userRelationshipRepositoryMock = UserRelationshipRepository as jest.MockedClass<typeof UserRelationshipRepository>;
 const awsS3Mock = AwsS3 as jest.MockedClass<typeof AwsS3>;
 const userProfileRepositoryMock = UserProfileRepository as jest.MockedClass<typeof UserProfileRepository>;
-// const userPrivacyRepositoryMock = UserPrivacyRepository as jest.MockedClass<typeof UserPrivacyRepository>;
 
 describe('Facades :: UserAccountFacade', () => {
     beforeEach(() => {
@@ -51,7 +50,6 @@ describe('Facades :: UserAccountFacade', () => {
         const userProfileRepositoryInstance = new UserProfileRepository();
         expect(userProfileRepositoryMock).toHaveBeenCalledTimes(1);
     });
-
 
     describe(':: getUserProfile', () => {
         describe('#execute', () => {

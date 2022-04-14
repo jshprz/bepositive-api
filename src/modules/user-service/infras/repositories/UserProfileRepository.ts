@@ -91,6 +91,21 @@ class UserProfileRepository implements IUserProfileRepository {
     }
 
     /**
+     * Update User Profile
+     * @params attributes: {}
+     * @params userId: string
+     * @returns Promise<UpdateResult>
+     */
+    updateUserProfile(attributes: {}, userId: string): Promise<UpdateResult> {
+        return getRepository(UserProfiles)
+            .createQueryBuilder('user_profiles')
+            .update(UserProfiles)
+            .set(attributes)
+            .where('user_id = :userId', {userId})
+            .execute();
+    }
+
+     /*
      * Update the user privacy setting.
      * @param userId: string
      * @param isPublic: boolean

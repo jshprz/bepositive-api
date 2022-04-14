@@ -20,7 +20,7 @@ import { validationResult } from "express-validator";
 
 // Declaration merging on aws-cognito-identity-js
 import '../../declarations/DAwsCognito'
-import {timestampsType} from "../../modules/types";
+import {timestampsType, userProfileType} from "../../modules/types";
 
 import ResponseMutator from "../../utils/ResponseMutator";
 import jwtDecode from "jwt-decode";
@@ -796,6 +796,165 @@ class UserController {
             throw {
                 message: 'Missing new access token',
                 code: 500
+            }
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async updateProfile(req: Request, res: Response) {
+
+        const errors = validationResult(req).mapped();
+
+        if (errors.attributes) {
+            return res.status(400).json({
+                message: errors.attributes.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors['attributes.name']) {
+            return res.status(400).json({
+                message: errors['attributes.name'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.gender']) {
+            return res.status(400).json({
+                message: errors['attributes.gender'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.profileTitle']) {
+            return res.status(400).json({
+                message: errors['attributes.profileTitle'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.profileDescription']) {
+            return res.status(400).json({
+                message: errors['attributes.profileDescription'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.dateOfBirth']) {
+            return res.status(400).json({
+                message: errors['attributes.dateOfBirth'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.website']) {
+            return res.status(400).json({
+                message: errors['attributes.website'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.city']) {
+            return res.status(400).json({
+                message: errors['attributes.city'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.state']) {
+            return res.status(400).json({
+                message: errors['attributes.state'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.zipcode']) {
+            return res.status(400).json({
+                message: errors['attributes.zipcode'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.country']) {
+            return res.status(400).json({
+                message: errors['attributes.country'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors['attributes.phoneNumber']) {
+            return res.status(400).json({
+                message: errors['attributes.phoneNumber'].msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const { attributes } = req.body;
+            const cognitoUpdate = [];
+            const userCognitoSub: string = req.body.userCognitoSub;
+
+            // if changing the name , update it first in Cognito.
+            if (attributes.name) {
+                cognitoUpdate.push({
+                    "Name": "name",
+                    "Value": attributes.name
+                })
+            }
+
+            if (cognitoUpdate.length) {
+                try {
+                    await this._userAccountFacade.updateNameInCognito(cognitoUpdate, userCognitoSub);
+                } catch (error: any) {
+                    return res.status(520).json({
+                        message: error.message,
+                        error: 'Unknown Server error',
+                        status: 520
+                    });
+                }
+            }
+            // continue with the update of the other fields
+            if (attributes) {
+                const updateProfileResult = await this._userAccountFacade.updateProfile(attributes, userCognitoSub);
+
+                return res.status(200).json({
+                    message: updateProfileResult.message,
+                    payload: updateProfileResult.data,
+                    status: 200
+                });
+            } else {
+                return res.status(400).json({
+                    message: "No attributes provided.",
+                    error: 'Bad Request',
+                    status: 400
+                });
             }
         } catch (error: any) {
             if (error.code && error.code === 500) {
