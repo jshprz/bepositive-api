@@ -101,7 +101,12 @@ class CommentController {
             for (const comment of comments.data) {
                 // Get the user profile data every post in the feed.
                 const userProfileData = await this._userAccountFacade.getUserProfile(comment.userId);
-                comment.user = userProfileData.data;
+                const { id, name, avatar } = userProfileData.data;
+                comment.user = {
+                    id,
+                    name,
+                    avatar
+                }
             }
 
             // Change the createdAt and updatedAt datetime format to unix timestamp

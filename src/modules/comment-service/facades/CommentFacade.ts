@@ -68,7 +68,7 @@ class CommentFacade {
            return resolve({
                message: 'Comment added successfully.',
                data: {},
-               code: 201
+               code: 200
            });
         });
     }
@@ -163,7 +163,7 @@ class CommentFacade {
             return resolve({
                 message: 'The comment was updated successfully.',
                 data: {},
-                code: 204
+                code: 200
             });
         });
     }
@@ -213,7 +213,7 @@ class CommentFacade {
             return resolve({
                 message: 'The comment was removed successfully.',
                 data: {},
-                code: 204
+                code: 200
             });
         });
     }

@@ -62,7 +62,7 @@ class PostShareFacade {
             return resolve({
                 message: 'The post successfully shared',
                 data: {},
-                code: 201
+                code: 200
             });
         });
     }
@@ -191,7 +191,7 @@ class PostShareFacade {
             return resolve({
                 message: 'The shared post has been updated successfully',
                 data: {},
-                code: 204
+                code: 200
             });
         });
     }
