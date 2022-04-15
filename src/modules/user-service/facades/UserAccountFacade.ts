@@ -421,7 +421,7 @@ class UserAccountFacade {
                 return resolve({
                     message: `${followeeCognitoSub} successfully followed by ${followerCognitoSub}`,
                     data: {},
-                    code: 201
+                    code: 200
                 });
             } else {
                 return reject({
@@ -468,7 +468,7 @@ class UserAccountFacade {
             return resolve({
                 message: `${followerCognitoSub} successfully unfollowed ${followeeCognitoSub}`,
                 data: {},
-                code: 204
+                code: 200
             });
         });
     }
