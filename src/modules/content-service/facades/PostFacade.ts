@@ -9,7 +9,7 @@ import IUserRelationshipRepository from "../../user-service/infras/repositories/
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type {postType, userRelationshipTypes} from '../../types';
+import type { postType, sharedPostType, userRelationshipTypes } from '../../types';
 import {Posts} from "../../../database/postgresql/models/Posts";
 
 class PostFacade {
@@ -615,6 +615,115 @@ class PostFacade {
 
         return post;
     }
+
+    /**
+     * Flag a post by another user
+     * @param userId: string
+     * @param postId: string
+     * @param classification: string
+     * @param reason: string
+     * @returns Promise<{
+     *   message: string,
+     *   data: {},
+     *   code: number
+     * }>
+     */
+    flagPost(userId: string, postId: string, classification: string, reason: string): Promise<{
+            message: string,
+            data: {},
+            code: number
+        }> {
+            return new Promise(async (resolve, reject) => {
+                let post: postType | sharedPostType | void;
+                if (classification === "REGULAR_POST") {
+                    post = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
+                        this._log.error({
+                            function: 'flagPost()',
+                            message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                            payload: {
+                                userId,
+                                postId,
+                                classification,
+                                reason
+                            }
+                        });
+
+                        if (error.message.includes('invalid input syntax for type uuid')) {
+                            return reject({
+                                message: 'Post not found.',
+                                code: 404
+                            });
+                        }
+
+                        return reject({
+                            message: Error.DATABASE_ERROR.GET,
+                            code: 500
+                        });
+                    });
+                } else {
+                    // get shared post
+                    post = await this._postRepository.getSharedPostById(postId
+                        ).catch((error: QueryFailedError) => {
+                        this._log.error({
+                            function: 'flagPost()',
+                            message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                            payload: {
+                                userId,
+                                postId,
+                                classification,
+                                reason
+                            }
+                        });
+
+                        if (error.message.includes('invalid input syntax for type uuid')) {
+                            return reject({
+                                message: 'Shared post not found.',
+                                code: 404
+                            });
+                        }
+
+                        return reject({
+                            message: Error.DATABASE_ERROR.GET,
+                            code: 500
+                        });
+                    });
+                }
+
+                if (!post || (post && (!post.id || post.id == ''))) {
+                    return reject({
+                        message: 'Post not found.',
+                        code: 404
+                    });
+                }
+
+                // do not permit users to report their own posts
+                if (post && post.userId === userId) {
+                    return reject({
+                        message: 'Reporting of own posts is not permitted.',
+                        code: 401
+                    });
+                }
+
+                await this._postRepository.flagPost(userId, postId, classification, reason).save().catch((error: QueryFailedError) => {
+                    this._log.error({
+                        function: 'flagPost()',
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                        payload: {userId, postId, classification, reason}
+                    });
+
+                    return reject({
+                        message: error.message,
+                        code: 500
+                    });
+                });
+
+                return resolve({
+                    message: 'The post was reported successfully.',
+                    data: {},
+                    code: 200
+                });
+            });
+        }
 }
 
 export default PostFacade;

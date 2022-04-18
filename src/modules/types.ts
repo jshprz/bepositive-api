@@ -97,6 +97,15 @@ export type postType = {
   updatedAt: Date | number
 };
 
+export type sharedPostType = {
+  id: string,
+  postId: string,
+  userId: string,
+  shareCaption: string,
+  createdAt: Date | number,
+  updatedAt: Date | number
+};
+
 export type feedTypes = {
   id: string,
   userId: string,

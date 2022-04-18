@@ -1,13 +1,17 @@
 import {getRepository, QueryFailedError, UpdateResult} from 'typeorm';
 import { Posts } from "../../../../database/postgresql/models/Posts";
-import type { postType } from '../../../types';
+import { PostShares } from "../../../../database/postgresql/models/PostShares";
+import { FlaggedPosts } from "../../../../database/postgresql/models/FlaggedPosts";
+import type { postType, sharedPostType } from '../../../types';
 import IPostRepository from "./IPostRepository";
 
 class PostRepository implements IPostRepository {
     private readonly _model;
+    private readonly _flaggedPostModel;
 
     constructor() {
         this._model = new Posts();
+        this._flaggedPostModel = new FlaggedPosts();
     }
 
     /**
@@ -114,6 +118,35 @@ class PostRepository implements IPostRepository {
     }
 
     /**
+     * Get a shared post by shared post id.
+     * @param id: string
+     * @returns Promise<postType>
+     */
+    getSharedPostById(id: string): Promise<sharedPostType> {
+        return new Promise(async (resolve, reject) => {
+            const post = await getRepository(PostShares)
+                .createQueryBuilder('post_shares')
+                .select('post_shares')
+                .where('id = :id', {id})
+                .getOne()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+
+            const newPost = {
+                id: post?.id || '',
+                postId: post?.post_id || '',
+                userId: post?.user_id || '',
+                shareCaption: post?.share_caption || '',
+                createdAt: post?.created_at || 0,
+                updatedAt: post?.updated_at || 0
+            }
+
+            return resolve(newPost);
+        });
+    }
+
+    /**
      * Updates a post from posts table.
      * @param id: string
      * @param caption: string
@@ -147,6 +180,25 @@ class PostRepository implements IPostRepository {
                 });
             return resolve(true);
         })
+    }
+
+    /**
+     * Creates flagged post record in the database.
+     * @param userCognitoSub: string
+     * @param postId: string
+     * @param classification: string,
+     * @param reason: string}
+     * @returns instance of FlaggedPosts
+     */
+    flagPost(userCognitoSub: string, postId: string, classification: string, reason: string): FlaggedPosts {
+
+        this._flaggedPostModel.id = undefined; // prevent overwriting existing entry from the same user
+        this._flaggedPostModel.user_id = userCognitoSub;
+        this._flaggedPostModel.post_id = postId;
+        this._flaggedPostModel.classification = classification;
+        this._flaggedPostModel.reason = reason;
+
+        return this._flaggedPostModel;
     }
 }
 

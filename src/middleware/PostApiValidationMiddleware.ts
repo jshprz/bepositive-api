@@ -72,6 +72,12 @@ export const likeOrUnlikePostApiValidation = [
   })
 ];
 
+export const flagPostApiValidation = [
+  check('id').not().isEmpty().withMessage('id parameter is required.').isString().withMessage('id parameter should be type of string.'),
+  check('classification').optional().isIn(['REGULAR_POST', 'SHARED_POST']).withMessage("classification property should only be 'REGULAR_POST or 'SHARED_POST'."),
+  check('reason').not().isEmpty().withMessage('reason property is required.')
+];
+
 function validateKey(extension: string): {isFailed: boolean, message: string | null} {
     switch (extension) {
       case '.jpg':
