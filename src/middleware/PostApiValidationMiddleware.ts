@@ -63,13 +63,9 @@ export const createPostApiValidation = [
 ];
 
 export const likeOrUnlikePostApiValidation = [
-  check('postId').not().isEmpty().withMessage('Post ID property is required and must be a string').custom((value) => {
-    if (typeof(value) !== 'string') {
-      return Promise.reject('Post ID property is required and must be a string');
-    } else {
-      return Promise.resolve();
-    }
-  })
+  check('postId').not().isEmpty().withMessage('postId parameter is required.').isString().withMessage('postId parameter should be of type string.'),
+  check('like').not().isEmpty().withMessage('like parameter is required.').isBoolean().withMessage('like parameter should be of type boolean.'),
+  check('classification').not().isEmpty().withMessage('classification property is required').isIn(['REGULAR_POST', 'SHARED_POST']).withMessage("classification property should only be 'REGULAR_POST' or 'SHARED_POST'.")
 ];
 
 export const flagPostApiValidation = [
