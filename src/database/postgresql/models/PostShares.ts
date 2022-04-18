@@ -11,11 +11,11 @@ import {
 @Entity({name: "post_shares"})
 export class PostShares extends BaseEntity {
 
-  @PrimaryGeneratedColumn({type: "int", unsigned: true})
-  id?: number;
+  @PrimaryGeneratedColumn('uuid')
+  id?: string;
 
-  @Column({type: "int", unsigned: true, nullable: false})
-  post_id?: number;
+  @Column('uuid', {nullable: false})
+  post_id?: string;
 
   @Column({type: "varchar", length: 255, nullable: false})
   user_id?: string;

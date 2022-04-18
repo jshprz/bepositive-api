@@ -1,7 +1,6 @@
-import feedRepository from "../../modules/feed-service/infras/repositories/FeedRepository";
-import userRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
+import FeedRepository from "../../modules/feed-service/infras/repositories/FeedRepository";
+import FeedFacade from "../../modules/feed-service/facades/FeedFacade";
 
-import feedFacade from "../../modules/feed-service/facades/FeedFacade";
 import {Request, Response} from "express";
 import { validationResult } from "express-validator";
 
@@ -21,7 +20,7 @@ class FeedController {
     private _userAccountFacade;
 
     constructor() {
-        this._feedFacade = new feedFacade(new feedRepository(), new userRelationshipRepository());
+        this._feedFacade = new FeedFacade(new FeedRepository(), new UserRelationshipRepository());
         this._utilResponseMutator = new ResponseMutator();
         this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
     }

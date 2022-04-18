@@ -1,28 +1,7 @@
 import { Comments } from "../../../../database/postgresql/models/Comments";
 import ICommentRepository from "./ICommentRepository";
 import { getRepository, QueryFailedError, UpdateResult } from 'typeorm';
-
-type getCommentByIdResult = {
-    id: number,
-    userId: string,
-    postId: number,
-    content: string,
-    status: string,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date
-};
-
-type getCommentsByPostIdReturnType = Promise<{
-    id: number,
-    userId: string,
-    postId: number,
-    content: string,
-    status: string,
-    createdAt: Date,
-    updatedAt: Date,
-    user: {}
-}[]>;
+import type { getCommentByIdResult, getCommentsByPostIdReturnType } from '../../../types';
 
 class CommentRepository implements ICommentRepository {
     private readonly _model;
@@ -31,7 +10,7 @@ class CommentRepository implements ICommentRepository {
         this._model = new Comments();
     }
 
-    create(item: {userCognitoSub: string, postId: number, content: string}): Comments {
+    create(item: {userCognitoSub: string, postId: string, content: string}): Comments {
 
         this._model.id = undefined; // prevent overwriting existing comments from the same user
         this._model.user_id = item.userCognitoSub;
@@ -44,11 +23,11 @@ class CommentRepository implements ICommentRepository {
 
     /**
      * Get a comment by id.
-     * @param id: number
+     * @param id: string
      * @param userId: string
      * @returns Promise<getCommentByIdResult>
      */
-    getCommentById(id: number, userId: string): Promise<getCommentByIdResult> {
+    getCommentById(id: string, userId: string): Promise<getCommentByIdResult> {
 
         return new Promise(async (resolve, reject) => {
             const query = await getRepository(Comments)
@@ -62,9 +41,9 @@ class CommentRepository implements ICommentRepository {
                 });
 
             return resolve({
-                id: query?.id || 0,
+                id: query?.id || '',
                 userId: query?.user_id || '',
-                postId: query?.post_id || 0,
+                postId: query?.post_id || '',
                 content: query?.content || '',
                 status: query?.status || '',
                 createdAt: query?.created_at || new Date(),
@@ -76,10 +55,10 @@ class CommentRepository implements ICommentRepository {
 
     /**
      * Get all the comments under a post.
-     * @param postId: number
-     * @returns getCommentsByPostIdReturnType
+     * @param postId: string
+     * @returns Promise<getCommentsByPostIdReturnType[]>
      */
-    getCommentsByPostId(postId: number): getCommentsByPostIdReturnType {
+    getCommentsByPostId(postId: string): Promise<getCommentsByPostIdReturnType[]> {
         return new Promise(async (resolve, reject) => {
             const comments = await getRepository(Comments)
                 .createQueryBuilder('comments')
@@ -94,9 +73,9 @@ class CommentRepository implements ICommentRepository {
             if (Array.isArray(comments)) {
 
                 const newComments = comments.map((comment: {
-                    comments_id: number,
+                    comments_id: string,
                     comments_user_id: string,
-                    comments_post_id: number,
+                    comments_post_id: string,
                     comments_content: string,
                     comments_status: string,
                     comments_created_at: Date,
@@ -123,12 +102,12 @@ class CommentRepository implements ICommentRepository {
 
     /**
      * Updates a post comment from comments table.
-     * @param id: number
+     * @param id: string
      * @param userId: string
      * @param content: string
      * @returns Promise<UpdateResult>
      */
-    update(id: number, userId: string, content: string): Promise<UpdateResult> {
+    update(id: string, userId: string, content: string): Promise<UpdateResult> {
 
         return getRepository(Comments)
             .createQueryBuilder('comments')
@@ -142,10 +121,10 @@ class CommentRepository implements ICommentRepository {
 
     /**
      * Performs soft delete for Comments
-     * @param id: number
+     * @param id: string
      * @returns Promise<boolean>
      */
-     softDelete(id: number): Promise<boolean> {
+     softDelete(id: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
             await getRepository(Comments)
                 .createQueryBuilder()

@@ -3,14 +3,14 @@ import { Entity, Column, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, U
 @Entity({name: "comments"})
 export class Comments extends BaseEntity {
 
-  @PrimaryGeneratedColumn({type: "int", unsigned: true})
-  id?: number;
+  @PrimaryGeneratedColumn('uuid')
+  id?: string;
 
   @Column({type: "varchar", length: 255, nullable: false})
   user_id?: string;
 
-  @Column({type: "int", unsigned: true, nullable: false})
-  post_id?: number;
+  @Column('uuid', {nullable: false})
+  post_id?: string;
 
   @Column({type: "text", nullable: true})
   content?: string;

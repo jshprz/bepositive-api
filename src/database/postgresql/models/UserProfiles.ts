@@ -11,8 +11,8 @@ import {
 @Entity({name: 'user_profiles'})
 export class UserProfiles extends BaseEntity {
 
-    @PrimaryGeneratedColumn({type: "int", unsigned: true})
-    id?: number
+    @PrimaryGeneratedColumn('uuid')
+    id?: string;
 
     @Column({type: "varchar", length: 255, nullable: false, unique: true})
     user_id?: string

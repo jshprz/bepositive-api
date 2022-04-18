@@ -34,6 +34,7 @@ class LoginFacade {
                onSuccess: (result: CognitoUserSession) => resolve(result),
                onFailure: (error: { message: string, code: string }) => {
                    this._log.error({
+                       function: 'normalLogin()',
                        message: error.message,
                        payload: body
                    });
@@ -60,6 +61,7 @@ class LoginFacade {
            this._awsCognito.getAwsCognitoClient().globalSignOut(param, (error: Error) => {
               if (error) {
                   this._log.error({
+                      function: 'logout()',
                       message: error.toString(),
                       payload: param
                   });
@@ -84,6 +86,7 @@ class LoginFacade {
             await this._accessTokenRepository.create(item)
                 .catch((error: QueryFailedError) => {
                     this._log.error({
+                        function: 'createAccessTokenItem()',
                         message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                         payload: {
                             accessToken,
@@ -106,6 +109,7 @@ class LoginFacade {
             await this._accessTokenRepository.delete(userCognitoSub)
                 .catch((error: QueryFailedError) => {
                     this._log.error({
+                        function: 'deleteAccessTokenItem()',
                         message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                         payload: {
                             userCognitoSub

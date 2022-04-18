@@ -2,7 +2,7 @@ import CommentRepository from "../../modules/comment-service/infras/repositories
 
 import PostRepository from "../../modules/content-service/infras/repositories/PostRepository"; // External
 
-import commentFacade from "../../modules/comment-service/facades/CommentFacade";
+import CommentFacade from "../../modules/comment-service/facades/CommentFacade";
 
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
@@ -10,7 +10,7 @@ import { validationResult } from 'express-validator';
 import ResponseMutator from "../../utils/ResponseMutator";
 import type { timestampsType } from '../../modules/types';
 
-import userAccountFacade from "../../modules/user-service/facades/UserAccountFacade"; // External
+import UserAccountFacade from "../../modules/user-service/facades/UserAccountFacade"; // External
 import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // External
 import AwsS3 from "../../modules/user-service/infras/aws/AwsS3"; // External
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
@@ -22,9 +22,9 @@ class CommentController {
     private _userAccountFacade;
 
     constructor() {
-        this._commentFacade = new commentFacade(new CommentRepository(), new PostRepository());
+        this._commentFacade = new CommentFacade(new CommentRepository(), new PostRepository());
         this._utilResponseMutator = new ResponseMutator();
-        this._userAccountFacade = new userAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
+        this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
     }
 
     async addComment(req: Request, res: Response) {
@@ -94,7 +94,7 @@ class CommentController {
         }
 
         try {
-            const postId: number = Number(req.params.postId);
+            const postId: string = req.params.postId;
 
             const comments = await this._commentFacade.getCommentsByPostId(postId);
 
@@ -172,8 +172,8 @@ class CommentController {
         }
 
         try {
-            const id = Number(req.params.id);
-            const content = String(req.body.content);
+            const id: string = req.params.id;
+            const content: string = req.body.content;
 
             const result = await this._commentFacade.updateComment(id, req.body.userCognitoSub, content);
 
@@ -221,7 +221,7 @@ class CommentController {
         }
 
         try {
-            const id = Number(req.params.id);
+            const id: string = req.params.id;
 
             const result = await this._commentFacade.removeComment(id, req.body.userCognitoSub);
 

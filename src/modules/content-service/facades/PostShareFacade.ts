@@ -3,6 +3,7 @@ import IPostRepository from "../infras/repositories/IPostRepository";
 import Logger from "../../../config/Logger";
 import Error from '../../../config/Error';
 import { QueryFailedError } from "typeorm";
+import { getByIdAndUserCognitoSubReturnTypes, postType } from "../../types";
 
 class PostShareFacade {
     private _log;
@@ -13,26 +14,30 @@ class PostShareFacade {
 
     /**
      * Checks the post existence and then creates a shared post.
-     * @param postId: number
-     * @param sharedPostAttr: { userId: string, postId: number, shareCaption: string }
+     * @param postId: string
+     * @param sharedPostAttr: { userId: string, postId: string, shareCaption: string }
      * @returns Promise<{ message: string, data: {}, code: number }>
      */
-    createSharedPost(postId: number, sharedPostAttr: { userId: string, postId: number, shareCaption: string }): Promise<{
+    createSharedPost(postId: string, sharedPostAttr: { userId: string, postId: string, shareCaption: string }): Promise<{
         message: string,
         data: {},
         code: number
     }> {
 
         return new Promise(async (resolve, reject) => {
-            const post = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
+            const post: postType | void = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'createSharedPost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                    payload: {
-                        postId,
-                        sharedPostAttr
-                    }
+                    payload: { postId, sharedPostAttr }
                 });
+
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Post not found.',
+                        code: 404
+                    });
+                }
 
                 return reject({
                     message: Error.DATABASE_ERROR.GET,
@@ -49,8 +54,9 @@ class PostShareFacade {
 
             await this._postShareRepository.create(sharedPostAttr).save().catch((error: QueryFailedError) => {
                 this._log.error({
+                    function: 'createSharedPost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                    payload: {sharedPostAttr}
+                    payload: { postId, sharedPostAttr }
                 });
 
                 return reject({
@@ -69,24 +75,25 @@ class PostShareFacade {
 
     /**
      * Gets a shared post by ID.
-     * @param postId: number
+     * @param postId: string
      * @returns Promise<{
-     *  message: string,
-     *  data: {
-     *      id: number,
-     *      post_id: number,
-     *      user_id: string,
-     *      share_caption: string,
-     *      created_at: number
-     *  },
-     *  code: number
-     * }>
+     *         message: string,
+     *         data: {
+     *             id: string,
+     *             postId: string,
+     *             userId: string,
+     *             shareCaption: string,
+     *             createdAt: Date | number,
+     *             updatedAt: Date | number
+     *         },
+     *         code: number
+     *     }>
      */
-    getSharedPostById(postId: number): Promise<{
+    getSharedPostById(postId: string): Promise<{
         message: string,
         data: {
-            id: number,
-            postId: number,
+            id: string,
+            postId: string,
             userId: string,
             shareCaption: string,
             createdAt: Date | number,
@@ -97,9 +104,17 @@ class PostShareFacade {
         return new Promise(async (resolve, reject) => {
             const sharedPost = await this._postShareRepository.get(postId).catch((error) => {
                this._log.error({
+                   function: 'getSharedPostById()',
                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                    payload: {postId}
                });
+
+               if (error.message.includes('invalid input syntax for type uuid')) {
+                   return reject({
+                        message: 'Shared post not found',
+                        code: 404
+                   });
+               }
 
                return reject({
                    message: Error.DATABASE_ERROR.GET,
@@ -131,7 +146,7 @@ class PostShareFacade {
 
     /**
      * Checks the existence of the shared post via id and userCognitoSub and then updates it.
-     * @param id: number
+     * @param id: string
      * @param userCognitoSub: string
      * @param shareCaption: string
      * @returns Promise<{
@@ -140,14 +155,14 @@ class PostShareFacade {
      *         code: number
      *     }>
      */
-    updateSharedPost(id: number, userCognitoSub: string, shareCaption: string): Promise<{
+    updateSharedPost(id: string, userCognitoSub: string, shareCaption: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
             // Check the existence of the shared post by getting it via its id and user_id.
-            const sharedPost = await this._postShareRepository.getByIdAndUserCognitoSub(id, userCognitoSub).catch((error: QueryFailedError) => {
+            const sharedPost: getByIdAndUserCognitoSubReturnTypes | void = await this._postShareRepository.getByIdAndUserCognitoSub(id, userCognitoSub).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'updateSharedPost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -158,13 +173,20 @@ class PostShareFacade {
                     }
                 });
 
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Shared post not found',
+                        code: 404
+                    });
+                }
+
                 return reject({
                     message: Error.DATABASE_ERROR.GET,
                     code: 500
                 });
             });
 
-            if (!sharedPost || (sharedPost && (!sharedPost.id || sharedPost.id == 0)) || userCognitoSub !== sharedPost.userId) {
+            if (!sharedPost || (sharedPost && (!sharedPost.id || sharedPost.id == '')) || userCognitoSub !== sharedPost.userId) {
                 return reject({
                     message: 'Shared post not found',
                     code: 404

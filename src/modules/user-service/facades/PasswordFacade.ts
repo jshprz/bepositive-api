@@ -29,6 +29,7 @@ class Password {
                 onSuccess: (result: string | PromiseLike<string>) => resolve(result),
                 onFailure: (error: any) => {
                     this._log.error({
+                        function: 'forgotPassword()',
                         message: error,
                         payload: { email }
                     });
@@ -50,6 +51,7 @@ class Password {
                 onSuccess: (result: string | PromiseLike<string>) => resolve(result),
                 onFailure: (error: any) => {
                     this._log.error({
+                        function: 'resetPassword()',
                         message: error,
                         payload: body
                     });

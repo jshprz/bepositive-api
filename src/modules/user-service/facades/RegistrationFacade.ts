@@ -89,6 +89,7 @@ class RegistrationFacade {
            this._awsCognito.getCognitoUser(body.email).confirmRegistration(body.verifyCode, true, (error: any, result: string) => {
               if (error) {
                   this._log.error({
+                      function: 'verifyUser()',
                       message: error,
                       payload: body
                   });
@@ -124,6 +125,7 @@ class RegistrationFacade {
            }, (error: Error) => {
                if (error) {
                    this._log.error({
+                       function: 'updateEmailVerifiedToTrue()',
                        message: error.toString(),
                        payload: { email }
                    });
@@ -149,6 +151,7 @@ class RegistrationFacade {
             }, (error?: Error) => {
                 if (error) {
                     this._log.error({
+                        function: 'resendAccountConfirmationCode()',
                         message: error.toString(),
                         payload: {email}
                     });

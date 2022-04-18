@@ -1,15 +1,7 @@
 import {getRepository, QueryFailedError} from 'typeorm';
 import { UserRelationships } from "../../../../database/postgresql/models/UserRelationships";
 import IUserRelationshipRepository from "./IUserRelationshipRepository";
-
-type userRelationshipTypes = {
-    id: number,
-    followeeId: string,
-    followerId: string,
-    createdAt: Date,
-    updatedAt: Date,
-    deletedAt: Date
-}
+import type { userRelationshipTypes } from '../../../types';
 
 class UserRelationshipRepository implements IUserRelationshipRepository {
     private readonly _model;
@@ -75,8 +67,8 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
 
     /**
      * To get a record in user_relationships table by followee id and follower id.
-     * @param followeeCognitoSub
-     * @param followerCognitoSub
+     * @param followeeCognitoSub: string
+     * @param followerCognitoSub: string
      * @returns Promise<userRelationshipTypes[]>
      */
     getByFolloweeIdAndFollowerId(followeeCognitoSub: string, followerCognitoSub: string): Promise<userRelationshipTypes[]> {
@@ -115,8 +107,8 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
 
     /**
      * To perform a soft delete in user_relationships table records.
-     * @param followeeCognitoSub
-     * @param followerCognitoSub
+     * @param followeeCognitoSub: string
+     * @param followerCognitoSub: string
      * @returns Promise<boolean>
      */
     softDelete(followeeCognitoSub: string, followerCognitoSub: string): Promise<boolean> {
@@ -138,8 +130,8 @@ class UserRelationshipRepository implements IUserRelationshipRepository {
 
     /**
      * To restore the soft deleted records in user_relationships table.
-     * @param followeeCognitoSub
-     * @param followerCognitoSub
+     * @param followeeCognitoSub: string
+     * @param followerCognitoSub: string
      * @returns Promise<boolean>
      */
     restoreSoftDelete(followeeCognitoSub: string, followerCognitoSub: string): Promise<boolean> {

@@ -3,8 +3,8 @@ import { Entity, Column, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, U
 @Entity({name: "posts"})
 export class Posts extends BaseEntity {
 
-  @PrimaryGeneratedColumn({type: "int", unsigned: true})
-  id?: number;
+  @PrimaryGeneratedColumn('uuid')
+  id?: string;
 
   @Column({type: "varchar", length: 255, nullable: false})
   user_id?: string;

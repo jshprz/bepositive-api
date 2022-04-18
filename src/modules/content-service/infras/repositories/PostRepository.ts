@@ -48,7 +48,7 @@ class PostRepository implements IPostRepository {
             if (Array.isArray(posts)) {
 
                 const newPosts = posts.map((post: {
-                    posts_id: number,
+                    posts_id: string,
                     posts_user_id: string,
                     posts_caption: string,
                     posts_status: string,
@@ -82,10 +82,10 @@ class PostRepository implements IPostRepository {
 
     /**
      * Get a post by id.
-     * @param id: number
+     * @param id: string
      * @returns Promise<postType>
      */
-    getPostById(id: number): Promise<postType> {
+    getPostById(id: string): Promise<postType> {
         return new Promise(async (resolve, reject) => {
             const post = await getRepository(Posts)
                 .createQueryBuilder('posts')
@@ -97,7 +97,7 @@ class PostRepository implements IPostRepository {
                 });
 
             const newPost = {
-                id: post?.id || 0,
+                id: post?.id || '',
                 userId: post?.user_id || '',
                 caption: post?.caption || '',
                 status: post?.status || '',
@@ -115,11 +115,11 @@ class PostRepository implements IPostRepository {
 
     /**
      * Updates a post from posts table.
-     * @param id: number
+     * @param id: string
      * @param caption: string
      * @returns Promise<UpdateResult>
      */
-    update(id: number, caption: string): Promise<UpdateResult> {
+    update(id: string, caption: string): Promise<UpdateResult> {
 
         return getRepository(Posts)
             .createQueryBuilder('posts')
@@ -132,10 +132,10 @@ class PostRepository implements IPostRepository {
 
     /**
      * Performs soft delete for Posts
-     * @param id: number
+     * @param id: string
      * @returns Promise<boolean>
      */
-    softDelete(id: number): Promise<boolean> {
+    softDelete(id: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
             await getRepository(Posts)
                 .createQueryBuilder()
