@@ -418,83 +418,136 @@ class PostFacade {
      * To like or unlike a post.
      * @param postId: string
      * @param userCognitoSub: string
+     * @param like: boolean
+     * @param classification: string
      * @returns Promise<{
      *         message: string,
-     *         data: { liked: boolean } | { unliked: boolean },
+     *         data: {isLiked: boolean},
      *         code: number
      *     }>
      */
-    likeOrUnlikePost(postId: string, userCognitoSub: string): Promise<{
+    likeOrUnlikePost(postId: string, userCognitoSub: string, like: boolean, classification: string): Promise<{
         message: string,
-        data: { liked: boolean } | { unliked: boolean },
+        data: {isLiked: boolean},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-           const post: postType | void = await this._postRepository.getPostById(postId).catch((error) => {
-               this._log.error({
-                   function: 'likeOrUnlikePost()',
-                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                   payload: {
-                       postId,
-                       userCognitoSub
-                   }
-               });
+            if (classification == "REGULAR_POST") {
+                const post = await this._postRepository.getPostById(postId).catch((error) => {
+                    this._log.error({
+                        function: 'likeOrUnlikePost()',
+                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        payload: {
+                            postId,
+                            like,
+                            userCognitoSub
+                        }
+                    });
 
-               if (error.message.includes('invalid input syntax for type uuid')) {
-                   return reject({
-                       message: 'Post not found.',
-                       code: 404
-                   });
-               }
+                    if (error.message.includes('invalid input syntax for type uuid')) {
+                        return reject({
+                            message: 'Post not found.',
+                            code: 404
+                        });
+                    }
 
-               return reject({
-                   message: Error.DATABASE_ERROR.GET,
-                   code: 500
-               });
-           });
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
 
-           // check if post exists first.
-           if (!post) {
-               return reject({
-                   message: 'Post not found.',
-                   code: 404
-               });
-           }
+                // check if post exists first.
+                if (!post || (post && post.id == "" ) || (post && !post.id)) {
+                    return reject({
+                        message: 'Post does not exist.',
+                        code: 404
+                    });
+                }
+            } else {
+                // we're dealing with a share post
+                const post = await this._postRepository.getSharedPostById(postId).catch((error) => {
+                    this._log.error({
+                        function: 'likeOrUnlikePost()',
+                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        payload: {
+                            postId,
+                            like,
+                            userCognitoSub
+                        }
+                    });
 
-           const liked = await this._postLikeRepository.getByIdAndUserId(postId, userCognitoSub).catch((error) => {
-               this._log.error({
-                   function: 'likeOrUnlikePost()',
-                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                   payload: {
-                       postId,
-                       userCognitoSub
-                   }
-               });
+                    if (error.message.includes('invalid input syntax for type uuid')) {
+                        return reject({
+                            message: 'Shared post not found.',
+                            code: 404
+                        });
+                    }
 
-               return reject({
-                   message: Error.DATABASE_ERROR.GET,
-                   code: 500
-               });
-           });
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
 
-           // check if the user has already liked the post
-           if (liked) {
-               const unlikeResult = await this._unlikePost(postId, userCognitoSub).catch((error) => {
-                  return reject(error);
-               });
+                // check if post exists first.
+                if (!post || (post && post.id == "" ) || (post && !post.id)) {
+                    return reject({
+                        message: 'Post does not exist.',
+                        code: 404
+                    });
+                }
+            }
 
-               if (unlikeResult && unlikeResult.message && unlikeResult.data && unlikeResult.code) {
-                   return resolve(unlikeResult);
-               }
+            // check if user has already liked or unliked the post
+            const postLiked = await this._postLikeRepository.getByIdAndUserId(postId, userCognitoSub).catch((error) => {
+                this._log.error({
+                    function: 'likeOrUnlikePost()',
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    payload: {
+                        postId,
+                        userCognitoSub
+                    }
+                });
+            });
 
+            if (like && postLiked) {
+                return reject({
+                    message: "Post already liked.",
+                    code: 400
+                });
+            } else if (!like && !postLiked) {
+                return reject({
+                    message: "Post already unliked.",
+                    code: 400
+                });
+            }
+
+            // create or delete a record in the database depending on the value of the like parameter.
+            if (like) {
+                const likeResult = await this._likePost(postId, userCognitoSub, classification).catch((error) => {
+                    return reject(error);
+                });
+
+                if (likeResult) {
+                    return resolve({
+                        message: 'Post successfully liked.',
+                        data: {isLiked: true},
+                        code: 200
+                    });
+                }
            } else {
-               const likeResult = await this._likePost(postId, userCognitoSub).catch((error) => {
-                  return reject(error);
-               });
+                const unlikeResult = await this._unlikePost(postId, userCognitoSub).catch((error) => {
+                    return reject(error);
+                });
 
-               if (likeResult && likeResult.message && likeResult.data && likeResult.code) {
-                   return resolve(likeResult);
-               }
+                if (unlikeResult) {
+                    return resolve({
+                        message: 'Post successfully unliked.',
+                        data: {isLiked: false},
+                        code: 200
+                    });
+                }
            }
         });
     }
@@ -503,23 +556,16 @@ class PostFacade {
      * To like a post.
      * @param postId: string
      * @param userCognitoSub: string
+     * @param classification: string
      * @returns Promise<{
      *         message: string,
-     *         data: {
-     *             liked: boolean
-     *         },
+     *         data: boolean,
      *         code: number
      *     }>
      */
-    private _likePost(postId: string, userCognitoSub: string): Promise<{
-        message: string,
-        data: {
-            liked: boolean
-        },
-        code: number
-    }> {
+    private _likePost(postId: string, userCognitoSub: string, classification: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
-           await this._postLikeRepository.create({userCognitoSub, postId}).save().catch((error: QueryFailedError) => {
+           await this._postLikeRepository.create(userCognitoSub, postId, classification).save().catch((error: QueryFailedError) => {
                this._log.error({
                    function: '_likePost()',
                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -535,13 +581,7 @@ class PostFacade {
                });
            });
 
-           return resolve({
-               message: 'Post successfully liked.',
-               data: {
-                   liked: true
-               },
-               code: 200
-           });
+           resolve(true);
         });
     }
 
@@ -551,19 +591,11 @@ class PostFacade {
      * @param userCognitoSub: string
      * @returns Promise<{
      *         message: string,
-     *         data: {
-     *             unliked: boolean
-     *         },
+     *         data: boolean,
      *         code: number
      *     }>
      */
-    private _unlikePost(postId: string, userCognitoSub: string): Promise<{
-        message: string,
-        data: {
-            unliked: boolean
-        },
-        code: number
-    }> {
+    private _unlikePost(postId: string, userCognitoSub: string): Promise<boolean> {
         return new Promise(async (resolve,reject) => {
             await this._postLikeRepository.deleteByIdAndUserId(postId, userCognitoSub).catch((error) => {
                 this._log.error({
@@ -578,13 +610,7 @@ class PostFacade {
                 return reject(Error.DATABASE_ERROR.DELETE);
             });
 
-            return resolve({
-                message: 'Post successfully unliked.',
-                data: {
-                    unliked: true
-                },
-                code: 200
-            });
+            resolve(true);
         });
     }
 

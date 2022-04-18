@@ -11,14 +11,17 @@ class PostLikeRepository implements IPostLikeRepository {
 
     /**
      * Creates post_like record in the database.
-     * @param item: {userCognitoSub: string, postId: string}
+     * @param userCognitoSub: string
+     * @param postId: string
+     * @param classification: string
      * @returns instance of PostLikes
      */
-    create(item: {userCognitoSub: string, postId: string}): PostLikes {
+    create(userCognitoSub: string, postId: string, classification: string): PostLikes {
 
         this._model.id = undefined; // prevent overwriting existing comments from the same user
-        this._model.user_id = item.userCognitoSub;
-        this._model.post_id = item.postId;
+        this._model.user_id = userCognitoSub;
+        this._model.post_id = postId;
+        this._model.classification = classification;
 
         return this._model;
     }
@@ -32,8 +35,8 @@ class PostLikeRepository implements IPostLikeRepository {
     getByIdAndUserId(postId: string, userCognitoSub: string): Promise<any> {
 
         return getRepository(PostLikes)
-            .createQueryBuilder('postlikes')
-            .select('postlikes')
+            .createQueryBuilder('post_likes')
+            .select('post_likes')
             .where('post_id = :postId', {postId})
             .andWhere('user_id = :userCognitoSub', {userCognitoSub})
             .getOne();

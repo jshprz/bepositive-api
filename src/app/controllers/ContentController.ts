@@ -489,11 +489,29 @@ class ContentController {
             });
         }
 
+        if (errors.like) {
+            return res.status(400).json({
+                message: errors.like.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.classification) {
+            return res.status(400).json({
+                message: errors.classification.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
         try {
             const postId: string = req.body.postId;
+            const like = req.body.like;
             const userCognitoSub: string = req.body.userCognitoSub;
+            const classification: string = req.body.classification;
 
-            const likeOrUnlikePostResult = await this._postFacade.likeOrUnlikePost(postId, userCognitoSub);
+            const likeOrUnlikePostResult = await this._postFacade.likeOrUnlikePost(postId, userCognitoSub, like, classification);
 
             return res.status(likeOrUnlikePostResult.code).json({
                 message: likeOrUnlikePostResult.message,
@@ -506,6 +524,12 @@ class ContentController {
                     message: error.message,
                     error: 'Internal server error',
                     status: 500
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(400).json({
+                    message: error.message,
+                    error: 'Bad Request error',
+                    status: 400
                 });
             } else if (error.code && error.code === 404) {
                 return res.status(404).json({

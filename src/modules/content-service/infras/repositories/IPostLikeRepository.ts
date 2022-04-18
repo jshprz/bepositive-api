@@ -2,7 +2,7 @@ import { DeleteResult } from "typeorm";
 import { PostLikes } from "../../../../database/postgresql/models/PostLikes";
 
 interface IPostLikeRepository {
-    create(item: {userCognitoSub: string, postId: string}): PostLikes;
+    create(userCognitoSub: string, postId: string, classification: string): PostLikes;
     getByIdAndUserId(postId: string, userCognitoSub: string): Promise<any>;
     deleteByIdAndUserId(postId: string, userCognitoSub: string): Promise<DeleteResult>;
 }

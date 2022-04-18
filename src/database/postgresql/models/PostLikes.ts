@@ -20,6 +20,9 @@ export class PostLikes extends BaseEntity {
   @Column({type: "varchar", length: 255, nullable: false})
   user_id?: string;
 
+  @Column({type: "varchar", nullable: false, default: "REGULAR_POST"})
+  classification?: string;
+
   @CreateDateColumn({type: 'timestamptz'})
   created_at?: Date;
 
