@@ -522,6 +522,75 @@ class ContentController {
             }
         }
     }
+
+    async flagPost(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.id) {
+            return res.status(400).json({
+                message: errors.id.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.classification) {
+            return res.status(400).json({
+                message: errors.classification.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.reason) {
+            return res.status(400).json({
+                message: errors.reason.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const postId: string = String(req.params.id);
+            const reason: string = String(req.body.reason);
+            const classification: string = req.body.classification ? req.body.classification : "REGULAR_POST";
+
+            const flagPostResult = await this._postFacade.flagPost(req.body.userCognitoSub, postId, classification, reason);
+
+            return res.status(flagPostResult.code).json({
+                message: flagPostResult.message,
+                payload: flagPostResult.data,
+                status: flagPostResult.code
+            });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 401) {
+                return res.status(401).json({
+                    message: error.message,
+                    error: 'Unauthorized',
+                    status: 401
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
 }
 
 export default ContentController;

@@ -10,6 +10,7 @@ import {
   sharePostByIdApiValidation,
   getSharedPostByIdApiValidation,
   likeOrUnlikePostApiValidation,
+  flagPostApiValidation,
   updateSharedPost
 } from '../middleware/PostApiValidationMiddleware';
 
@@ -25,5 +26,6 @@ router.post('/share/:id', [authMiddleWare, ...sharePostByIdApiValidation], (req:
 router.get('/share/get/:id', [authMiddleWare, ...getSharedPostByIdApiValidation], (req: Request, res: Response) => contentController.getSharedPostById(req, res));
 router.patch('/share/update/:id', [authMiddleWare, ...updateSharedPost], (req: Request, res: Response) => contentController.updateSharedPost(req, res));
 router.post('/like', [authMiddleWare, ...likeOrUnlikePostApiValidation], (req: Request, res: Response) => contentController.likeOrUnlikePost(req, res));
+router.patch('/flag/:id', [authMiddleWare, ...flagPostApiValidation], (req: Request, res: Response) => contentController.flagPost(req, res))
 
 export default router;
