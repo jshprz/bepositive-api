@@ -25,7 +25,7 @@ class UserAccountFacade {
 
     /**
      * Gets user information from AWS Cognito using access token.
-     * @param accessToken: string
+     * @param userId: string
      * @returns Promise<{
      *         message: string,
      *         data: UserProfiles,
@@ -59,7 +59,7 @@ class UserAccountFacade {
 
             if (userProfileData) {
                 const newUserProfileData = {
-                    id: (userProfileData.id)? userProfileData.id : 0,
+                    id: (userProfileData.id)? userProfileData.id : '',
                     userId: (userProfileData.user_id)? userProfileData.user_id : '',
                     email: (userProfileData.email)? userProfileData.email : '',
                     name: (userProfileData.name)? userProfileData.name : '',
@@ -229,12 +229,12 @@ class UserAccountFacade {
      * @returns Promise<{
      *         message: string,
      *         data: {
-     *             user_relationships_id: number,
-     *             user_relationships_followee_id: string,
-     *             user_relationships_follower_id: string,
-     *             user_relationships_created_at: number,
-     *             user_relationships_updated_at: number,
-     *             user_relationships_deleted_at: number
+     *             id: string,
+     *             followeeId: string,
+     *             followerId: string,
+     *             createdAt: Date,
+     *             updatedAt: Date,
+     *             deletedAt: Date
      *         }[],
      *         code: number
      *     }>
@@ -242,7 +242,7 @@ class UserAccountFacade {
     getFollowers(userCognitoSub: string): Promise<{
         message: string,
         data: {
-            id: number,
+            id: string,
             followeeId: string,
             followerId: string,
             createdAt: Date,
@@ -295,7 +295,7 @@ class UserAccountFacade {
      * @returns Promise<{
      *         message: string,
      *         data: {
-     *             id: number,
+     *             id: string,
      *             followeeId: string,
      *             followerId: string,
      *             createdAt: number,
@@ -308,7 +308,7 @@ class UserAccountFacade {
     getFollowings(userCognitoSub: string): Promise<{
         message: string,
         data: {
-            id: number,
+            id: string,
             followeeId: string,
             followerId: string,
             createdAt: Date,
@@ -322,6 +322,7 @@ class UserAccountFacade {
             const followings = await this._userRelationshipRepository.get(true, userCognitoSub)
                 .catch((error) => {
                     this._log.error({
+                        function: 'getFollowings()',
                         message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                         payload: {userCognitoSub}
                     });
@@ -403,7 +404,7 @@ class UserAccountFacade {
                         .save()
                         .catch((error: QueryFailedError) => {
                             this._log.error({
-                                function: 'followUserById()',
+                                function: 'followUser()',
                                 message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                                 payload: {
                                     followeeCognitoSub,

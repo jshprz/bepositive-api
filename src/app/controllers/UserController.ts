@@ -10,17 +10,17 @@ import UserRelationshipRepository from "../../modules/user-service/infras/reposi
 import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository";
 
 // Facades
-import loginFacade from "../../modules/user-service/facades/LoginFacade";
-import passwordFacade from "../../modules/user-service/facades/PasswordFacade";
-import registrationFacade from "../../modules/user-service/facades/RegistrationFacade";
-import userAccountFacade from "../../modules/user-service/facades/UserAccountFacade";
+import LoginFacade from "../../modules/user-service/facades/LoginFacade";
+import PasswordFacade from "../../modules/user-service/facades/PasswordFacade";
+import RegistrationFacade from "../../modules/user-service/facades/RegistrationFacade";
+import UserAccountFacade from "../../modules/user-service/facades/UserAccountFacade";
 
 import { Request, Response } from 'express';
 import { validationResult } from "express-validator";
 
 // Declaration merging on aws-cognito-identity-js
 import '../../declarations/DAwsCognito'
-import {timestampsType, userProfileType} from "../../modules/types";
+import { timestampsType } from "../../modules/types";
 
 import ResponseMutator from "../../utils/ResponseMutator";
 import jwtDecode from "jwt-decode";
@@ -41,10 +41,10 @@ class UserController {
     private _utilResponseMutator;
 
     constructor() {
-        this._loginFacade = new loginFacade(new AwsCognito, new AccessTokenRepository());
-        this._passwordFacade = new passwordFacade(new AwsCognito());
-        this._registrationFacade = new registrationFacade(new AwsCognito(), new UserProfileRepository());
-        this._userAccountFacade = new userAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
+        this._loginFacade = new LoginFacade(new AwsCognito, new AccessTokenRepository());
+        this._passwordFacade = new PasswordFacade(new AwsCognito());
+        this._registrationFacade = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
+        this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
         this._upload = multer().single('avatarFile');
         this._utilResponseMutator = new ResponseMutator();
     }

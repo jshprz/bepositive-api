@@ -5,7 +5,12 @@ import Error from '../../../config/Error';
 import IPostRepository from "../../content-service/infras/repositories/IPostRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type { commentType } from '../../types';
+import type {
+    commentType,
+    getCommentByIdResult,
+    getCommentsByPostIdReturnType,
+    postType
+} from '../../types';
 
 class CommentFacade {
     private _log;
@@ -17,26 +22,34 @@ class CommentFacade {
 
     /**
      * Validate the post id and add a comment.
-     * @param commentAttr: {userCognitoSub: string, postId: number, content: string}
+     * @param commentAttr: {userCognitoSub: string, postId: string, content: string}
      * @returns Promise<{
      *         message: string,
      *         data: {},
      *         status: number
      *     }>
      */
-    addComment(commentAttr: {userCognitoSub: string, postId: number, content: string}): Promise<{
+    addComment(commentAttr: {userCognitoSub: string, postId: string, content: string}): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-           const post = await this._postRepository.getPostById(commentAttr.postId).catch((error) => {
+           const post: postType | void = await this._postRepository.getPostById(commentAttr.postId).catch((error) => {
                this._log.error({
+                   function: 'addComment()',
                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                    payload: {
                        commentAttr
                    }
                });
+
+               if (error.message.includes('invalid input syntax for type uuid')) {
+                   return reject({
+                       message: 'Post not found.',
+                       code: 404
+                   });
+               }
 
                return reject({
                    message: Error.DATABASE_ERROR.GET,
@@ -53,6 +66,7 @@ class CommentFacade {
 
            await this._commentRepository.create(commentAttr).save().catch((error: QueryFailedError) => {
                this._log.error({
+                   function: 'addComment()',
                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                    payload: {
                        commentAttr
@@ -75,28 +89,35 @@ class CommentFacade {
 
     /**
      * Get all the comments under a post .
-     * @param postId: number
+     * @param postId: string
      * @returns Promise<{
      *         message: string,
      *         data: commentType[],
      *         code: number
      *     }>
      */
-    getCommentsByPostId(postId: number): Promise<{
+    getCommentsByPostId(postId: string): Promise<{
         message: string,
         data: commentType[],
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const comments = await this._commentRepository.getCommentsByPostId(postId).catch((error: QueryFailedError) => {
+            const comments: getCommentsByPostIdReturnType[] | void = await this._commentRepository.getCommentsByPostId(postId).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'getCommentsByPostId()',
                     message: error.toString(),
                     payload: { postId }
                 });
 
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Post not found.',
+                        code: 404
+                    });
+                }
+
                 return reject({
-                    message: error,
+                    message: Error.DATABASE_ERROR.GET,
                     code: 500
                 });
             });
@@ -119,7 +140,7 @@ class CommentFacade {
 
     /**
      * Update the content of the post comment.
-     * @param id: number
+     * @param id: string
      * @param userId: string
      * @param content: string
      * @returns Promise<{
@@ -128,13 +149,13 @@ class CommentFacade {
      *         code: number
      *     }>
      */
-    updateComment(id: number, userId: string, content: string): Promise<{
+    updateComment(id: string, userId: string, content: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const comment = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
+            const comment: getCommentByIdResult | void = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'updateComment()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -145,13 +166,20 @@ class CommentFacade {
                     }
                 });
 
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Comment not found.',
+                        code: 404
+                    });
+                }
+
                 return reject({
                     message: Error.DATABASE_ERROR.GET,
                     code: 500
                 });
             });
 
-            if (!comment || (comment && (!comment.id || comment.id == 0))) {
+            if (!comment || (comment && (!comment.id || comment.id == ''))) {
                 return reject({
                     message: 'Comment not found.',
                     code: 404
@@ -170,7 +198,7 @@ class CommentFacade {
 
     /**
      * Remove a post comment by ID.
-     * @param id: number
+     * @param id: string
      * @param userId: string
      * @returns Promise<{
      *         message: string,
@@ -178,14 +206,14 @@ class CommentFacade {
      *         code: number
      *     }>
      */
-    removeComment(id: number, userId: string): Promise<{
+    removeComment(id: string, userId: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
 
         return new Promise(async (resolve, reject) => {
-            const comment = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
+            const comment: getCommentByIdResult | void = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'removeComment()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -195,13 +223,20 @@ class CommentFacade {
                     }
                 });
 
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Comment not found.',
+                        code: 404
+                    });
+                }
+
                 return reject({
                     message: Error.DATABASE_ERROR.UPDATE,
                     code: 500
                 });
             });
 
-            if (!comment || (comment && (!comment.id || comment.id == 0))) {
+            if (!comment || (comment && (!comment.id || comment.id == ''))) {
                 return reject({
                     message: 'Comment not found.',
                     code: 404

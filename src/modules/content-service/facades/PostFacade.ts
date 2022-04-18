@@ -9,7 +9,8 @@ import IUserRelationshipRepository from "../../user-service/infras/repositories/
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type { postType } from '../../types';
+import type {postType, userRelationshipTypes} from '../../types';
+import {Posts} from "../../../database/postgresql/models/Posts";
 
 class PostFacade {
     private _log;
@@ -62,7 +63,7 @@ class PostFacade {
                 });
             });
 
-            const post = await this._postRepository.create(item).save().catch((error: QueryFailedError) => {
+            const post: Posts | void = await this._postRepository.create(item).save().catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'createPost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -75,7 +76,7 @@ class PostFacade {
                 });
             });
 
-            const userRelationships = await this._userRelationshipRepository.get(false, item.userCognitoSub).catch((error: QueryFailedError) => {
+            const userRelationships: userRelationshipTypes[] | void = await this._userRelationshipRepository.get(false, item.userCognitoSub).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'createPost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -93,7 +94,7 @@ class PostFacade {
 
                 // Allow users to see their own post within their feed.
                 userRelationships.push({
-                    id: 0,
+                    id: '',
                     followeeId: '',
                     followerId: item.userCognitoSub,
                     createdAt: new Date(),
@@ -103,7 +104,7 @@ class PostFacade {
 
                 // After creating the post we distribute it to the followers of the user who created it.
                 for (const userRelationship of userRelationships) {
-                    await this._feedRepository.create(userRelationship.followerId, Number(post.id))
+                    await this._feedRepository.create(userRelationship.followerId, String(post.id))
                         .save()
                         .catch((error: QueryFailedError) => {
                             this._log.error({
@@ -154,7 +155,7 @@ class PostFacade {
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const posts = await this._postRepository.getPostsByUserCognitoSub(userCognitoSub).catch((error: QueryFailedError) => {
+            const posts: postType[] | void = await this._postRepository.getPostsByUserCognitoSub(userCognitoSub).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'getPostsByUser()',
                     message: error.toString(),
@@ -179,7 +180,7 @@ class PostFacade {
 
                 Promise.allSettled(promises).then((results) => {
                     const tempPostData = {
-                        id: 0,
+                        id: '',
                         userId: '',
                         caption: '',
                         status: '',
@@ -197,7 +198,7 @@ class PostFacade {
 
                     return resolve({
                         message: 'Posts successfully retrieved',
-                        data: resultsMap.filter(r => r.id !== 0 && r.userId !== ''),
+                        data: resultsMap.filter(r => r.id !== '' && r.userId !== ''),
                         code: 200
                     });
                 });
@@ -212,25 +213,32 @@ class PostFacade {
 
     /**
      * Get a post by its ID.
-     * @param id: number
+     * @param id: string
      * @returns Promise<{
      *   message: string,
      *   data: postType,
      *   code: number
      * }>
      */
-    getPostById(id: number): Promise<{
+    getPostById(id: string): Promise<{
         message: string,
         data: postType,
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const post = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
+            const post: postType | void = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'getPostById()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                    payload: {id}
+                    payload: { id }
                 });
+
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Post not found.',
+                        code: 404
+                    });
+                }
 
                 return reject({
                     message: Error.DATABASE_ERROR.GET,
@@ -238,7 +246,7 @@ class PostFacade {
                 });
             });
 
-            if (post && post.id && post.id !== 0) {
+            if (post && post.id && post.id !== '') {
                 if (post.googleMapsPlaceId) {
                     // Retrieve post location details
                     const place = await this._googleapis.placeDetails({
@@ -267,12 +275,12 @@ class PostFacade {
                 this._log.info({
                     function: 'getPostById()',
                     message: 'Post retrieval info',
-                    payload: {id}
+                    payload: { id }
                 });
+
                 return reject({
-                    message: 'Post retrieved',
-                    data: {},
-                    code: 200
+                    message: 'Post not found',
+                    code: 404
                 });
             }
         });
@@ -281,7 +289,7 @@ class PostFacade {
     /**
      * Update the caption of the post.
      * @param userId: string
-     * @param id: number
+     * @param id: string
      * @param caption: string
      * @returns Promise<{
      *   message: string,
@@ -289,13 +297,13 @@ class PostFacade {
      *   code: number
      * }>
      */
-    updatePost(userId: string, id: number, caption: string): Promise<{
+    updatePost(userId: string, id: string, caption: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const post = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
+            const post: postType | void = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'updatePost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -306,13 +314,20 @@ class PostFacade {
                     }
                 });
 
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Post not found.',
+                        code: 404
+                    });
+                }
+
                 return reject({
                     message: Error.DATABASE_ERROR.GET,
                     code: 500
                 });
             });
 
-            if (!post || (post && (!post.id || post.id == 0)) || userId !== post.userId) {
+            if (!post || (post && (!post.id || post.id == '')) || userId !== post.userId) {
                 return reject({
                     message: 'Post not found.',
                     code: 404
@@ -332,20 +347,20 @@ class PostFacade {
     /**
      * Remove a post by ID.
      * @param userId: string
-     * @param id: number
+     * @param id: string
      * @returns Promise<{
      *   message: string,
      *   data: {},
      *   code: number
      * }>
      */
-    removePost(userId: string, id: number): Promise<{
+    removePost(userId: string, id: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const post = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
+            const post: postType | void = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'removePost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -355,13 +370,20 @@ class PostFacade {
                     }
                 });
 
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Post not found.',
+                        code: 404
+                    });
+                }
+
                 return reject({
                     message: Error.DATABASE_ERROR.GET,
                     code: 500
                 });
             });
 
-            if (!post || (post && (!post.id || post.id == 0)) || userId !== post.userId) {
+            if (!post || (post && (!post.id || post.id == '')) || userId !== post.userId) {
                 return reject({
                     message: 'Post not found.',
                     code: 404
@@ -394,28 +416,36 @@ class PostFacade {
 
     /**
      * To like or unlike a post.
-     * @param postId
-     * @param userCognitoSub
+     * @param postId: string
+     * @param userCognitoSub: string
      * @returns Promise<{
      *         message: string,
      *         data: { liked: boolean } | { unliked: boolean },
      *         code: number
      *     }>
      */
-    likeOrUnlikePost(postId: number, userCognitoSub: string): Promise<{
+    likeOrUnlikePost(postId: string, userCognitoSub: string): Promise<{
         message: string,
         data: { liked: boolean } | { unliked: boolean },
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-           const post = await this._postRepository.getPostById(postId).catch((error) => {
+           const post: postType | void = await this._postRepository.getPostById(postId).catch((error) => {
                this._log.error({
+                   function: 'likeOrUnlikePost()',
                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                    payload: {
                        postId,
                        userCognitoSub
                    }
                });
+
+               if (error.message.includes('invalid input syntax for type uuid')) {
+                   return reject({
+                       message: 'Post not found.',
+                       code: 404
+                   });
+               }
 
                return reject({
                    message: Error.DATABASE_ERROR.GET,
@@ -426,13 +456,14 @@ class PostFacade {
            // check if post exists first.
            if (!post) {
                return reject({
-                   message: 'Post does not exist.',
+                   message: 'Post not found.',
                    code: 404
                });
            }
 
            const liked = await this._postLikeRepository.getByIdAndUserId(postId, userCognitoSub).catch((error) => {
                this._log.error({
+                   function: 'likeOrUnlikePost()',
                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                    payload: {
                        postId,
@@ -470,8 +501,8 @@ class PostFacade {
 
     /**
      * To like a post.
-     * @param postId
-     * @param userCognitoSub
+     * @param postId: string
+     * @param userCognitoSub: string
      * @returns Promise<{
      *         message: string,
      *         data: {
@@ -480,7 +511,7 @@ class PostFacade {
      *         code: number
      *     }>
      */
-    private _likePost(postId: number, userCognitoSub: string): Promise<{
+    private _likePost(postId: string, userCognitoSub: string): Promise<{
         message: string,
         data: {
             liked: boolean
@@ -490,6 +521,7 @@ class PostFacade {
         return new Promise(async (resolve, reject) => {
            await this._postLikeRepository.create({userCognitoSub, postId}).save().catch((error: QueryFailedError) => {
                this._log.error({
+                   function: '_likePost()',
                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                    payload: {
                        postId,
@@ -515,8 +547,8 @@ class PostFacade {
 
     /**
      * To unlike a post.
-     * @param postId
-     * @param userCognitoSub
+     * @param postId: string
+     * @param userCognitoSub: string
      * @returns Promise<{
      *         message: string,
      *         data: {
@@ -525,7 +557,7 @@ class PostFacade {
      *         code: number
      *     }>
      */
-    private _unlikePost(postId: number, userCognitoSub: string): Promise<{
+    private _unlikePost(postId: string, userCognitoSub: string): Promise<{
         message: string,
         data: {
             unliked: boolean
@@ -535,6 +567,7 @@ class PostFacade {
         return new Promise(async (resolve,reject) => {
             await this._postLikeRepository.deleteByIdAndUserId(postId, userCognitoSub).catch((error) => {
                 this._log.error({
+                    function: '_unlikePost()',
                     message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                     payload: {
                         postId,

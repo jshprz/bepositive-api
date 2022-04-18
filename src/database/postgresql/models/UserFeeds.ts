@@ -11,14 +11,14 @@ import {
 @Entity({name: "user_feeds"})
 export class UserFeeds extends BaseEntity {
 
-  @PrimaryGeneratedColumn({type: "int", unsigned: true})
-  id?: number;
+  @PrimaryGeneratedColumn('uuid')
+  id?: string;
 
   @Column({type: "varchar", length: 255, nullable: false})
   user_id?: string;
 
-  @Column({type: "int", unsigned: true, nullable: false})
-  post_id?: number;
+  @Column('uuid', {nullable: false})
+  post_id?: string;
 
   @CreateDateColumn({type: 'timestamptz'})
   created_at?: Date;

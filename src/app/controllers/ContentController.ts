@@ -1,13 +1,13 @@
-import awsS3 from "../../modules/content-service/infras/aws/AwsS3";
-import postRepository from "../../modules/content-service/infras/repositories/PostRepository";
-import postShareRepository from "../../modules/content-service/infras/repositories/PostShareRepository";
-import postLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository";
+import AwsS3 from "../../modules/content-service/infras/aws/AwsS3";
+import PostRepository from "../../modules/content-service/infras/repositories/PostRepository";
+import PostShareRepository from "../../modules/content-service/infras/repositories/PostShareRepository";
+import PostLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository";
 
-import userRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
-import feedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
+import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
+import FeedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
 
-import postFacade from "../../modules/content-service/facades/PostFacade";
-import postShareFacade from "../../modules/content-service/facades/PostShareFacade";
+import PostFacade from "../../modules/content-service/facades/PostFacade";
+import PostShareFacade from "../../modules/content-service/facades/PostShareFacade";
 
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
@@ -23,8 +23,8 @@ class ContentController {
     private _utilResponseMutator;
 
     constructor() {
-        this._postFacade = new postFacade(new awsS3(), new postRepository(), new postLikeRepository(), new userRelationshipRepository(), new feedRepository());
-        this._postShareFacade = new postShareFacade(new postShareRepository(), new postRepository());
+        this._postFacade = new PostFacade(new AwsS3(), new PostRepository(), new PostLikeRepository(), new UserRelationshipRepository(), new FeedRepository());
+        this._postShareFacade = new PostShareFacade(new PostShareRepository(), new PostRepository());
         this._utilResponseMutator = new ResponseMutator();
     }
 
@@ -168,7 +168,7 @@ class ContentController {
         }
 
         try {
-            const id = Number(req.params.id);
+            const id: string = req.params.id;
             const post = await this._postFacade.getPostById(id);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
@@ -236,7 +236,7 @@ class ContentController {
         }
 
         try {
-            const id: number = Number(req.params.id);
+            const id: string = req.params.id;
             const caption: string = String(req.body.caption);
 
             const updatePostResult = await this._postFacade.updatePost(req.body.userCognitoSub, id, caption);
@@ -283,7 +283,7 @@ class ContentController {
         }
 
         try {
-            const id = Number(req.params.id);
+            const id: string = req.params.id;
             const removePostResult = await this._postFacade.removePost(req.body.userCognitoSub, id);
 
             return res.status(removePostResult.code).json({
@@ -338,7 +338,7 @@ class ContentController {
         try {
             const { shareCaption } = req.body;
             const userId: string = req.body.userCognitoSub;
-            const postId: number = Number(req.params.id);
+            const postId: string = req.params.id;
 
             const sharedPost = await this._postShareFacade.createSharedPost(postId, {userId, postId, shareCaption});
 
@@ -383,7 +383,7 @@ class ContentController {
         }
 
         try {
-            const sharedPostId = Number(req.params.id);
+            const sharedPostId: string = req.params.id;
             const sharedPost = await this._postShareFacade.getSharedPostById(sharedPostId);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
@@ -444,7 +444,7 @@ class ContentController {
         }
 
         try {
-            const sharedPostId: number = Number(req.params.id);
+            const sharedPostId: string = req.params.id;
             const userCognitoSub: string = req.body.userCognitoSub;
             const shareCaption: string = req.body.shareCaption;
 
@@ -490,7 +490,7 @@ class ContentController {
         }
 
         try {
-            const postId = req.body.postId;
+            const postId: string = req.body.postId;
             const userCognitoSub: string = req.body.userCognitoSub;
 
             const likeOrUnlikePostResult = await this._postFacade.likeOrUnlikePost(postId, userCognitoSub);

@@ -3,30 +3,30 @@ import path from 'path';
 import mime from 'mime';
 
 export const updateSharedPost = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
+  check('id').not().isEmpty().withMessage('id parameter is required.').isString().withMessage('id parameter should be a type of string.'),
   check('shareCaption').not().isEmpty().withMessage('shareCaption property is required.')
 ];
 
 export const getSharedPostByIdApiValidation = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
+  check('id').not().isEmpty().withMessage('id parameter is required.').isString().withMessage('id parameter should be a type of string.'),
 ];
 
 export const sharePostByIdApiValidation = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
+  check('id').not().isEmpty().withMessage('id parameter is required.').isString().withMessage('id parameter should be a type of string.'),
   check('shareCaption').not().isEmpty().withMessage('shareCaption property is required.')
 ];
 
 export const removePostApiValidation = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
+  check('id').not().isEmpty().withMessage('id parameter is required.').isString().withMessage('id parameter should be a type of string.'),
 ];
 
 export const updatePostApiValidation = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.'),
+  check('id').not().isEmpty().withMessage('id parameter is required.').isString().withMessage('id parameter should be a type of string.'),
   check('caption').not().isEmpty().withMessage('caption property is required.')
 ];
 
 export const getPostByIdApiValidation = [
-  check('id').not().isEmpty().withMessage('id parameter is required.').isNumeric().withMessage('id parameter should be a type of number.')
+  check('id').not().isEmpty().withMessage('id parameter is required.').isString().withMessage('id parameter should be a type of string.')
 ];
 
 export const createPostApiValidation = [
@@ -63,9 +63,9 @@ export const createPostApiValidation = [
 ];
 
 export const likeOrUnlikePostApiValidation = [
-  check('postId').not().isEmpty().withMessage('Post ID property is required and must be a number').custom((value) => {
-    if (typeof(value) == 'string' || value === undefined || value === null || value.length === 0 ) {
-      return Promise.reject('Post ID property is required and must be a number');
+  check('postId').not().isEmpty().withMessage('Post ID property is required and must be a string').custom((value) => {
+    if (typeof(value) !== 'string') {
+      return Promise.reject('Post ID property is required and must be a string');
     } else {
       return Promise.resolve();
     }

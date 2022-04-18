@@ -1,5 +1,46 @@
+export type userRelationshipTypes = {
+  id: string,
+  followeeId: string,
+  followerId: string,
+  createdAt: Date,
+  updatedAt: Date,
+  deletedAt: Date
+};
+
+export type getByIdAndUserCognitoSubReturnTypes = {
+  id: string,
+  postId: string,
+  userId: string,
+  shareCaption: string,
+  createdAt: Date,
+  updatedAt: Date,
+  deletedAt: Date
+};
+
+export type getCommentsByPostIdReturnType = {
+  id: string,
+  userId: string,
+  postId: string,
+  content: string,
+  status: string,
+  createdAt: Date,
+  updatedAt: Date,
+  user: {}
+};
+
+export type getCommentByIdResult = {
+  id: string,
+  userId: string,
+  postId: string,
+  content: string,
+  status: string,
+  createdAt: Date,
+  updatedAt: Date,
+  deletedAt: Date
+};
+
 export type userProfileType = {
-  id: number,
+  id: string,
   userId: string,
   email: string,
   name: string,
@@ -33,9 +74,9 @@ export type timestampsType = {
 };
 
 export type commentType = {
-  id: number,
+  id: string,
   userId: string,
-  postId: number,
+  postId: string,
   content: string,
   status: string,
   createdAt: Date | number,
@@ -44,7 +85,7 @@ export type commentType = {
 };
 
 export type postType = {
-  id: number,
+  id: string,
   userId: string,
   caption: string,
   status: string,
@@ -57,7 +98,7 @@ export type postType = {
 };
 
 export type feedTypes = {
-  id: number,
+  id: string,
   userId: string,
   caption: string,
   status: string,

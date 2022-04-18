@@ -11,10 +11,10 @@ class PostLikeRepository implements IPostLikeRepository {
 
     /**
      * Creates post_like record in the database.
-     * @param item: {userCognitoSub: string, postId: number}
+     * @param item: {userCognitoSub: string, postId: string}
      * @returns instance of PostLikes
      */
-    create(item: {userCognitoSub: string, postId: number}): PostLikes {
+    create(item: {userCognitoSub: string, postId: string}): PostLikes {
 
         this._model.id = undefined; // prevent overwriting existing comments from the same user
         this._model.user_id = item.userCognitoSub;
@@ -25,11 +25,11 @@ class PostLikeRepository implements IPostLikeRepository {
 
     /**
      * Get a PostLike by id and user id
-     * @param postId: number
+     * @param postId: string
      * @param userCognitoSub: string
      * @returns Promise<any>
      */
-    getByIdAndUserId(postId: number, userCognitoSub: string): Promise<any> {
+    getByIdAndUserId(postId: string, userCognitoSub: string): Promise<any> {
 
         return getRepository(PostLikes)
             .createQueryBuilder('postlikes')
@@ -41,11 +41,11 @@ class PostLikeRepository implements IPostLikeRepository {
 
     /**
      * Deletes post_like record in the database.
-     * @param postId: number
+     * @param postId: string
      * @param userCognitoSub: string
      * @returns Promise<DeleteResult>
      */
-    deleteByIdAndUserId(postId: number, userCognitoSub: string): Promise<DeleteResult> {
+    deleteByIdAndUserId(postId: string, userCognitoSub: string): Promise<DeleteResult> {
 
         return getRepository(PostLikes)
             .createQueryBuilder()

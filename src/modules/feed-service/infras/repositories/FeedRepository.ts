@@ -13,11 +13,11 @@ class FeedRepository implements IFeedRepository{
 
     /**
      * Creates a follower's feed.
-     * @param userId: string
-     * @param postId: number
+     * @param followeeId: string
+     * @param postId: string
      * @returns UserFeeds
      */
-    create(followeeId: string, postId: number): UserFeeds {
+    create(followeeId: string, postId: string): UserFeeds {
 
         this._model.id = undefined; // prevent overwriting existing comments from the same user
         this._model.user_id = followeeId;
@@ -57,7 +57,7 @@ class FeedRepository implements IFeedRepository{
             if (Array.isArray(feeds)) {
                 const newFeedStructure = feeds.map((feed) => {
                     return {
-                        id: feed?.id || 0,
+                        id: feed?.id || '',
                         userId: feed?.user_id || '',
                         caption: feed?.caption || '',
                         status: feed?.status || '',
@@ -107,7 +107,7 @@ class FeedRepository implements IFeedRepository{
             if (Array.isArray(trendingFeeds)) {
                 const newFeedStructure = trendingFeeds.map((trendingFeed) => {
                     return {
-                        id: trendingFeed?.id || 0,
+                        id: trendingFeed?.id || '',
                         userId: trendingFeed?.user_id || '',
                         caption: trendingFeed?.caption || '',
                         status: trendingFeed?.status || '',

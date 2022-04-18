@@ -8,8 +8,8 @@ import {
 
 @Entity({name: "access_tokens"})
 export class AccessTokens extends BaseEntity {
-  @PrimaryGeneratedColumn({type: "int", unsigned: true})
-  id?: number;
+  @PrimaryGeneratedColumn('uuid')
+  id?: string;
 
   @Column({type: "text", nullable: false})
   access_token?: string;
