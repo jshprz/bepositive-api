@@ -15,6 +15,7 @@ import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // Ex
 import AwsS3 from "../../modules/user-service/infras/aws/AwsS3"; // External
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
 import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository"; // External
+import CommentLikeRepository from "../../modules/comment-service/infras/repositories/CommentLikeRepository";
 
 class CommentController {
     private _commentFacade;
@@ -22,7 +23,7 @@ class CommentController {
     private _userAccountFacade;
 
     constructor() {
-        this._commentFacade = new CommentFacade(new CommentRepository(), new PostRepository());
+        this._commentFacade = new CommentFacade(new CommentRepository(), new PostRepository(), new CommentLikeRepository);
         this._utilResponseMutator = new ResponseMutator();
         this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
     }
@@ -254,6 +255,84 @@ class CommentController {
             }
         }
     }
+
+    async likeOrUnlikeComment(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.commentId) {
+            return res.status(400).json({
+                message: errors.commentId.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.postId) {
+            return res.status(400).json({
+                message: errors.postId.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.like) {
+            return res.status(400).json({
+                message: errors.like.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+        if (errors.classification) {
+            return res.status(400).json({
+                message: errors.classification.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const commentId: string = String(req.body.commentId);
+            const postId: string = String(req.body.postId);
+            const like: boolean = req.body.like;
+            const userCognitoSub: string = req.body.userCognitoSub;
+            const classification: string = req.body.classification;
+
+            const likeOrUnlikeCommentResult = await this._commentFacade.likeOrUnlikeComment(commentId, postId, userCognitoSub, like, classification);
+
+            return res.status(likeOrUnlikeCommentResult.code).json({
+                message: likeOrUnlikeCommentResult.message,
+                payload: likeOrUnlikeCommentResult.data,
+                status: likeOrUnlikeCommentResult.code
+            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(400).json({
+                    message: error.message,
+                    error: 'Bad Request error',
+                    status: 400
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
 }
 
 export default CommentController;
