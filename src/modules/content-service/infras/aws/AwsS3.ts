@@ -15,9 +15,10 @@ class AwsS3 {
      * @param acl: string
      * @returns string
      */
-    presignedPutUrl(s3FilenameKey: string, contentType: string, acl: string): string {
+    presignedPutUrl(s3FilenameKey: string, contentType: string, acl: string): Promise<string> {
 
         type paramsType = {Bucket: string, Key: string, Expires: number, ContentType: string, ACL: string};
+
         const params: paramsType = {
             Bucket: `${process.env.AWS_S3_BUCKET}`,
             Key: s3FilenameKey,
@@ -26,7 +27,7 @@ class AwsS3 {
             ACL: acl
         };
 
-        return this._s3.getSignedUrl('putObject', params);
+        return this._s3.getSignedUrlPromise('putObject', params);
     }
 }
 
