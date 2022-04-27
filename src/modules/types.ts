@@ -171,17 +171,3 @@ export type feedTypes = {
     }
   }
 } | null;
-
-export type feedTypesTemp = {
-  id: string,
-  userId: string,
-  caption: string,
-  status: string,
-  viewCount: number,
-  googleMapsPlaceId: string,
-  locationDetails: string,
-  postMediaFiles: { key: string, type: string }[],
-  createdAt: Date | number,
-  updatedAt: Date | number,
-  user: {}
-};
