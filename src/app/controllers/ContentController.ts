@@ -23,8 +23,18 @@ class ContentController {
     private _utilResponseMutator;
 
     constructor() {
-        this._postFacade = new PostFacade(new AwsS3(), new PostRepository(), new PostLikeRepository(), new UserRelationshipRepository(), new FeedRepository());
-        this._postShareFacade = new PostShareFacade(new PostShareRepository(), new PostRepository());
+        this._postFacade = new PostFacade(
+            new AwsS3(), new PostRepository(),
+            new PostLikeRepository(),
+            new UserRelationshipRepository(),
+            new FeedRepository()
+        );
+        this._postShareFacade = new PostShareFacade(
+            new PostShareRepository(),
+            new PostRepository(),
+            new UserRelationshipRepository(),
+            new FeedRepository()
+        );
         this._utilResponseMutator = new ResponseMutator();
     }
 

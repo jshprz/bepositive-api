@@ -1,14 +1,23 @@
 import IPostShareRepository from "../infras/repositories/IPostShareRepository";
 import IPostRepository from "../infras/repositories/IPostRepository";
+
+import IUserRelationshipRepository from "../../user-service/infras/repositories/IUserRelationshipRepository"; // External
+import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
+
 import Logger from "../../../config/Logger";
 import Error from '../../../config/Error';
 import { QueryFailedError } from "typeorm";
-import { getByIdAndUserCognitoSubReturnTypes, postType } from "../../types";
+import {getByIdAndUserCognitoSubReturnTypes, postType, sharedPostType} from "../../types";
 
 class PostShareFacade {
     private _log;
 
-    constructor(private _postShareRepository: IPostShareRepository, private _postRepository: IPostRepository) {
+    constructor(
+        private _postShareRepository: IPostShareRepository,
+        private _postRepository: IPostRepository,
+        private _userRelationshipRepository: IUserRelationshipRepository,
+        private _feedRepository: IFeedRepository
+    ) {
         this._log = Logger.createLogger('PostShareFacade.ts');
     }
 
@@ -52,7 +61,7 @@ class PostShareFacade {
                 });
             }
 
-            await this._postShareRepository.create(sharedPostAttr).save().catch((error: QueryFailedError) => {
+            const sharedPost = await this._postShareRepository.create(sharedPostAttr).save().catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'createSharedPost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
@@ -65,11 +74,67 @@ class PostShareFacade {
                 })
             });
 
-            return resolve({
-                message: 'The post successfully shared',
-                data: {},
-                code: 200
+            const userRelationships = await this._userRelationshipRepository.get(false, sharedPostAttr.userId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'createSharedPost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: { postId, sharedPostAttr }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
             });
+
+            // If the followers is not an array, it should be an error.
+            if (Array.isArray(userRelationships) && sharedPost) {
+
+                // Allow users to see their own post within their feed.
+                userRelationships.push({
+                    id: '',
+                    followeeId: '',
+                    followerId: sharedPostAttr.userId,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    deletedAt: new Date()
+                });
+
+                // After creating the post we distribute it to the followers of the user who created it.
+                for (const userRelationship of userRelationships) {
+                    await this._feedRepository.createFeedForSharedPost(userRelationship.followerId, String(sharedPost.id))
+                        .save()
+                        .catch((error: QueryFailedError) => {
+                            this._log.error({
+                                function: 'createSharedPost()',
+                                message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                                payload: { postId, sharedPostAttr }
+                            });
+
+                            return reject({
+                                message: Error.DATABASE_ERROR.CREATE,
+                                code: 500
+                            });
+                        });
+                }
+
+                return resolve({
+                    message: 'The post successfully shared',
+                    data: {},
+                    code: 200
+                });
+            } else {
+                this._log.error({
+                    function: 'createSharedPost()',
+                    message: `An error occurred while retrieving the user relationships: ${userRelationships}`,
+                    payload: { postId, sharedPostAttr }
+                });
+
+                return reject({
+                    message: 'An error occurred while retrieving the followers',
+                    code: 500
+                });
+            }
         });
     }
 
@@ -102,7 +167,7 @@ class PostShareFacade {
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const sharedPost = await this._postShareRepository.get(postId).catch((error) => {
+            const sharedPost: sharedPostType | void = await this._postShareRepository.get(postId).catch((error) => {
                this._log.error({
                    function: 'getSharedPostById()',
                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
@@ -131,14 +196,7 @@ class PostShareFacade {
 
             return resolve({
                 message: `Shared post with an id of ${postId} has been successfully retrieved`,
-                data: {
-                    id: sharedPost.id,
-                    postId: sharedPost.post_id,
-                    userId: sharedPost.user_id,
-                    shareCaption: sharedPost.share_caption,
-                    createdAt: sharedPost.created_at,
-                    updatedAt: sharedPost.updated_at
-                },
+                data: sharedPost,
                 code: 200
             });
         });

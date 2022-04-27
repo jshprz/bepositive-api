@@ -8,10 +8,15 @@ import ResponseMutator from "../../utils/ResponseMutator";
 import type { timestampsType } from '../../modules/types';
 
 import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository"; // External
+import PostLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository"; // External
+import PostRepository from "../../modules/content-service/infras/repositories/PostRepository"; // External
+import PostShareRepository from "../../modules/content-service/infras/repositories/PostShareRepository"; // External
+
 import UserAccountFacade from "../../modules/user-service/facades/UserAccountFacade"; // External
 import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // External
 import AwsS3 from "../../modules/user-service/infras/aws/AwsS3"; // External
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
+
 
 class FeedController {
 
@@ -20,7 +25,13 @@ class FeedController {
     private _userAccountFacade;
 
     constructor() {
-        this._feedFacade = new FeedFacade(new FeedRepository(), new UserRelationshipRepository());
+        this._feedFacade = new FeedFacade(
+            new FeedRepository(),
+            new PostLikeRepository(),
+            new UserProfileRepository(),
+            new PostRepository(),
+            new PostShareRepository()
+        );
         this._utilResponseMutator = new ResponseMutator();
         this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
     }
@@ -54,20 +65,32 @@ class FeedController {
             const feed = await this._feedFacade.getFeed(userCognitoSub, pagination);
 
             for (const f of feed.data) {
-                // Get the user profile data every post in the feed.
-                const userProfileData = await this._userAccountFacade.getUserProfile(f.userId);
-                f.user = userProfileData.data;
 
-                const timestamps = {
-                    createdAt: f.createdAt,
-                    updatedAt: f.updatedAt
+                if (f) {
+                    const timestamps = {
+                        createdAt: f.content.createdAt,
+                        updatedAt: f.content.updatedAt
+                    }
+
+                    // Change the createdAt and updatedAt datetime format to unix timestamp
+                    // We do this as format convention for createdAt and updatedAt
+                    const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+                    f.content.createdAt = unixTimestamps.createdAt;
+                    f.content.updatedAt = unixTimestamps.updatedAt;
+
+                    if (f.content.originalPost) {
+                        const timestamps = {
+                            createdAt: f.content.originalPost.content.createdAt,
+                            updatedAt: f.content.originalPost.content.updatedAt
+                        }
+
+                        // Change the createdAt and updatedAt datetime format to unix timestamp
+                        // We do this as format convention for createdAt and updatedAt
+                        const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+                        f.content.originalPost.content.createdAt = unixTimestamps.createdAt;
+                        f.content.originalPost.content.updatedAt = unixTimestamps.updatedAt;
+                    }
                 }
-
-                // Change the createdAt and updatedAt datetime format to unix timestamp
-                // We do this as format convention for createdAt and updatedAt
-                const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
-                f.createdAt = unixTimestamps.createdAt;
-                f.updatedAt = unixTimestamps.updatedAt;
             }
 
             return res.status(feed.code).json({
@@ -130,23 +153,6 @@ class FeedController {
             };
             const popularityThreshold = 20;
             const trendingFeed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold);
-
-            // Change the createdAt and updatedAt datetime format to unix timestamp
-            // We do this as format convention for createdAt and updatedAt
-            for (const f of trendingFeed.data) {
-
-                // Get the user profile data every post in the feed.
-                const userProfileData = await this._userAccountFacade.getUserProfile(f.userId);
-                f.user = userProfileData.data;
-
-                const timestamps = {
-                    createdAt: f.createdAt,
-                    updatedAt: f.updatedAt
-                }
-                const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
-                f.createdAt = unixTimestamps.createdAt;
-                f.updatedAt = unixTimestamps.updatedAt;
-            }
 
             return res.status(trendingFeed.code).json({
                 message: trendingFeed.message,

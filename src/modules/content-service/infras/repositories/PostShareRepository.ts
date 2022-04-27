@@ -2,6 +2,7 @@ import { getRepository, UpdateResult, QueryFailedError } from "typeorm";
 import { PostShares } from "../../../../database/postgresql/models/PostShares";
 import IPostShareRepository from "./IPostShareRepository";
 import type { getByIdAndUserCognitoSubReturnTypes } from '../../../types';
+import { sharedPostType } from "../../../types";
 
 class PostShareRepository implements IPostShareRepository {
 
@@ -29,15 +30,31 @@ class PostShareRepository implements IPostShareRepository {
     /**
      * Gets a shared post by ID.
      * @param id: string
-     * @returns Promise<any>
+     * @returns Promise<sharedPostType>
      */
-    get(id: string): Promise<any> {
+    get(id: string): Promise<sharedPostType> {
 
-        return getRepository(PostShares)
-            .createQueryBuilder('post_shares')
-            .select('post_shares')
-            .where('id = :id', {id})
-            .getOne();
+        return new Promise(async (resolve, reject) => {
+            const sharedPost = await getRepository(PostShares)
+                .createQueryBuilder('post_shares')
+                .select('post_shares')
+                .where('id = :id', {id})
+                .getOne()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+
+            if (sharedPost) {
+                return resolve({
+                    id: String(sharedPost.id),
+                    postId: String(sharedPost.post_id),
+                    userId: String(sharedPost.user_id),
+                    shareCaption: String(sharedPost.share_caption),
+                    createdAt: sharedPost?.created_at || new Date(),
+                    updatedAt: sharedPost?.updated_at || new Date()
+                });
+            }
+        });
     }
 
     /**

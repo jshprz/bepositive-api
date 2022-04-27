@@ -105,7 +105,7 @@ class PostFacade {
 
                     // After creating the post we distribute it to the followers of the user who created it.
                     for (const userRelationship of userRelationships) {
-                        await this._feedRepository.create(userRelationship.followerId, String(post.id))
+                        await this._feedRepository.createFeedForRegularPost(userRelationship.followerId, String(post.id))
                             .save()
                             .catch((error: QueryFailedError) => {
                                 this._log.error({
