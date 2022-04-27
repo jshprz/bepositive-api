@@ -8,8 +8,8 @@ import {
   DeleteDateColumn
 } from "typeorm";
 
-@Entity({name: "user_feeds"})
-export class UserFeeds extends BaseEntity {
+@Entity({name: "user_feed_post"})
+export class UserFeedPost extends BaseEntity {
 
   @PrimaryGeneratedColumn('uuid')
   id?: string;
@@ -19,6 +19,9 @@ export class UserFeeds extends BaseEntity {
 
   @Column('uuid', {nullable: false})
   post_id?: string;
+
+  @Column({type: "varchar", length: 50, default: "REGULAR_POST"})
+  classification?: string;
 
   @CreateDateColumn({type: 'timestamptz'})
   created_at?: Date;

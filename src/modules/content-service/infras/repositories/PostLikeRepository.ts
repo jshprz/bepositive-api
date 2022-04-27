@@ -1,6 +1,7 @@
-import { getRepository, DeleteResult } from "typeorm";
+import { getRepository, DeleteResult, QueryFailedError } from "typeorm";
 import { PostLikes } from "../../../../database/postgresql/models/PostLikes";
 import IPostLikeRepository from "./IPostLikeRepository";
+import type { getPostLikeType } from "../../../types";
 
 class PostLikeRepository implements IPostLikeRepository {
     private readonly _model;
@@ -30,17 +31,34 @@ class PostLikeRepository implements IPostLikeRepository {
      * Get a PostLike by id and user id
      * @param postId: string
      * @param userCognitoSub: string
-     * @returns Promise<any>
+     * @returns Promise<getPostLikeType | number>
      */
-    getByIdAndUserId(postId: string, userCognitoSub: string): Promise<any> {
+    getByIdAndUserId(postId: string, userCognitoSub: string): Promise<getPostLikeType | number> {
 
-        return getRepository(PostLikes)
-            .createQueryBuilder('post_likes')
-            .select('post_likes')
-            .where('post_id = :postId', {postId})
-            .andWhere('user_id = :userCognitoSub', {userCognitoSub})
-            .getOne();
+        return new Promise(async (resolve, reject) => {
+            const postLike = await getRepository(PostLikes)
+                .createQueryBuilder('postlikes')
+                .select('postlikes')
+                .where('post_id = :postId', {postId})
+                .andWhere('user_id = :userCognitoSub', {userCognitoSub})
+                .getOne()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+            if (postLike) {
+                return resolve({
+                    id: postLike.id || '',
+                    postId: postLike.post_id || '',
+                    userId: postLike.user_id || '',
+                    createdAt: postLike.created_at || 0,
+                    updatedAt: postLike.updated_at || 0
+                });
+            } else {
+                return resolve(0);
+            }
+        });
     }
+
 
     /**
      * Deletes post_like record in the database.

@@ -1,29 +1,50 @@
-import {getRepository, QueryFailedError} from 'typeorm';
-import { UserFeeds } from "../../../../database/postgresql/models/UserFeeds";
+import {getRepository, QueryFailedError, getManager} from 'typeorm';
+import { UserFeedPost } from "../../../../database/postgresql/models/UserFeedPost";
 import { Posts } from "../../../../database/postgresql/models/Posts";
 import IFeedRepository from "./IFeedRepository";
 import type { feedTypes } from '../../../types';
+import { UserFeedSharedPost } from "../../../../database/postgresql/models/UserFeedSharedPost";
+import {feedTypesTemp} from "../../../types";
 
-class FeedRepository implements IFeedRepository{
-    private readonly _model;
+class FeedRepository implements IFeedRepository {
+    private readonly _modelFeedRegularPost;
+    private readonly _modelFeedSharedPost;
 
     constructor() {
-        this._model = new UserFeeds();
+        this._modelFeedRegularPost = new UserFeedPost();
+        this._modelFeedSharedPost = new UserFeedSharedPost();
     }
 
     /**
-     * Creates a follower's feed.
+     * Creates a follower's feed for regular post.
      * @param followeeId: string
      * @param postId: string
-     * @returns UserFeeds
+     * @returns UserFeedPost
      */
-    create(followeeId: string, postId: string): UserFeeds {
+    createFeedForRegularPost(followeeId: string, postId: string): UserFeedPost {
 
-        this._model.id = undefined; // prevent overwriting existing comments from the same user
-        this._model.user_id = followeeId;
-        this._model.post_id = postId;
+        this._modelFeedRegularPost.id = undefined; // prevent overwriting existing comments from the same user
+        this._modelFeedRegularPost.user_id = followeeId;
+        this._modelFeedRegularPost.post_id = postId;
+        this._modelFeedRegularPost.classification = 'REGULAR_POST';
 
-        return this._model;
+        return this._modelFeedRegularPost;
+    }
+
+    /**
+     * Creates a follower's feed for shared post.
+     * @param followeeId: string
+     * @param sharedPostId: string
+     * @returns UserFeedSharedPost
+     */
+    createFeedForSharedPost(followeeId: string, sharedPostId: string): UserFeedSharedPost {
+
+        this._modelFeedSharedPost.id = undefined; // prevent overwriting existing comments from the same user
+        this._modelFeedSharedPost.user_id = followeeId;
+        this._modelFeedSharedPost.shared_post_id = sharedPostId;
+        this._modelFeedSharedPost.classification = 'SHARED_POST';
+
+        return this._modelFeedSharedPost;
     }
 
     /**
@@ -36,38 +57,124 @@ class FeedRepository implements IFeedRepository{
         return new Promise(async (resolve, reject) => {
             const {page, size} = pagination;
 
-            const feeds = await getRepository(Posts)
-                .createQueryBuilder('posts')
-                .skip((page - 1) * size)
-                .take(size)
-                .where(qb => {
-                    const subQuery = qb.subQuery()
-                        .select("user_feeds.post_id")
-                        .from(UserFeeds, "user_feeds")
-                        .where("user_feeds.user_id = :userCognitoSub", {userCognitoSub})
-                        .getQuery();
-                    return "posts.id IN " + subQuery;
-                })
-                .orderBy('posts.created_at', 'DESC')
-                .getMany()
+            const feeds: {
+                id: string,
+                user_id: string,
+                post_id: string,
+                classification: string,
+                created_at: Date | number,
+                updated_at: Date | number,
+                deleted_at: Date | number
+            }[] = await getManager()
+                .query(`
+                    SELECT * FROM user_feed_post
+                    WHERE user_id = '${userCognitoSub}'
+                    UNION
+                    SELECT * FROM user_feed_shared_post
+                    WHERE user_id = '${userCognitoSub}'
+                    ORDER BY created_at DESC
+                    OFFSET ${(page - 1) * size} ROWS FETCH NEXT ${size} ROWS ONLY
+                    `)
                 .catch((error: QueryFailedError) => {
                     return reject(error);
                 });
 
             if (Array.isArray(feeds)) {
                 const newFeedStructure = feeds.map((feed) => {
-                    return {
-                        id: feed?.id || '',
-                        userId: feed?.user_id || '',
-                        caption: feed?.caption || '',
-                        status: feed?.status || '',
-                        viewCount: feed?.view_count || 0,
-                        googleMapsPlaceId: feed?.google_maps_place_id || '',
-                        locationDetails: feed?.location_details || '',
-                        postMediaFiles: feed?.s3_files || [{key: '', type: ''}],
-                        createdAt: feed?.created_at || new Date(),
-                        updatedAt: feed?.updated_at || new Date(),
-                        user: {}
+                    const classification = feed.classification;
+                    switch (classification) {
+                        case 'REGULAR_POST':
+                            return {
+                                content: {
+                                    classification: feed?.classification || '',
+                                    postId: feed?.post_id || '',
+                                    caption: '',
+                                    googleMapsPlaceId: '',
+                                    locationDetails: '',
+                                    attachments: [{
+                                        key: '',
+                                        url: '',
+                                        type: '',
+                                        height: '',
+                                        width: ''
+                                    }],
+                                    originalPost: null,
+                                    isLiked: false,
+                                    isSponsored: null,
+                                    createdAt: 0,
+                                    updatedAt: 0,
+                                },
+                                actor: {
+                                    userId: '',
+                                    name: '',
+                                    avatar: {
+                                        url: '',
+                                        type: '',
+                                        height: '',
+                                        width: ''
+                                    }
+                                }
+                            }
+                        case 'SHARED_POST':
+                            return {
+                                content: {
+                                    classification: feed?.classification || '',
+                                    postId: feed?.post_id || '',
+                                    caption: '',
+                                    googleMapsPlaceId: '',
+                                    locationDetails: '',
+                                    attachments: [{
+                                        key: '',
+                                        url: '',
+                                        type: '',
+                                        height: '',
+                                        width: ''
+                                    }],
+                                    originalPost: {
+                                        content: {
+                                            postId: '',
+                                            caption: '',
+                                            googleMapsPlaceId: '',
+                                            locationDetails: '',
+                                            attachments: [{
+                                                key: '',
+                                                url: '',
+                                                type: '',
+                                                height: '',
+                                                width: ''
+                                            }],
+                                            createdAt: 0,
+                                            updatedAt: 0
+                                        },
+                                        actor: {
+                                            userId: '',
+                                            name: '',
+                                            avatar: {
+                                                url: '',
+                                                type: '',
+                                                height: '',
+                                                width: ''
+                                            }
+                                        }
+                                    },
+                                    isLiked: false,
+                                    isSponsored: null,
+                                    createdAt: 0,
+                                    updatedAt: 0,
+                                },
+                                actor: {
+                                    userId: '',
+                                    name: '',
+                                    avatar: {
+                                        url: '',
+                                        type: '',
+                                        height: '',
+                                        width: ''
+                                    }
+                                }
+                            }
+                        default:
+                            return null;
                     }
                 });
 
@@ -84,7 +191,7 @@ class FeedRepository implements IFeedRepository{
      * @param threshold: number
      * @returns Promise<feedTypes[]>
      */
-    getTrendingFeed(pagination: {page: number, size: number}, threshold: number): Promise<feedTypes[]> {
+    getTrendingFeed(pagination: {page: number, size: number}, threshold: number): Promise<feedTypesTemp[]> {
         return new Promise(async (resolve, reject) => {
             const {page, size} = pagination;
 
