@@ -147,12 +147,15 @@ class FeedController {
         }
 
         try {
+            const userCognitoSub: string = req.body.userCognitoSub;
+
             const pagination = {
                 page: Number(req.query.page),
                 size: Number(req.query.size)
             };
-            const popularityThreshold = 20;
-            const trendingFeed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold);
+
+            const popularityThreshold = 1;
+            const trendingFeed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold, userCognitoSub);
 
             return res.status(trendingFeed.code).json({
                 message: trendingFeed.message,

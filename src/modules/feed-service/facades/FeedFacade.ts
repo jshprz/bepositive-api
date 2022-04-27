@@ -9,7 +9,7 @@ import IPostRepository from "../../content-service/infras/repositories/IPostRepo
 import IPostShareRepository from "../../content-service/infras/repositories/IPostShareRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type {feedTypes, postType, getPostLikeType, sharedPostType} from '../../types';
+import type { feedTypes, postType, getPostLikeType } from '../../types';
 
 class FeedFacade {
     private _log;
@@ -103,13 +103,14 @@ class FeedFacade {
      * Get the trending feed/s.
      * @param pagination: {page: number, size: number}
      * @param popularityThreshold: number
+     * @param userCognitoSub: string
      * @returns Promise<{
      *         message: string,
      *         data: feedTypes[],
      *         code: number
      *     }>
      */
-    getTrendingFeed(pagination: {page: number, size: number}, popularityThreshold: number): Promise<{
+    getTrendingFeed(pagination: {page: number, size: number}, popularityThreshold: number, userCognitoSub: string): Promise<{
         message: string,
         data: feedTypes[],
         code: number
@@ -135,7 +136,7 @@ class FeedFacade {
                 const feedBuilderPromises: Promise<feedTypes>[] = [];
 
                 trendingFeeds.forEach((trendingFeed) => {
-                    feedBuilderPromises.push(this._feedBuilder(trendingFeed));
+                    feedBuilderPromises.push(this._feedBuilder(trendingFeed, userCognitoSub));
                 });
 
                 const newTrendingFeedCollection = await Promise.all(feedBuilderPromises)

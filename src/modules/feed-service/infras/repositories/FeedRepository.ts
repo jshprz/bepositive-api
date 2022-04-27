@@ -4,7 +4,6 @@ import { Posts } from "../../../../database/postgresql/models/Posts";
 import IFeedRepository from "./IFeedRepository";
 import type { feedTypes } from '../../../types';
 import { UserFeedSharedPost } from "../../../../database/postgresql/models/UserFeedSharedPost";
-import {feedTypesTemp} from "../../../types";
 
 class FeedRepository implements IFeedRepository {
     private readonly _modelFeedRegularPost;
@@ -191,7 +190,7 @@ class FeedRepository implements IFeedRepository {
      * @param threshold: number
      * @returns Promise<feedTypes[]>
      */
-    getTrendingFeed(pagination: {page: number, size: number}, threshold: number): Promise<feedTypesTemp[]> {
+    getTrendingFeed(pagination: {page: number, size: number}, threshold: number): Promise<feedTypes[]> {
         return new Promise(async (resolve, reject) => {
             const {page, size} = pagination;
 
@@ -214,17 +213,35 @@ class FeedRepository implements IFeedRepository {
             if (Array.isArray(trendingFeeds)) {
                 const newFeedStructure = trendingFeeds.map((trendingFeed) => {
                     return {
-                        id: trendingFeed?.id || '',
-                        userId: trendingFeed?.user_id || '',
-                        caption: trendingFeed?.caption || '',
-                        status: trendingFeed?.status || '',
-                        viewCount: trendingFeed?.view_count || 0,
-                        googleMapsPlaceId: trendingFeed?.google_maps_place_id || '',
-                        locationDetails: trendingFeed?.location_details || '',
-                        postMediaFiles: trendingFeed?.s3_files || [{key: '', type: ''}],
-                        createdAt: trendingFeed?.created_at || new Date(),
-                        updatedAt: trendingFeed?.updated_at || new Date(),
-                        user: {}
+                        content: {
+                            classification: 'REGULAR_POST',
+                            postId: trendingFeed?.id || '',
+                            caption: trendingFeed?.caption || '',
+                            googleMapsPlaceId: trendingFeed?.google_maps_place_id || '',
+                            locationDetails: trendingFeed?.location_details || '',
+                            attachments: [{
+                                key: '',
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }],
+                            originalPost: null,
+                            isLiked: false,
+                            isSponsored: null,
+                            createdAt: trendingFeed?.created_at || new Date(),
+                            updatedAt: trendingFeed?.updated_at || new Date(),
+                        },
+                        actor: {
+                            userId: '',
+                            name: '',
+                            avatar: {
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }
+                        }
                     }
                 });
 
