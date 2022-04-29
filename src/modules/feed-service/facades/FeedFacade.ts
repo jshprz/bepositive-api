@@ -319,8 +319,17 @@ class FeedFacade {
                 }
 
                 return resolve(feed);
-            } catch(e) {
-                return reject(false);
+            } catch(error) {
+                this._log.error({
+                    function: '_feedBuilder()',
+                    message: `${error}`,
+                    payload: {
+                        feed,
+                        loggedInUserId
+                    }
+                });
+
+                return reject(error);
             }
         });
     }
