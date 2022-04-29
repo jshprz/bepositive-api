@@ -64,6 +64,7 @@ class UserProfileRepository implements IUserProfileRepository {
                     return reject(error);
                 });
 
+            console.log(userProfile);
             if (userProfile) {
                 return resolve(userProfile);
             } else {
