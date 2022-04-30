@@ -68,27 +68,73 @@ class FeedFacade {
                     }
                 });
 
-                const newFeedCollection = await Promise.all(feedBuilderPromises)
-                    .catch((error: string) => {
-                        this._log.error({
-                            function: 'getFeed()',
-                            message: error.toString(),
-                            payload: {
-                                userCognitoSub,
-                                pagination
+                Promise.allSettled(feedBuilderPromises).then((results) => {
+
+                    const tempFeedData = {
+                        content: {
+                            classification: '',
+                            postId: '',
+                            caption: '',
+                            googleMapsPlaceId: '',
+                            locationDetails: '',
+                            attachments: [{
+                                key: '',
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }],
+                            originalPost: {
+                                content: {
+                                    postId: '',
+                                    caption: '',
+                                    googleMapsPlaceId: '',
+                                    locationDetails: '',
+                                    attachments: [{
+                                        key: '',
+                                        url: '',
+                                        type: '',
+                                        height: '',
+                                        width: ''
+                                    }],
+                                    createdAt: 0,
+                                    updatedAt: 0
+                                },
+                                actor: {
+                                    userId: '',
+                                    name: '',
+                                    avatar: {
+                                        url: '',
+                                        type: '',
+                                        height: '',
+                                        width: ''
+                                    }
+                                }
+                            },
+                            isLiked: false,
+                            isSponsored: false,
+                            createdAt: 0,
+                            updatedAt: 0,
+                        },
+                        actor: {
+                            userId: '',
+                            name: '',
+                            avatar: {
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
                             }
-                        });
+                        }
+                    }
 
-                        return reject({
-                            message: 'Error occured while generating a feed.',
-                            code: 500
-                        });
+                    const resultsMap = results.map(r => r.status !== 'rejected'? r.value : tempFeedData);
+
+                    return resolve({
+                        message: 'Feed successfully retrieved.',
+                        data: resultsMap.filter(r => r !== null && r.content.postId !== '' && r.actor.userId !== ''),
+                        code: 200
                     });
-
-                return resolve({
-                    message: 'Feed successfully retrieved.',
-                    data: (Array.isArray(newFeedCollection))? newFeedCollection : [],
-                    code: 200
                 });
             } else {
                 return reject({
@@ -319,10 +365,10 @@ class FeedFacade {
                 }
 
                 return resolve(feed);
-            } catch(error) {
+            } catch(error: any) {
                 this._log.error({
                     function: '_feedBuilder()',
-                    message: `${error}`,
+                    message: (error.includes('NOT_FOUND'))? 'Post not found' : `${error}`,
                     payload: {
                         feed,
                         loggedInUserId
