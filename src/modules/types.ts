@@ -93,16 +93,35 @@ export type commentType = {
 };
 
 export type postType = {
-  id: string,
-  userId: string,
-  caption: string,
-  status: string,
-  viewCount: number,
-  googleMapsPlaceId: string,
-  locationDetails: string,
-  postMediaFiles: {key: string, type: string}[],
-  createdAt: Date | number,
-  updatedAt: Date | number
+  content: {
+    classification: string,
+    postId: string,
+    caption: string,
+    googleMapsPlaceId: string,
+    locationDetails: string,
+    attachments: ({
+      key: string,
+      url: string,
+      type: string,
+      height: string,
+      width: string
+    }[] & {
+      key: string,
+      type: string
+    }[]) | null,
+    createdAt: Date | number,
+    updatedAt: Date | number,
+  },
+  actor: {
+    userId: string,
+    name: string,
+    avatar: {
+      url: string,
+      type: string,
+      height: string,
+      width: string
+    }
+  }
 };
 
 export type sharedPostType = {

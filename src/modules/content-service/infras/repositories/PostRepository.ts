@@ -64,16 +64,40 @@ class PostRepository implements IPostRepository {
                     posts_updated_at: Date
                 }) => {
                     return {
-                        id: post.posts_id,
-                        userId: post.posts_user_id,
-                        caption: post.posts_caption,
-                        status: post.posts_status,
-                        viewCount: post.posts_view_count,
-                        googleMapsPlaceId: post.posts_google_maps_place_id,
-                        locationDetails: post.posts_location_details,
-                        postMediaFiles: post.posts_s3_files,
-                        createdAt: post.posts_created_at,
-                        updatedAt: post.posts_updated_at
+                        content: {
+                            classification: 'REGULAR_POST',
+                            postId: post.posts_id,
+                            caption: post.posts_caption,
+                            googleMapsPlaceId: post.posts_google_maps_place_id,
+                            locationDetails: post.posts_location_details,
+                            attachments: (post && Array.isArray(post.posts_s3_files))? post?.posts_s3_files.map((r) => {
+                                return {
+                                    key: r.key,
+                                    url: '',
+                                    type: r.type,
+                                    height: '',
+                                    width: ''
+                                }
+                            }) : [{
+                                key: '',
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }],
+                            createdAt: post.posts_created_at,
+                            updatedAt: post.posts_updated_at,
+                        },
+                        actor: {
+                            userId: post.posts_user_id,
+                            name: '',
+                            avatar: {
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }
+                        }
                     }
                 });
 
@@ -101,16 +125,40 @@ class PostRepository implements IPostRepository {
                 });
 
             const newPost = {
-                id: post?.id || '',
-                userId: post?.user_id || '',
-                caption: post?.caption || '',
-                status: post?.status || '',
-                viewCount: post?.view_count || 0,
-                googleMapsPlaceId: post?.google_maps_place_id || '',
-                locationDetails: post?.location_details || '',
-                postMediaFiles: post?.s3_files || [],
-                createdAt: post?.created_at || 0,
-                updatedAt: post?.updated_at || 0
+                content: {
+                    classification: 'REGULAR_POST',
+                    postId: post?.id || '',
+                    caption: post?.caption || '',
+                    googleMapsPlaceId: post?.google_maps_place_id || '',
+                    locationDetails: post?.location_details || '',
+                    attachments: (post && Array.isArray(post.s3_files))? post?.s3_files.map((r) => {
+                        return {
+                            key: r.key,
+                            url: '',
+                            type: r.type,
+                            height: '',
+                            width: ''
+                        }
+                    }) : [{
+                        key: '',
+                        url: '',
+                        type: '',
+                        height: '',
+                        width: ''
+                    }],
+                    createdAt: post?.created_at || 0,
+                    updatedAt: post?.updated_at || 0,
+                },
+                actor: {
+                    userId: post?.user_id || '',
+                    name: '',
+                    avatar: {
+                        url: '',
+                        type: '',
+                        height: '',
+                        width: ''
+                    }
+                }
             }
 
             return resolve(newPost);

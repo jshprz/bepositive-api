@@ -232,23 +232,25 @@ class FeedFacade {
                             throw error;
                         });
 
-                        const attachments = post.postMediaFiles.map((attachment) => {
-                            return {
-                                key: attachment.key,
-                                url: '',
-                                type: attachment.type,
-                                height: '',
-                                width: ''
-                            }
-                        });
+                        if (post.content.attachments) {
+                            const attachments = post.content.attachments.map((attachment) => {
+                                return {
+                                    key: attachment.key,
+                                    url: '',
+                                    type: attachment.type,
+                                    height: '',
+                                    width: ''
+                                }
+                            });
 
-                        feed.actor.userId = post.userId;
-                        feed.content.caption = post.caption;
-                        feed.content.googleMapsPlaceId = post.googleMapsPlaceId;
-                        feed.content.attachments = attachments;
-                        feed.content.createdAt = post.createdAt;
-                        feed.content.updatedAt = post.updatedAt;
-                        feed.content.originalPost = null;
+                            feed.actor.userId = post.actor.userId;
+                            feed.content.caption = post.content.caption;
+                            feed.content.googleMapsPlaceId = post.content.googleMapsPlaceId;
+                            feed.content.attachments = attachments;
+                            feed.content.createdAt = post.content.createdAt;
+                            feed.content.updatedAt = post.content.updatedAt;
+                            feed.content.originalPost = null;
+                        }
                     }
 
                     // Retrieve shared post data and append them to each of the respective feed property.
@@ -269,52 +271,54 @@ class FeedFacade {
                         // Retrieve the original post based on the shared post,
                         // fulfill the data of the original post
                         if (feed.content.originalPost) {
-                            const originalPostAttachments = originalPost.postMediaFiles.map((attachment) => {
-                                return {
-                                    key: attachment.key,
-                                    url: '',
-                                    type: attachment.type,
-                                    height: '',
-                                    width: ''
-                                }
-                            });
-
-                            feed.content.originalPost.actor.userId = originalPost.userId;
-                            feed.content.originalPost.content.postId = originalPost.id;
-                            feed.content.originalPost.content.caption = originalPost.caption;
-                            feed.content.originalPost.content.googleMapsPlaceId = originalPost.googleMapsPlaceId;
-                            feed.content.originalPost.content.attachments = originalPostAttachments;
-                            feed.content.originalPost.content.createdAt = originalPost.createdAt;
-                            feed.content.originalPost.content.updatedAt = originalPost.updatedAt;
-
-                            // Retrieve original post location details.
-                            if (feed.content.originalPost.content.googleMapsPlaceId) {
-                                const originalPostPlace = await this._googleapis.placeDetails({
-                                    params: {
-                                        place_id: feed.content.originalPost.content.googleMapsPlaceId,
-                                        key: `${process.env.GOOGLE_MAPS_API_KEY}`
+                            if (originalPost.content.attachments) {
+                                const originalPostAttachments = originalPost.content.attachments.map((attachment) => {
+                                    return {
+                                        key: attachment.key,
+                                        url: '',
+                                        type: attachment.type,
+                                        height: '',
+                                        width: ''
                                     }
-                                }).catch((error) => {
-                                    throw error.stack;
-                                });
-                                feed.content.originalPost.content.locationDetails = `${originalPostPlace.data.result.name}, ${originalPostPlace.data.result.vicinity}`;
-                            }
-
-                            // To provide the complete URL of the original post attachments from S3 bucket.
-                            if (feed.content.originalPost.content.attachments) {
-                                feed.content.originalPost.content.attachments.forEach((file) => {
-                                    file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
-                                });
-                            }
-
-                            // Get the user profile data of the original post.
-                            if (feed.content.originalPost.actor) {
-                                const originalPostUserProfileData = await this._userProfileRepository.getUserProfileByUserId(feed.content.originalPost.actor.userId).catch((error) => {
-                                    throw error;
                                 });
 
-                                feed.content.originalPost.actor.name = originalPostUserProfileData.name || '';
-                                feed.content.originalPost.actor.avatar.url = originalPostUserProfileData.avatar || '';
+                                feed.content.originalPost.actor.userId = originalPost.actor.userId;
+                                feed.content.originalPost.content.postId = originalPost.content.postId;
+                                feed.content.originalPost.content.caption = originalPost.content.caption;
+                                feed.content.originalPost.content.googleMapsPlaceId = originalPost.content.googleMapsPlaceId;
+                                feed.content.originalPost.content.attachments = originalPostAttachments;
+                                feed.content.originalPost.content.createdAt = originalPost.content.createdAt;
+                                feed.content.originalPost.content.updatedAt = originalPost.content.updatedAt;
+
+                                // Retrieve original post location details.
+                                if (feed.content.originalPost.content.googleMapsPlaceId) {
+                                    const originalPostPlace = await this._googleapis.placeDetails({
+                                        params: {
+                                            place_id: feed.content.originalPost.content.googleMapsPlaceId,
+                                            key: `${process.env.GOOGLE_MAPS_API_KEY}`
+                                        }
+                                    }).catch((error) => {
+                                        throw error.stack;
+                                    });
+                                    feed.content.originalPost.content.locationDetails = `${originalPostPlace.data.result.name}, ${originalPostPlace.data.result.vicinity}`;
+                                }
+
+                                // To provide the complete URL of the original post attachments from S3 bucket.
+                                if (feed.content.originalPost.content.attachments) {
+                                    feed.content.originalPost.content.attachments.forEach((file) => {
+                                        file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                                    });
+                                }
+
+                                // Get the user profile data of the original post.
+                                if (feed.content.originalPost.actor) {
+                                    const originalPostUserProfileData = await this._userProfileRepository.getUserProfileByUserId(feed.content.originalPost.actor.userId).catch((error) => {
+                                        throw error;
+                                    });
+
+                                    feed.content.originalPost.actor.name = originalPostUserProfileData.name || '';
+                                    feed.content.originalPost.actor.avatar.url = originalPostUserProfileData.avatar || '';
+                                }
                             }
                         }
                     }

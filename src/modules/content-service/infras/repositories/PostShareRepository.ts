@@ -53,6 +53,8 @@ class PostShareRepository implements IPostShareRepository {
                     createdAt: sharedPost?.created_at || new Date(),
                     updatedAt: sharedPost?.updated_at || new Date()
                 });
+            } else {
+                return reject('SHARED_POST_NOT_FOUND');
             }
         });
     }

@@ -5,6 +5,7 @@ import PostLikeRepository from "../../modules/content-service/infras/repositorie
 
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
 import FeedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
+import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository"; // External
 
 import PostFacade from "../../modules/content-service/facades/PostFacade";
 import PostShareFacade from "../../modules/content-service/facades/PostShareFacade";
@@ -27,7 +28,8 @@ class ContentController {
             new AwsS3(), new PostRepository(),
             new PostLikeRepository(),
             new UserRelationshipRepository(),
-            new FeedRepository()
+            new FeedRepository(),
+            new UserProfileRepository()
         );
         this._postShareFacade = new PostShareFacade(
             new PostShareRepository(),
@@ -129,13 +131,13 @@ class ContentController {
             // We do this as format convention for createdAt and updatedAt
             posts.data.forEach((post) => {
                 const timestamps = {
-                    createdAt: post.createdAt,
-                    updatedAt: post.updatedAt
+                    createdAt: post.content.createdAt,
+                    updatedAt: post.content.updatedAt
                 }
                 const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
 
-                post.createdAt = unixTimestamps.createdAt;
-                post.updatedAt = unixTimestamps.updatedAt;
+                post.content.createdAt = unixTimestamps.createdAt;
+                post.content.updatedAt = unixTimestamps.updatedAt;
             });
 
             return res.status(posts.code).json({
@@ -184,12 +186,12 @@ class ContentController {
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
             const timestamps = {
-                createdAt: post.data.createdAt,
-                updatedAt: post.data.updatedAt
+                createdAt: post.data.content.createdAt,
+                updatedAt: post.data.content.updatedAt
             }
             const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
-            post.data.createdAt = unixTimestamps.createdAt;
-            post.data.updatedAt = unixTimestamps.updatedAt;
+            post.data.content.createdAt = unixTimestamps.createdAt;
+            post.data.content.updatedAt = unixTimestamps.updatedAt;
 
             return res.status(post.code).json({
                 message: post.message,

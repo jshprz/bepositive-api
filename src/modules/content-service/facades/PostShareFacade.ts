@@ -54,7 +54,7 @@ class PostShareFacade {
                 });
             });
 
-            if (post && !post.id) {
+            if (post && !post.content.postId) {
                 return reject({
                     message: 'Post not found',
                     code: 404
@@ -167,14 +167,14 @@ class PostShareFacade {
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const sharedPost: sharedPostType | void = await this._postShareRepository.get(postId).catch((error) => {
+            const sharedPost: sharedPostType | void = await this._postShareRepository.get(postId).catch((error: string & QueryFailedError) => {
                this._log.error({
                    function: 'getSharedPostById()',
-                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                   message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                    payload: {postId}
                });
 
-               if (error.message.includes('invalid input syntax for type uuid')) {
+               if (error === 'SHARED_POST_NOT_FOUND' || error.message.includes('invalid input syntax for type uuid')) {
                    return reject({
                         message: 'Shared post not found',
                         code: 404
