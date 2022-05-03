@@ -11,6 +11,8 @@ import IFeedRepository from "../../feed-service/infras/repositories/IFeedReposit
 import { QueryFailedError } from "typeorm";
 import type { postType, sharedPostType } from '../../types';
 
+import IUserProfileRepository from "../../user-service/infras/repositories/IUserProfileRepository"; // External
+
 class PostFacade {
     private _log;
     private _googleapis;
@@ -20,7 +22,8 @@ class PostFacade {
         private _postRepository: IPostRepository,
         private _postLikeRepository: IPostLikeRepository,
         private _userRelationshipRepository: IUserRelationshipRepository,
-        private _feedRepository: IFeedRepository
+        private _feedRepository: IFeedRepository,
+        private _userProfileRepository: IUserProfileRepository,
     ) {
 
         this._log = Logger.createLogger('PostFacade.ts');
@@ -184,25 +187,38 @@ class PostFacade {
 
                 Promise.allSettled(promises).then((results) => {
                     const tempPostData = {
-                        id: '',
-                        userId: '',
-                        caption: '',
-                        status: '',
-                        viewCount: 0,
-                        googleMapsPlaceId: '',
-                        locationDetails: '',
-                        postMediaFiles: [{
-                            key: '',
-                            type: ''
-                        }],
-                        createdAt: 0,
-                        updatedAt: 0
+                        content: {
+                            classification: '',
+                            postId: '',
+                            caption: '',
+                            googleMapsPlaceId: '',
+                            locationDetails: '',
+                            attachments: [{
+                                key: '',
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }],
+                            createdAt: 0,
+                            updatedAt: 0,
+                        },
+                        actor: {
+                            userId: '',
+                            name: '',
+                            avatar: {
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }
+                        }
                     };
                     const resultsMap = results.map(r => r.status !== 'rejected'? r.value : tempPostData);
 
                     return resolve({
                         message: 'Posts successfully retrieved',
-                        data: resultsMap.filter(r => r.id !== '' && r.userId !== ''),
+                        data: resultsMap.filter(r => r.content.postId !== '' && r.actor.userId !== ''),
                         code: 200
                     });
                 });
@@ -250,24 +266,34 @@ class PostFacade {
                 });
             });
 
-            if (post && post.id && post.id !== '') {
-                if (post.googleMapsPlaceId) {
+            if (post && post.content.postId && post.content.postId !== '') {
+                if (post.content.googleMapsPlaceId) {
                     // Retrieve post location details
                     const place = await this._googleapis.placeDetails({
                         params: {
-                            place_id: post.googleMapsPlaceId,
+                            place_id: post.content.googleMapsPlaceId,
                             key: `${process.env.GOOGLE_MAPS_API_KEY}`
                         }
                     }).catch((error) => {
                         throw error.stack;
                     });
-                    post.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
+                    post.content.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
                 }
 
-                if (post.postMediaFiles) {
-                    post.postMediaFiles.forEach((file: { key: string; }) => {
-                        file.key = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                if (post.content.attachments) {
+                    post.content.attachments.forEach((file) => {
+                        file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
                     });
+                }
+
+                // Get the user of a post.
+                if (post.actor) {
+                    const userProfileData = await this._userProfileRepository.getUserProfileByUserId(post.actor.userId).catch((error) => {
+                        throw error;
+                    });
+
+                    post.actor.name = userProfileData.name || '';
+                    post.actor.avatar.url = userProfileData.avatar || '';
                 }
 
                 return resolve({
@@ -331,7 +357,7 @@ class PostFacade {
                 });
             });
 
-            if (!post || (post && (!post.id || post.id == '')) || userId !== post.userId) {
+            if (!post || (post && (!post.content.postId || post.content.postId == '')) || userId !== post.actor.userId) {
                 return reject({
                     message: 'Post not found.',
                     code: 404
@@ -387,7 +413,7 @@ class PostFacade {
                 });
             });
 
-            if (!post || (post && (!post.id || post.id == '')) || userId !== post.userId) {
+            if (!post || (post && (!post.content.postId || post.content.postId == '')) || userId !== post.actor.userId) {
                 return reject({
                     message: 'Post not found.',
                     code: 404
@@ -462,7 +488,7 @@ class PostFacade {
                 });
 
                 // check if post exists first.
-                if (!post || (post && post.id == "" ) || (post && !post.id)) {
+                if (!post || (post && post.content.postId == "" ) || (post && !post.content.postId)) {
                     return reject({
                         message: 'Post does not exist.',
                         code: 404
@@ -624,23 +650,33 @@ class PostFacade {
      * @private Promise<postType>
      */
     private async _processPostsLocationAndMediaFiles(post: postType): Promise<postType> {
-        if (post.googleMapsPlaceId) {
+        if (post.content.googleMapsPlaceId) {
             // Retrieve post location details
             const place = await this._googleapis.placeDetails({
                 params: {
-                    place_id: post.googleMapsPlaceId,
+                    place_id: post.content.googleMapsPlaceId,
                     key: `${process.env.GOOGLE_MAPS_API_KEY}`
                 }
             }).catch((error) => {
                 throw error.stack;
             });
-            post.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
+            post.content.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
         }
 
-        if (post.postMediaFiles) {
-            post.postMediaFiles.forEach((file) => {
-                file.key = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+        if (post.content.attachments) {
+            post.content.attachments.forEach((file) => {
+                file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
             });
+        }
+
+        // Get the user of every post.
+        if (post.actor) {
+            const userProfileData = await this._userProfileRepository.getUserProfileByUserId(post.actor.userId).catch((error) => {
+                throw error;
+            });
+
+            post.actor.name = userProfileData.name || '';
+            post.actor.avatar.url = userProfileData.avatar || '';
         }
 
         return post;
@@ -690,6 +726,21 @@ class PostFacade {
                             code: 500
                         });
                     });
+
+                    if (!post || (post && (!post.content.postId || post.content.postId == ''))) {
+                        return reject({
+                            message: 'Post not found.',
+                            code: 404
+                        });
+                    }
+
+                    // do not permit users to report their own posts
+                    if (post && post.actor.userId === userId) {
+                        return reject({
+                            message: 'Reporting of own posts is not permitted.',
+                            code: 401
+                        });
+                    }
                 } else {
                     // get shared post
                     post = await this._postRepository.getSharedPostById(postId
@@ -717,22 +768,23 @@ class PostFacade {
                             code: 500
                         });
                     });
+
+                    if (!post || (post && (!post.id || post.id == ''))) {
+                        return reject({
+                            message: 'Shared post not found.',
+                            code: 404
+                        });
+                    }
+
+                    // do not permit users to report their own posts
+                    if (post && post.userId === userId) {
+                        return reject({
+                            message: 'Reporting of own posts is not permitted.',
+                            code: 401
+                        });
+                    }
                 }
 
-                if (!post || (post && (!post.id || post.id == ''))) {
-                    return reject({
-                        message: 'Post not found.',
-                        code: 404
-                    });
-                }
-
-                // do not permit users to report their own posts
-                if (post && post.userId === userId) {
-                    return reject({
-                        message: 'Reporting of own posts is not permitted.',
-                        code: 401
-                    });
-                }
 
                 await this._postRepository.flagPost(userId, postId, classification, reason).save().catch((error: QueryFailedError) => {
                     this._log.error({

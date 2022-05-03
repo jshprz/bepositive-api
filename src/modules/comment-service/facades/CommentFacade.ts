@@ -58,7 +58,7 @@ class CommentFacade {
                });
            });
 
-           if (!post || (post && (!post.id || post.id == ''))) {
+           if (!post || (post && (!post.content.postId || post.content.postId == ''))) {
                return reject({
                    message: 'Post not found.',
                    code: 404
@@ -324,7 +324,7 @@ class CommentFacade {
                     });
                 });
 
-                if (!post || (post && post.id == '' ) || (post && !post.id)) {
+                if (!post || (post && post.content.postId == '' ) || (post && !post.content.postId)) {
                     return reject({
                         message: 'Post does not exist.',
                         code: 404
