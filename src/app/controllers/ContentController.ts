@@ -2,6 +2,8 @@ import AwsS3 from "../../modules/content-service/infras/aws/AwsS3";
 import PostRepository from "../../modules/content-service/infras/repositories/PostRepository";
 import PostShareRepository from "../../modules/content-service/infras/repositories/PostShareRepository";
 import PostLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository";
+import HashtagRepository from "../../modules/content-service/infras/repositories/HashtagRepository";
+import PostHashtagRepository from "../../modules/content-service/infras/repositories/PostHashtagRepository";
 
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
 import FeedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
@@ -29,7 +31,9 @@ class ContentController {
             new PostLikeRepository(),
             new UserRelationshipRepository(),
             new FeedRepository(),
-            new UserProfileRepository()
+            new UserProfileRepository(),
+            new HashtagRepository(),
+            new PostHashtagRepository()
         );
         this._postShareFacade = new PostShareFacade(
             new PostShareRepository(),
@@ -71,6 +75,10 @@ class ContentController {
             const userCognitoSub: string = req.body.userCognitoSub;
             const { caption, files, googlemapsPlaceId } = req.body;
 
+            const hashtagNames: string[] = this._getHashtagsInCaption(caption);
+
+            const createdHashtagIds = await this._postFacade.createHashtag(hashtagNames);
+
             if (Array.isArray(files)) {
                 // We append which folder inside S3 bucket the file will be uploaded.
                 // We make the filename unique.
@@ -81,9 +89,13 @@ class ContentController {
 
             const createPostResult = await this._postFacade.createPost({userCognitoSub, caption, files, googlemapsPlaceId});
 
+            await this._postFacade.createPostsHashtags(createdHashtagIds.data, createPostResult.data.postId);
+
             return res.status(createPostResult.code).json({
                 message: createPostResult.message,
-                payload: createPostResult.data,
+                payload: {
+                    uploadSignedURLs: createPostResult.data.uploadSignedURLs
+                },
                 status: createPostResult.code
             });
         } catch (error: any) {
@@ -107,6 +119,35 @@ class ContentController {
                 });
             }
         }
+    }
+
+    _getHashtagsInCaption(caption: string): string[] {
+        const extractedHashtags = caption.split('#').map((item, index) => {
+            let hashtagName = '';
+
+            // We make sure that each of the hashtag contains a valid word.
+            // We don't accept whitespaces in a hashtag and any other escape characters.
+            if (index !== 0) {
+                hashtagName = item.split(' ')[0];
+                hashtagName = hashtagName.split('\n')[0];
+                hashtagName = hashtagName.split('\t')[0];
+                hashtagName = hashtagName.split('\b')[0];
+                hashtagName = hashtagName.split('\r')[0];
+            }
+
+            return hashtagName;
+        }).filter((item) => {
+            // We filter each of the extracted hashtag to make sure we get a valid one.
+
+            const constraint1 = item.trim();
+            const constraint2 = item.indexOf(' ');
+
+            return constraint1.length > 0 && constraint2 !== 0;
+        }).map((item) => {
+            return item.toLowerCase();
+        });
+
+        return extractedHashtags;
     }
 
     async getPostsByUser(req: Request, res: Response) {

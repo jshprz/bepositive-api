@@ -1,6 +1,8 @@
 import IAwsS3 from "../infras/aws/IAwsS3";
 import IPostRepository from "../infras/repositories/IPostRepository";
 import IPostLikeRepository from "../infras/repositories/IPostLikeRepository";
+import IHashtagRepository from "../infras/repositories/IHashtagRepository";
+import IPostHashtagRepository from "../infras/repositories/IPostHashtagRepository";
 import Logger from '../../../config/Logger';
 import Error from '../../../config/Error';
 import { Client } from '@googlemaps/google-maps-services-js';
@@ -24,6 +26,8 @@ class PostFacade {
         private _userRelationshipRepository: IUserRelationshipRepository,
         private _feedRepository: IFeedRepository,
         private _userProfileRepository: IUserProfileRepository,
+        private _hashtagRepository: IHashtagRepository,
+        private _postHashtagRepository: IPostHashtagRepository
     ) {
 
         this._log = Logger.createLogger('PostFacade.ts');
@@ -41,7 +45,10 @@ class PostFacade {
      */
     createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<{
         message: string,
-        data: { uploadSignedURLs: string[] },
+        data: {
+            postId: string,
+            uploadSignedURLs: string[]
+        },
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
@@ -127,6 +134,7 @@ class PostFacade {
                     return resolve({
                         message: 'Post created successfully.',
                         data: {
+                            postId: post.id || '',
                             uploadSignedURLs: resultsMap.filter(result => result !== '')
                         },
                         code: 200
@@ -143,6 +151,104 @@ class PostFacade {
                         code: 500
                     });
                 }
+            });
+        });
+    }
+
+    /**
+     * Creates a hashtag record if it is not existing yet.
+     * @param hashtagNames: string[]
+     * @returns Promise<{
+     *         message: string,
+     *         data: string[],
+     *         code: number
+     *     }>
+     */
+    async createHashtag(hashtagNames: string[]): Promise<{
+        message: string,
+        data: string[],
+        code: number
+    }> {
+        const createdHashtagIds: string[] = [];
+
+        return new Promise(async (resolve, reject) => {
+            for (const hashtagName of hashtagNames) {
+                const getHashtagByName = await this._hashtagRepository.get(hashtagName);
+
+                if (getHashtagByName.id === '') {
+                    const createdHashtag = await this._hashtagRepository.create(hashtagName).save().catch((error) => {
+                        this._log.error({
+                            function: 'createHashtag()',
+                            message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                            payload: hashtagNames
+                        });
+
+                        return reject({
+                            message: Error.DATABASE_ERROR.CREATE,
+                            code: 500
+                        });
+                    });
+
+                    if (createdHashtag && createdHashtag.id) {
+                        createdHashtagIds.push(createdHashtag.id);
+                    }
+                } else {
+                    createdHashtagIds.push(getHashtagByName.id);
+                }
+            }
+
+            return resolve({
+                message: 'Hashtags created successfully.',
+                data: createdHashtagIds,
+                code: 200
+            });
+        });
+    }
+
+    /**
+     * Creates a Posts - Hashtags record if it is not existing yet.
+     * (PostsHashtags table is the junction table between posts table and hashtags table).
+     * @param hashtagIds: string[]
+     * @param postId: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
+    async createPostsHashtags(hashtagIds: string[], postId: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+
+        return new Promise(async (resolve, reject) => {
+            for (const hashtagId of hashtagIds) {
+                const isPostHashtagExist = await this._postHashtagRepository.isPostHashtagExist(hashtagId, postId);
+
+                if (!isPostHashtagExist) {
+                    await this._postHashtagRepository.create(hashtagId, postId).save().catch((error) => {
+                        this._log.error({
+                            function: 'createPostsHashtags()',
+                            message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                            payload: {
+                                hashtagIds,
+                                postId
+                            }
+                        });
+
+                        return reject({
+                            message: Error.DATABASE_ERROR.CREATE,
+                            code: 500
+                        });
+                    });
+                }
+            }
+
+            return resolve({
+                message: 'A Posts Hashtags record created successfully',
+                data: {},
+                code: 200
             });
         });
     }

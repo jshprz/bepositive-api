@@ -1,3 +1,10 @@
+export type getHashtagType = {
+  id: string,
+  name: string,
+  createdAt: Date | number,
+  updatedAt: Date | number
+}
+
 export type getPostLikeType = {
   id: string,
   postId: string,
