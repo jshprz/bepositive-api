@@ -11,7 +11,7 @@ import IUserRelationshipRepository from "../../user-service/infras/repositories/
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type { postType, sharedPostType } from '../../types';
+import type {getHashtagType, postType, sharedPostType} from '../../types';
 
 import IUserProfileRepository from "../../user-service/infras/repositories/IUserProfileRepository"; // External
 
@@ -756,6 +756,10 @@ class PostFacade {
      * @private Promise<postType>
      */
     private async _processPostsLocationAndMediaFiles(post: postType): Promise<postType> {
+        if (post.content.postId === '' || post.actor.userId === '') {
+            return post;
+        }
+
         if (post.content.googleMapsPlaceId) {
             // Retrieve post location details
             const place = await this._googleapis.placeDetails({
@@ -911,6 +915,117 @@ class PostFacade {
                     code: 200
                 });
             });
+        }
+
+        /**
+         * Get list of posts by hashtag
+         * @param hashtagId: string
+         * @param pagination: {page: number, size: number}
+         * @returns Promise<{
+         *             message: string,
+         *             data: {
+         *                 hashtagInfo: {
+         *                     id: string,
+         *                     name: string
+         *                 },
+         *                 posts: postType[]
+         *             },
+         *             code: number
+         *         }>
+         */
+        getPostsByHashtag(hashtagId: string, pagination: {page: number, size: number}): Promise<{
+            message: string,
+            data: {
+                hashtagInfo: {
+                    id: string,
+                    name: string
+                },
+                posts: postType[]
+            },
+            code: number
+        }> {
+
+        const posts: postType[] = [];
+
+        return new Promise(async (resolve, reject) => {
+            const hashtag = await this._hashtagRepository.getById(hashtagId).catch((error) => {
+                this._log.error({
+                    function: 'getPostsByHashtag()',
+                    message: error,
+                    payload: {
+                        hashtagId
+                    }
+                });
+
+                return reject({
+                    message: 'Hashtag not found',
+                    code: 404
+                });
+            });
+
+            if (hashtag) {
+                const hashtagInfo = {
+                    id: hashtag.id,
+                    name: hashtag.name
+                };
+
+                const postsHashtags = await this._postHashtagRepository.getByHashtagId(hashtagId, pagination).catch((error: QueryFailedError) => {
+                    this._log.error({
+                        function: 'getPostsByHashtag()',
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                        payload: {
+                            hashtagId
+                        }
+                    });
+
+                    if (error.message.includes('invalid input syntax for type uuid')) {
+                        return resolve({
+                            message: 'Posts from hashtag was retrieved.',
+                            data: {
+                                hashtagInfo,
+                                posts: []
+                            },
+                            code: 200
+                        });
+                    }
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 404
+                    });
+                });
+
+                if (postsHashtags) {
+                    for (const postHashtag of postsHashtags) {
+                        const post: postType | void = await this._postRepository.getPostById(postHashtag.postId).catch((error) => {});
+
+                        if (post && post.content.postId) {
+                            posts.push(await this._processPostsLocationAndMediaFiles(post));
+                        }
+                    }
+
+                    return resolve({
+                        message: 'Posts from hashtag was retrieved.',
+                        data: {
+                            hashtagInfo,
+                            posts
+                        },
+                        code: 200
+                    });
+                } else {
+                    return reject({
+                        message: `Unable to retrieve PostsHashtags: ${postsHashtags}`,
+                        code: 500
+                    });
+                }
+            } else {
+                return reject({
+                    message: 'Hashtag not found',
+                    code: 404
+                });
+            }
+        });
+
         }
 }
 

@@ -1,3 +1,25 @@
+export type postsHashtagsType = {
+  id: string,
+  postId: string,
+  hashtagId: string,
+  createdAt: Date | number,
+  updatedAt: Date | number
+}
+
+export type searchHashtagType = {
+  classification: string,
+  hashtagId: string,
+  name: string
+}
+
+export type searchUserType = {
+  classification: string,
+  userId: string,
+  name: string,
+  avatar: string,
+  profileTitle: string
+}
+
 export type getHashtagType = {
   id: string,
   name: string,
