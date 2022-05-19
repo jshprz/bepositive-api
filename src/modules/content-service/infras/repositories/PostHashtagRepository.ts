@@ -1,6 +1,7 @@
 import IPostHashtagRepository from "./IPostHashtagRepository";
 import { PostsHashtags } from "../../../../database/postgresql/models/PostsHashtags";
 import { getRepository } from "typeorm";
+import type { postsHashtagsType } from '../../../types';
 
 
 class PostHashtagRepository implements IPostHashtagRepository {
@@ -51,6 +52,44 @@ class PostHashtagRepository implements IPostHashtagRepository {
             } else {
                 return resolve(false);
             }
+        });
+    }
+
+    /**
+     * Get hashtag by ID.
+     * @param hashtagId: string
+     * @param pagination: {page: number, size: number}
+     * @returns Promise<postsHashtagsType[]>
+     */
+    getByHashtagId(hashtagId: string, pagination: {page: number, size: number}): Promise<postsHashtagsType[]> {
+
+        return new Promise(async (resolve, reject) => {
+            const postsHashtags = await getRepository(PostsHashtags)
+                .createQueryBuilder('posts_hashtags')
+                .select('posts_hashtags')
+                .where('hashtag_id = :hashtagId', { hashtagId })
+                .take(pagination.size)
+                .skip(pagination.size * (pagination.page - 1))
+                .getMany()
+                .catch((error) => {
+                    return reject(error);
+                });
+
+            if (postsHashtags) {
+                const newPostsHashtags = postsHashtags.map((item) => {
+                    return {
+                        id: item.id || '',
+                        postId: item.post_id || '',
+                        hashtagId: item.hashtag_id || '',
+                        createdAt: item.created_at || 0,
+                        updatedAt: item.updated_at || 0
+                    }
+                });
+
+                return resolve(newPostsHashtags);
+            }
+
+            return reject(`Unable to retrieve PostsHashtags: ${postsHashtags}`);
         });
     }
 }

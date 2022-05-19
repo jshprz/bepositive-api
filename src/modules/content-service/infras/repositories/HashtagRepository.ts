@@ -66,6 +66,38 @@ class HashtagRepository implements IHashtagRepository {
             }
         });
     }
+
+    /**
+     * Get a hashtag record by id.
+     * @param hashtagId: string
+     * @returns Promise<getHashtagType>
+     */
+    async getById(hashtagId: string): Promise<getHashtagType> {
+
+        return new Promise(async (resolve, reject) => {
+            const hashtag = await getRepository(Hashtags)
+                .createQueryBuilder('hashtags')
+                .select('hashtags')
+                .where('id = :hashtagId', { hashtagId })
+                .getOne()
+                .catch((error) => {
+                    return reject(error);
+                });
+
+            if (hashtag) {
+                const newHashtag = {
+                    id: hashtag.id || '',
+                    name: hashtag.name || '',
+                    createdAt: hashtag.created_at || 0,
+                    updatedAt: hashtag.updated_at || 0
+                }
+
+                return resolve(newHashtag);
+            } else {
+                return reject(`Unable to retrieve hashtag: ${hashtag}`);
+            }
+        });
+    }
 }
 
 export default HashtagRepository;

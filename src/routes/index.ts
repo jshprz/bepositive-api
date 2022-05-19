@@ -4,6 +4,7 @@ import PostApi from './PostApi';
 import UserFeedApi from './UserFeedApi';
 import LocationApi from './LocationApi';
 import CommentApi from './CommentApi';
+import SearchApi from './SearchApi';
 
 export const apis = {
   UserApi,
@@ -11,5 +12,6 @@ export const apis = {
   PostApi,
   UserFeedApi,
   LocationApi,
-  CommentApi
+  CommentApi,
+  SearchApi
 }
