@@ -1,4 +1,13 @@
-import { Entity, Column, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from "typeorm";
+import {
+    Entity,
+    Column,
+    BaseEntity,
+    PrimaryGeneratedColumn,
+    CreateDateColumn,
+    UpdateDateColumn,
+    DeleteDateColumn,
+    BeforeInsert
+} from "typeorm";
 
 @Entity({name: "posts_hashtags"})
 export class PostsHashtags extends BaseEntity {
@@ -21,4 +30,9 @@ export class PostsHashtags extends BaseEntity {
     @DeleteDateColumn({type: 'timestamptz', nullable: true})
     deleted_at?: Date;
 
+    @BeforeInsert()
+    updateDates() {
+        this.created_at = new Date();
+        this.updated_at = new Date();
+    }
 }

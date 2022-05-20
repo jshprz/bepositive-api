@@ -32,7 +32,7 @@ class SearchController {
 
         try {
 
-            const searchQuery: string = req.body.searchQuery;
+            const searchQuery: string = decodeURI(String(req.query.searchQuery));
 
             const searchUserOrHashtagResult = await this._searchFacade.searchUserOrHashtag(searchQuery);
 
