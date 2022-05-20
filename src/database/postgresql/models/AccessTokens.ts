@@ -3,7 +3,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   BaseEntity,
-  CreateDateColumn, UpdateDateColumn, DeleteDateColumn
+  CreateDateColumn, UpdateDateColumn, DeleteDateColumn, BeforeInsert
 } from "typeorm";
 
 @Entity({name: "access_tokens"})
@@ -25,4 +25,10 @@ export class AccessTokens extends BaseEntity {
 
   @DeleteDateColumn({type: 'timestamptz', nullable: true})
   deleted_at?: Date;
+
+  @BeforeInsert()
+  updateDates() {
+      this.created_at = new Date();
+      this.updated_at = new Date();
+  }
 }

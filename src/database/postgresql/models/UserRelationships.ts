@@ -5,7 +5,8 @@ import {
   PrimaryGeneratedColumn,
   DeleteDateColumn,
   UpdateDateColumn,
-  CreateDateColumn
+  CreateDateColumn,
+  BeforeInsert
 } from "typeorm";
 
 @Entity({name: "user_relationships"})
@@ -28,4 +29,10 @@ export class UserRelationships extends BaseEntity {
 
   @DeleteDateColumn({type: 'timestamptz', nullable: true})
   deleted_at?: Date;
+
+  @BeforeInsert()
+  updateDates() {
+      this.created_at = new Date();
+      this.updated_at = new Date();
+  }
 }
