@@ -1,5 +1,5 @@
-import { check } from "express-validator";
+import {check, query} from "express-validator";
 
 export const searchUserOrHashtagApiValidation = [
-    check('searchQuery').not().isEmpty().withMessage('searchQuery property is required.')
+    query('searchQuery').not().isEmpty().withMessage('searchQuery query param is required.')
 ];

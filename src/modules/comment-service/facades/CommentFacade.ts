@@ -267,7 +267,7 @@ class CommentFacade {
             }
         }
         // reverse the repliesOfReplyHolder object for the order to be correct in terms of createdAt property
-        const reversedrepliesOfReplyHolder = repliesOfReplyHolder.reverse(); 
+        const reversedrepliesOfReplyHolder = repliesOfReplyHolder.reverse();
         return reversedrepliesOfReplyHolder;
     }
 
