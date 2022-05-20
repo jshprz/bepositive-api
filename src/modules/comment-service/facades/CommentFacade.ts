@@ -7,16 +7,21 @@ import IPostRepository from "../../content-service/infras/repositories/IPostRepo
 
 import { QueryFailedError } from "typeorm";
 import type {
-    commentType,
     getCommentByIdResult,
     getCommentsByPostIdReturnType,
-    postType
+    getCommentRepliesByCommentIdReturnType,
+    postType,
+    commentType,
 } from '../../types';
+
+import CommentRepository from "../infras/repositories/CommentRepository";
+import UserProfileRepository from "../../user-service/infras/repositories/UserProfileRepository";
+import IUserProfileRepository from "../../user-service/infras/repositories/IUserProfileRepository";
 
 class CommentFacade {
     private _log;
 
-    constructor(private _commentRepository: ICommentRepository, private _postRepository: IPostRepository, private _commentLikeRepository: ICommentLikeRepository) {
+    constructor(private _commentRepository: ICommentRepository, private _postRepository: IPostRepository, private _commentLikeRepository: ICommentLikeRepository, private _userProfileRepository: UserProfileRepository) {
 
         this._log = Logger.createLogger('CommentFacade.ts');
     }
@@ -38,7 +43,7 @@ class CommentFacade {
         return new Promise(async (resolve, reject) => {
            const post: postType | void = await this._postRepository.getPostById(commentAttr.postId).catch((error) => {
                this._log.error({
-                   function: 'addComment()',
+                   function: 'getPostById()',
                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                    payload: {
                        commentAttr
@@ -89,7 +94,7 @@ class CommentFacade {
     }
 
     /**
-     * Get all the comments under a post .
+     * Get all the comments and replies under a post .
      * @param postId: string
      * @returns Promise<{
      *         message: string,
@@ -124,11 +129,46 @@ class CommentFacade {
             });
 
             if (Array.isArray(comments)) {
+                const promises: any = [];
 
-                return resolve({
-                    message: 'Comments successfully retrieved',
-                    data: comments || [],
-                    code: 200
+                for (const comment of comments) {
+                    // Get the user of a comment.
+                    if (comment.actor) {
+                        const userProfileData = await this._userProfileRepository.getUserProfileByUserId(comment.actor.userId).catch((error) => {
+                            throw error;
+                        });
+
+                        comment.actor.name = userProfileData.name || '';
+                        comment.actor.avatar.url = userProfileData.avatar || '';
+                    }
+
+                    promises.push(this._getConsolidatedCommentReplies(comment.id));
+                }
+
+                Promise.allSettled(promises).then((results) => {
+                    const resultsMap = results.map((result) => {
+                        if (result.status !== 'rejected') {
+                            return result.value;
+                        }
+
+                        return '';
+                    });
+
+                    const processedCommentsData: getCommentsByPostIdReturnType[] = comments.map((comment, indexX) => {
+                        resultsMap.forEach((replies, indexY) => {
+                            if (indexX === indexY) {
+                                comment.replies = (replies !== '')? replies : [];
+                            }
+                        });
+
+                        return comment;
+                    });
+
+                    return resolve({
+                        message: 'Comments retrieved successfully.',
+                        data: processedCommentsData,
+                        code: 200
+                    });
                 });
             } else {
                 return reject({
@@ -139,26 +179,170 @@ class CommentFacade {
         });
     }
 
+
     /**
-     * Update the content of the post comment.
+     * Get the replies of a comment.
+     * @param commentId: string
+     * @returns Promise<getCommentRepliesByCommentIdReturnType[]>
+     */
+    private async _getConsolidatedCommentReplies(commentId: string): Promise<getCommentRepliesByCommentIdReturnType[]> {
+        return new Promise(async (resolve, reject) => {
+            const replies: getCommentRepliesByCommentIdReturnType[] | void = await this._commentRepository.getCommentRepliesByCommentId(commentId)
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+            if (Array.isArray(replies) && replies.length > 0) {
+                for (const reply of replies) {
+                    // Get the user of a reply.
+                    if (reply.actor) {
+                        const userProfileData = await this._userProfileRepository.getUserProfileByUserId(reply.actor.userId).catch((error) => {
+                            throw error;
+                        });
+
+                        reply.actor.name = userProfileData.name || '';
+                        reply.actor.avatar.url = userProfileData.avatar || '';
+                    }
+
+                    const repliesOfReplyResult = await this._getRepliesOfReply(reply.id);
+                    reply.replies = repliesOfReplyResult;
+                }
+                return resolve(replies);
+            } else {
+                return reject(false);
+            }
+        });
+    }
+
+    /**
+     * Recursively get the replies of a reply.
+     * @param commentId: string
+     * @returns Promise<getCommentRepliesByCommentIdReturnType[]>
+     */
+    private async _getRepliesOfReply(commentId: string): Promise<getCommentRepliesByCommentIdReturnType[]> {
+        const repliesOfReplyHolder: getCommentRepliesByCommentIdReturnType[] = [];
+        const repliesArr: getCommentRepliesByCommentIdReturnType[] = await this._commentRepository.getCommentRepliesByCommentId(commentId);
+        let repliesArrHolder: getCommentRepliesByCommentIdReturnType[] = [...repliesArr];
+        const tempRepliesArrHolder: getCommentRepliesByCommentIdReturnType[] = [];
+        let replyIdHolder = '';
+
+        await (async function recursiveFunction(commentId: string) {
+            const commentRepository: ICommentRepository = new CommentRepository();
+            const userProfileRepository: IUserProfileRepository = new UserProfileRepository();
+            const repliesArr2: getCommentRepliesByCommentIdReturnType[] = await commentRepository.getCommentRepliesByCommentId(commentId);
+
+            if (repliesArrHolder.length < 1) {
+                return repliesOfReplyHolder;
+            }
+
+            replyIdHolder = repliesArrHolder[repliesArrHolder.length - 1].id;
+
+            const findId = repliesOfReplyHolder.find(r => r.id === repliesArrHolder[repliesArrHolder.length - 1].id);
+            if (!findId) {
+                repliesOfReplyHolder.push(repliesArrHolder[repliesArrHolder.length - 1]);
+            }
+
+            repliesArr2.forEach((reply) => {
+                tempRepliesArrHolder.push(reply);
+            });
+
+            repliesArrHolder.pop();
+
+            if (repliesArrHolder.length < 1) {
+                repliesArrHolder = tempRepliesArrHolder.map(i => i);
+                tempRepliesArrHolder.length = 0;
+            }
+
+            await recursiveFunction(replyIdHolder);
+        })(commentId);
+
+        for (const reply of repliesOfReplyHolder) {
+            // Get the user of a child reply.
+            if (reply.actor) {
+                const userProfileData = await this._userProfileRepository.getUserProfileByUserId(reply.actor.userId).catch((error) => {
+                    throw error;
+                });
+
+                reply.actor.name = userProfileData.name || '';
+                reply.actor.avatar.url = userProfileData.avatar || '';
+            }
+        }
+        // reverse the repliesOfReplyHolder object for the order to be correct in terms of createdAt property
+        const reversedrepliesOfReplyHolder = repliesOfReplyHolder.reverse(); 
+        return reversedrepliesOfReplyHolder;
+    }
+
+    /**
+     * Get all the replies under a comment.
+     * @param commentId: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: commentType[],
+     *         code: number
+     *     }>
+     */
+     getCommentRepliesByCommentId(commentId: string): Promise<{
+        message: string,
+        data: getCommentRepliesByCommentIdReturnType[],
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            const replies: getCommentRepliesByCommentIdReturnType[] | void = await this._commentRepository.getCommentRepliesByCommentId(commentId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'getCommentRepliesByCommentId()',
+                    message: error.toString(),
+                    payload: { commentId }
+                });
+
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Comment not found.',
+                        code: 404
+                    });
+                }
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (Array.isArray(replies)) {
+
+                return resolve({
+                    message: 'Comment replies successfully retrieved',
+                    data: replies || [],
+                    code: 200
+                });
+            } else {
+                return reject({
+                    message: 'Invalid type for comment replies.',
+                    code: 500
+                });
+            }
+        });
+    }
+
+    /**
+     * Update the content of the post comment or reply.
      * @param id: string
      * @param userId: string
      * @param content: string
+     * @param type: string
      * @returns Promise<{
      *         message: string,
      *         data: {},
      *         code: number
      *     }>
      */
-    updateComment(id: string, userId: string, content: string): Promise<{
+    updateCommentOrReply(id: string, userId: string, content: string, type: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const comment: getCommentByIdResult | void = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
+            const comment: getCommentByIdResult | void = await this._commentRepository.getCommentById(id, userId, type).catch((error: QueryFailedError) => {
                 this._log.error({
-                    function: 'updateComment()',
+                    function: 'getCommentById()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         id,
@@ -169,7 +353,7 @@ class CommentFacade {
 
                 if (error.message.includes('invalid input syntax for type uuid')) {
                     return reject({
-                        message: 'Comment not found.',
+                        message: type == 'comment' ? 'Comment not found.' : 'Comment reply not found.',
                         code: 404
                     });
                 }
@@ -179,18 +363,26 @@ class CommentFacade {
                     code: 500
                 });
             });
-
-            if (!comment || (comment && (!comment.id || comment.id == ''))) {
-                return reject({
-                    message: 'Comment not found.',
-                    code: 404
-                });
+            if (type == 'comment') {
+                if (!comment || (comment && (!comment.id || comment.id == '') || comment.commentId != '' || comment.userId != userId)) {
+                    return reject({
+                        message: 'Comment not found.',
+                        code: 404
+                    });
+                }
+            } else {
+                if (!comment || (comment && (!comment.commentId || comment.commentId == '' || comment.userId != userId))) {
+                    return reject({
+                        message: 'Comment reply not found.',
+                        code: 404
+                    });
+                }
             }
 
-            await this._commentRepository.update(id, userId, content);
+            await this._commentRepository.update(id, userId, content, type);
 
             return resolve({
-                message: 'The comment was updated successfully.',
+                message: type == 'comment' ? 'The comment was updated successfully.' : 'The comment reply was updated successfully.',
                 data: {},
                 code: 200
             });
@@ -198,25 +390,26 @@ class CommentFacade {
     }
 
     /**
-     * Remove a post comment by ID.
+     * Remove a post comment or comment reply by ID.
      * @param id: string
      * @param userId: string
+     * @param type: string
      * @returns Promise<{
      *         message: string,
      *         data: {},
      *         code: number
      *     }>
      */
-    removeComment(id: string, userId: string): Promise<{
+     removeCommentOrReply(id: string, userId: string, type: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
 
         return new Promise(async (resolve, reject) => {
-            const comment: getCommentByIdResult | void = await this._commentRepository.getCommentById(id, userId).catch((error: QueryFailedError) => {
+            const comment: getCommentByIdResult | void = await this._commentRepository.getCommentById(id, userId, type).catch((error: QueryFailedError) => {
                 this._log.error({
-                    function: 'removeComment()',
+                    function: 'getCommentById()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         id,
@@ -226,7 +419,7 @@ class CommentFacade {
 
                 if (error.message.includes('invalid input syntax for type uuid')) {
                     return reject({
-                        message: 'Comment not found.',
+                        message: type == 'comment' ? 'Comment not found.' : 'Comment reply not found.',
                         code: 404
                     });
                 }
@@ -237,17 +430,26 @@ class CommentFacade {
                 });
             });
 
-            if (!comment || (comment && (!comment.id || comment.id == ''))) {
-                return reject({
-                    message: 'Comment not found.',
-                    code: 404
-                });
+            if (type == 'comment') {
+                if (!comment || (comment && (!comment.id || comment.id == '') || comment.commentId != '' || comment.userId != userId)) {
+                    return reject({
+                        message: 'Comment not found.',
+                        code: 404
+                    });
+                }
+            } else {
+                if (!comment || (comment && (!comment.commentId || comment.commentId == '' || comment.userId != userId))) {
+                    return reject({
+                        message: 'Comment reply not found.',
+                        code: 404
+                    });
+                }
             }
 
-            await this._commentRepository.softDelete(id);
+            await this._commentRepository.softDelete(id, type);
 
             return resolve({
-                message: 'The comment was removed successfully.',
+                message: type == 'comment' ? 'The comment was removed successfully.' : 'The comment reply was removed successfully.',
                 data: {},
                 code: 200
             });
@@ -255,27 +457,28 @@ class CommentFacade {
     }
 
     /**
-     * To like or unlike a comment.
+     * To like or unlike a comment or comment reply.
      * @param commentId: string
      * @param postId: string
      * @param userCognitoSub: string
      * @param like: boolean
      * @param classification: string
+     * @param commentType: string
      * @returns Promise<{
      *         message: string,
      *         data: {isLiked: boolean},
      *         code: number
      *     }>
      */
-     likeOrUnlikeComment(commentId: string, postId: string, userCognitoSub: string, like: boolean, classification: string): Promise<{
+     likeOrUnlikeCommentOrReply(commentId: string, postId: string, userCognitoSub: string, like: boolean, classification: string, commentType: string): Promise<{
         message: string,
         data: {isLiked: boolean},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const comment = await this._commentRepository.getCommentById(commentId, userCognitoSub).catch((error) => {
+            const comment = await this._commentRepository.getCommentById(commentId, userCognitoSub, commentType).catch((error) => {
                 this._log.error({
-                    function: 'likeOrUnlikeComment()',
+                    function: 'getCommentById()',
                     message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                     payload: {
                         postId,
@@ -286,7 +489,7 @@ class CommentFacade {
 
                 if (error.message.includes('invalid input syntax for type uuid')) {
                     return reject({
-                        message: 'Comment not found.',
+                        message: commentType == 'comment' ? 'Comment not found.' : 'Comment reply not found.',
                         code: 404
                     });
                 }
@@ -297,19 +500,28 @@ class CommentFacade {
                 });
             });
 
-            // check if comment exists first.
-            if (!comment || (comment && comment.id == '' ) || (comment && !comment.id) || (comment && comment.postId !== postId)) {
-                return reject({
-                    message: 'Comment not found.',
-                    code: 404
-                });
+            // check if comment / reply exists first.
+            if (commentType == 'comment') {
+                if (!comment || (comment && comment.id == '' ) || (comment && !comment.id) || (comment && comment.postId !== postId) || comment.commentId != '') {
+                    return reject({
+                        message: 'Comment not found.',
+                        code: 404
+                    });
+                }
+            } else {
+                if (!comment || (comment && comment.id == '' ) || (comment && !comment.id) || comment.commentId == '') {
+                    return reject({
+                        message: 'Comment reply not found.',
+                        code: 404
+                    });
+                }
             }
 
             // check if post exists
             if (classification == "REGULAR_POST") {
                 const post = await this._postRepository.getPostById(postId).catch((error) => {
                     this._log.error({
-                        function: 'likeOrUnlikeComment()',
+                        function: 'getPostById()',
                         message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                         payload: {
                             postId,
@@ -334,7 +546,7 @@ class CommentFacade {
                 // we're dealing with a shared post
                 const post = await this._postRepository.getSharedPostById(postId).catch((error) => {
                     this._log.error({
-                        function: 'likeOrUnlikeComment()',
+                        function: 'getSharedPostById()',
                         message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                         payload: {
                             postId,
@@ -361,7 +573,7 @@ class CommentFacade {
             // check if user has already liked or unliked the post
             const commentLiked = await this._commentLikeRepository.getByIdAndUserId(commentId, userCognitoSub).catch((error) => {
                 this._log.error({
-                    function: 'likeOrUnlikeComment()',
+                    function: 'getByIdAndUserId()',
                     message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
                     payload: {
                         postId,
@@ -372,12 +584,12 @@ class CommentFacade {
 
             if (like && commentLiked) {
                 return reject({
-                    message: "Comment already liked.",
+                    message: commentType == 'comment' ? "Comment already liked." : "Comment reply already liked.",
                     code: 400
                 });
             } else if (!like && !commentLiked) {
                 return reject({
-                    message: "Comment already unliked.",
+                    message: commentType == 'comment' ? "Comment already unliked." : "Comment reply already unliked.",
                     code: 400
                 });
             }
@@ -389,7 +601,7 @@ class CommentFacade {
                 });
                 if (likeResult) {
                     return resolve({
-                        message: 'Comment successfully liked.',
+                        message: commentType == 'comment' ? "Comment successfully liked." : "Comment reply successfully liked.",
                         data: {isLiked: true},
                         code: 200
                     });
@@ -400,7 +612,7 @@ class CommentFacade {
                 });
                 if (unlikeResult) {
                     return resolve({
-                        message: 'Comment successfully unliked.',
+                        message: commentType == 'comment' ? "Comment successfully unliked." : "Comment reply successfully unliked.",
                         data: {isLiked: false},
                         code: 200
                     });
@@ -409,7 +621,7 @@ class CommentFacade {
         });
     }
     /**
-     * To like a comment.
+     * To like a comment or reply.
      * @param commentId: string
      * @param postId: string
      * @param userCognitoSub: string
@@ -439,7 +651,7 @@ class CommentFacade {
         });
     }
     /**
-     * To unlike a comment.
+     * To unlike a comment or reply.
      * @param commentId: string
      * @param userCognitoSub: string
      * @returns Promise<{
@@ -461,6 +673,75 @@ class CommentFacade {
                 return reject(Error.DATABASE_ERROR.DELETE);
             });
             resolve(true);
+        });
+    }
+
+    /**
+     * Replies to a comment or another reply.
+     * @param item: {commentId: string, userCognitoSub: string, content: string}
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         status: number
+     *     }>
+     */
+    replyToComment(item: { commentId: string, userCognitoSub: string, content: string }): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+
+            // validate existence of comment
+            const comment = await this._commentRepository.getCommentOrCommentReplyIdsById(item.commentId).catch((error) => {
+                this._log.error({
+                    function: 'getCommentOrCommentReplyIdsById()',
+                    message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                    payload: {
+                        item
+                    }
+                });
+
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Comment not found.',
+                        code: 404
+                    });
+                }
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (!comment || comment.length < 1) {
+                return reject({
+                    message: 'Comment not found.',
+                    code: 404
+                });
+            }
+
+            await this._commentRepository.replyToComment(item).save().catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'replyToComment()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        item
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.CREATE,
+                    code: 500
+                });
+            });
+
+            return resolve({
+                message: 'Successfully replied to comment.',
+                data: {},
+                code: 200
+            });
         });
     }
 

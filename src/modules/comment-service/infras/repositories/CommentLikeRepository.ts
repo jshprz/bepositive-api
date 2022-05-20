@@ -1,12 +1,15 @@
 import { getRepository, DeleteResult } from "typeorm";
 import { CommentLikes } from "../../../../database/postgresql/models/CommentLikes";
+import { CommentReplies } from "../../../../database/postgresql/models/CommentReplies";
 import ICommentLikeRepository from "./ICommentLikeRepository";
 
 class CommentLikeRepository implements ICommentLikeRepository {
     private readonly _model;
+    private readonly _comment_replies_model;
 
     constructor() {
         this._model = new CommentLikes();
+        this._comment_replies_model = new CommentReplies();
     }
 
     /**
