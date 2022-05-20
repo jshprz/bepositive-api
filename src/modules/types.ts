@@ -35,6 +35,14 @@ export type getPostLikeType = {
   updatedAt: Date | number
 }
 
+export type getCommentLikeType = {
+  id: string,
+  commentId: string,
+  userId: string,
+  createdAt: Date | number,
+  updatedAt: Date | number
+}
+
 export type userRelationshipTypes = {
   id: string,
   followeeId: string,
@@ -60,14 +68,36 @@ export type getCommentsByPostIdReturnType = {
   postId: string,
   content: string,
   status: string,
-  createdAt: Date,
-  updatedAt: Date,
-  user: {}
+  createdAt: Date | number,
+  updatedAt: Date | number,
+  actor: {
+    userId: string,
+    name: string,
+    avatar: {
+      url: string,
+      type: string,
+      height: string,
+      width: string
+    }
+  },
+  replies: any[]
+};
+
+export type getCommentRepliesByCommentIdReturnType = {
+  id: string,
+  commentId: string,
+  userId: string,
+  content: string,
+  createdAt: Date | number,
+  updatedAt: Date | number,
+  actor: any,
+  replies: any[]
 };
 
 export type getCommentByIdResult = {
   id: string,
   userId: string,
+  commentId: string,
   postId: string,
   content: string,
   status: string,
@@ -118,7 +148,17 @@ export type commentType = {
   status: string,
   createdAt: Date | number,
   updatedAt: Date | number,
-  user: {}
+  actor: {
+    userId: string,
+    name: string,
+    avatar: {
+      url: string,
+      type: string,
+      height: string,
+      width: string
+    }
+  },
+  replies: any[]
 };
 
 export type postType = {

@@ -8,7 +8,7 @@ import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 
 import ResponseMutator from "../../utils/ResponseMutator";
-import type { timestampsType } from '../../modules/types';
+import type { getCommentRepliesByCommentIdReturnType, timestampsType } from '../../modules/types';
 
 import UserAccountFacade from "../../modules/user-service/facades/UserAccountFacade"; // External
 import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // External
@@ -23,7 +23,7 @@ class CommentController {
     private _userAccountFacade;
 
     constructor() {
-        this._commentFacade = new CommentFacade(new CommentRepository(), new PostRepository(), new CommentLikeRepository);
+        this._commentFacade = new CommentFacade(new CommentRepository(), new PostRepository(), new CommentLikeRepository(), new UserProfileRepository());
         this._utilResponseMutator = new ResponseMutator();
         this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
     }
@@ -96,21 +96,9 @@ class CommentController {
 
         try {
             const postId: string = req.params.postId;
-
             const comments = await this._commentFacade.getCommentsByPostId(postId);
 
-            for (const comment of comments.data) {
-                // Get the user profile data every post in the feed.
-                const userProfileData = await this._userAccountFacade.getUserProfile(comment.userId);
-                const { id, name, avatar } = userProfileData.data;
-                comment.user = {
-                    id,
-                    name,
-                    avatar
-                }
-            }
-
-            // Change the createdAt and updatedAt datetime format to unix timestamp
+            // Change the createdAt and updatedAt datetime format to unix timestamp for all comments/replies under the post
             // We do this as format convention for createdAt and updatedAt
             comments.data.forEach((comment) => {
                 const timestamps = {
@@ -121,6 +109,32 @@ class CommentController {
 
                 comment.createdAt = unixTimestamps.createdAt;
                 comment.updatedAt = unixTimestamps.updatedAt;
+
+                // replies
+                comment.replies.forEach((reply) => {
+                    const timestamps = {
+                        createdAt: reply.createdAt,
+                        updatedAt: reply.updatedAt
+                    }
+                    const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+
+                    reply.createdAt = unixTimestamps.createdAt;
+                    reply.updatedAt = unixTimestamps.updatedAt;
+
+                    // child replies
+                    reply.replies.forEach((childReply:getCommentRepliesByCommentIdReturnType) => {
+                        const timestamps = {
+                            createdAt: childReply.createdAt,
+                            updatedAt: childReply.updatedAt
+                        }
+                        const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+
+                        childReply.createdAt = unixTimestamps.createdAt;
+                        childReply.updatedAt = unixTimestamps.updatedAt;
+                    });
+
+                });
+
             });
 
             return res.status(comments.code).json({
@@ -152,7 +166,7 @@ class CommentController {
     }
 
 
-    async updateComment(req: Request, res: Response) {
+    async updateCommentOrReply(req: Request, res: Response) {
 
         const errors = validationResult(req).mapped();
 
@@ -166,7 +180,15 @@ class CommentController {
 
         if (errors.content) {
             return res.status(400).json({
-                message: errors.caption.msg,
+                message: errors.content.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.type) {
+            return res.status(400).json({
+                message: errors.type.msg,
                 error: 'Bad request error',
                 status: 400
             });
@@ -174,9 +196,9 @@ class CommentController {
 
         try {
             const id: string = req.params.id;
-            const content: string = req.body.content;
+            const { content, type } = req.body;
 
-            const result = await this._commentFacade.updateComment(id, req.body.userCognitoSub, content);
+            const result = await this._commentFacade.updateCommentOrReply(id, req.body.userCognitoSub, content, type);
 
             return res.status(result.code).json({
                 message: result.message,
@@ -209,7 +231,7 @@ class CommentController {
         }
     }
 
-    async removeComment(req: Request, res: Response) {
+    async removeCommentOrReply(req: Request, res: Response) {
 
         const errors = validationResult(req).mapped();
 
@@ -221,10 +243,19 @@ class CommentController {
             });
         }
 
+        if (errors.type) {
+            return res.status(400).json({
+                message: errors.type.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
         try {
             const id: string = req.params.id;
+            const type: string = req.body.type;
 
-            const result = await this._commentFacade.removeComment(id, req.body.userCognitoSub);
+            const result = await this._commentFacade.removeCommentOrReply(id, req.body.userCognitoSub, type);
 
             return res.status(result.code).json({
                 message: result.message,
@@ -256,7 +287,7 @@ class CommentController {
         }
     }
 
-    async likeOrUnlikeComment(req: Request, res: Response) {
+    async likeOrUnlikeCommentOrReply(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
         if (errors.commentId) {
@@ -282,6 +313,7 @@ class CommentController {
                 status: 400
             });
         }
+
         if (errors.classification) {
             return res.status(400).json({
                 message: errors.classification.msg,
@@ -290,14 +322,19 @@ class CommentController {
             });
         }
 
-        try {
-            const commentId: string = String(req.body.commentId);
-            const postId: string = String(req.body.postId);
-            const like: boolean = req.body.like;
-            const userCognitoSub: string = req.body.userCognitoSub;
-            const classification: string = req.body.classification;
+        if (errors.commentType) {
+            return res.status(400).json({
+                message: errors.commentType.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
 
-            const likeOrUnlikeCommentResult = await this._commentFacade.likeOrUnlikeComment(commentId, postId, userCognitoSub, like, classification);
+        try {
+            const { commentId, postId, like, classification, commentType } = req.body;
+            const userCognitoSub: string = req.body.userCognitoSub;
+
+            const likeOrUnlikeCommentResult = await this._commentFacade.likeOrUnlikeCommentOrReply(commentId, postId, userCognitoSub, like, classification, commentType);
 
             return res.status(likeOrUnlikeCommentResult.code).json({
                 message: likeOrUnlikeCommentResult.message,
@@ -333,6 +370,65 @@ class CommentController {
         }
     }
 
+    async replyToComment(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.commentId) {
+            return res.status(400).json({
+                message: errors.commentId.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.content) {
+            return res.status(400).json({
+                message: errors.content.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const commentId: string = String(req.params.commentId);
+            const content: string = req.body.content;
+            const userCognitoSub: string = req.body.userCognitoSub;
+
+            const replyToCommentResult = await this._commentFacade.replyToComment({ commentId, userCognitoSub, content});
+
+            return res.status(replyToCommentResult.code).json({
+                message: replyToCommentResult.message,
+                payload: replyToCommentResult.data,
+                status: replyToCommentResult.code
+            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(400).json({
+                    message: error.message,
+                    error: 'Bad Request error',
+                    status: 400
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
 }
 
 export default CommentController;
