@@ -5,7 +5,8 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn
+  DeleteDateColumn,
+  BeforeInsert
 } from "typeorm";
 
 @Entity({name: "post_shares"})
@@ -31,4 +32,10 @@ export class PostShares extends BaseEntity {
 
   @DeleteDateColumn({type: 'timestamptz', nullable: true})
   deleted_at?: Date;
+
+  @BeforeInsert()
+  updateDates() {
+      this.created_at = new Date();
+      this.updated_at = new Date();
+  }
 }

@@ -1,4 +1,4 @@
-import { Entity, Column, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from "typeorm";
+import { Entity, Column, BaseEntity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, BeforeInsert } from "typeorm";
 
 @Entity({name: "flagged_posts"})
 export class FlaggedPosts extends BaseEntity {
@@ -26,4 +26,10 @@ export class FlaggedPosts extends BaseEntity {
 
   @DeleteDateColumn({type: 'timestamptz', nullable: true})
   deleted_at?: Date;
+
+  @BeforeInsert()
+  updateDates() {
+      this.created_at = new Date();
+      this.updated_at = new Date();
+  }
 }
