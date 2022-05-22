@@ -6,6 +6,7 @@ interface IPostLikeRepository {
     create(userCognitoSub: string, postId: string, classification: string): PostLikes;
     getByIdAndUserId(postId: string, userCognitoSub: string): Promise<getPostLikeType | number>;
     deleteByIdAndUserId(postId: string, userCognitoSub: string): Promise<DeleteResult>;
+    getByUserId(userId: string): Promise<getPostLikeType[]>
 }
 
 export default IPostLikeRepository;

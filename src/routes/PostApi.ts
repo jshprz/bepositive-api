@@ -20,6 +20,7 @@ const contentController = new ContentController();
 
 router.post('/create', [authMiddleWare, ...createPostApiValidation], (req: Request, res: Response) => contentController.createPost(req, res));
 router.get('/user/posts/:userId?', authMiddleWare, (req: Request, res: Response) => contentController.getPostsByUser(req, res));
+router.get('/user/favorites/:userId?', authMiddleWare, (req: Request, res: Response) => contentController.getFavoritePostsByUser(req, res));
 router.get('/get/:id', [authMiddleWare, ...getPostByIdApiValidation], (req: Request, res: Response) => contentController.getPostById(req, res));
 router.patch('/update/:id', [authMiddleWare, ...updatePostApiValidation], (req: Request, res: Response) => contentController.updatePost(req, res));
 router.patch('/remove/:id', [authMiddleWare, ...removePostApiValidation], (req: Request, res: Response) => contentController.removePost(req, res));
