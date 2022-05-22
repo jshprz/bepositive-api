@@ -11,7 +11,7 @@ import IUserRelationshipRepository from "../../user-service/infras/repositories/
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type {getHashtagType, postType, sharedPostType} from '../../types';
+import type {feedRawType, postType, sharedPostType} from '../../types';
 
 import IUserProfileRepository from "../../user-service/infras/repositories/IUserProfileRepository"; // External
 
@@ -115,7 +115,7 @@ class PostFacade {
 
                     // After creating the post we distribute it to the followers of the user who created it.
                     for (const userRelationship of userRelationships) {
-                        await this._feedRepository.createFeedForRegularPost(userRelationship.followerId, String(post.id))
+                        await this._feedRepository.create(userRelationship.followerId, String(post.id), true)
                             .save()
                             .catch((error: QueryFailedError) => {
                                 this._log.error({
@@ -526,6 +526,26 @@ class PostFacade {
                 });
             }
 
+            const getFeedsByPostIdResult: feedRawType[] | void = await this._feedRepository.getFeedsByPostId(id).catch((error) => {
+                this._log.error({
+                    function: 'removePost()',
+                    message: error.toString(),
+                    payload: {
+                        userId,
+                        id
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (getFeedsByPostIdResult) {
+                await this._toDeleteFeedsByPostId(getFeedsByPostIdResult);
+            }
+
             await this._postRepository.softDelete(id).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'removePost()',
@@ -547,6 +567,21 @@ class PostFacade {
                 data: {},
                 code: 200
             });
+        });
+    }
+
+    /**
+     * To delete the feed related to a post.
+     * @param feeds: feedRawType[]
+     * @returns Promise<boolean>
+     */
+    private _toDeleteFeedsByPostId(feeds: feedRawType[]): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            for (const feed of feeds) {
+                await this._feedRepository.softDeleteFeedById(feed.id);
+            }
+
+            return resolve(true);
         });
     }
 

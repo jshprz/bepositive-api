@@ -102,7 +102,7 @@ class PostShareFacade {
 
                 // After creating the post we distribute it to the followers of the user who created it.
                 for (const userRelationship of userRelationships) {
-                    await this._feedRepository.createFeedForSharedPost(userRelationship.followerId, String(sharedPost.id))
+                    await this._feedRepository.create(userRelationship.followerId, String(sharedPost.id), false)
                         .save()
                         .catch((error: QueryFailedError) => {
                             this._log.error({

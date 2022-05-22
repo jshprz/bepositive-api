@@ -1,49 +1,30 @@
-import {getRepository, QueryFailedError, getManager} from 'typeorm';
-import { UserFeedPost } from "../../../../database/postgresql/models/UserFeedPost";
+import { getRepository, QueryFailedError } from 'typeorm';
+import { UserFeeds } from "../../../../database/postgresql/models/UserFeeds";
 import { Posts } from "../../../../database/postgresql/models/Posts";
 import IFeedRepository from "./IFeedRepository";
-import type { feedTypes } from '../../../types';
-import { UserFeedSharedPost } from "../../../../database/postgresql/models/UserFeedSharedPost";
+import type { feedTypes, feedRawType } from '../../../types';
 
 class FeedRepository implements IFeedRepository {
-    private readonly _modelFeedRegularPost;
-    private readonly _modelFeedSharedPost;
+    private readonly _model;
 
     constructor() {
-        this._modelFeedRegularPost = new UserFeedPost();
-        this._modelFeedSharedPost = new UserFeedSharedPost();
+        this._model = new UserFeeds();
     }
 
     /**
      * Creates a follower's feed for regular post.
      * @param followeeId: string
      * @param postId: string
-     * @returns UserFeedPost
+     * @returns UserFeeds
      */
-    createFeedForRegularPost(followeeId: string, postId: string): UserFeedPost {
+    create(followeeId: string, postId: string, isRegularPost: boolean = false): UserFeeds {
 
-        this._modelFeedRegularPost.id = undefined; // prevent overwriting existing comments from the same user
-        this._modelFeedRegularPost.user_id = followeeId;
-        this._modelFeedRegularPost.post_id = postId;
-        this._modelFeedRegularPost.classification = 'REGULAR_POST';
+        this._model.id = undefined; // prevent overwriting existing comments from the same user
+        this._model.user_id = followeeId;
+        this._model.post_id = postId;
+        this._model.classification = (isRegularPost)? 'REGULAR_POST' : 'SHARED_POST';
 
-        return this._modelFeedRegularPost;
-    }
-
-    /**
-     * Creates a follower's feed for shared post.
-     * @param followeeId: string
-     * @param sharedPostId: string
-     * @returns UserFeedSharedPost
-     */
-    createFeedForSharedPost(followeeId: string, sharedPostId: string): UserFeedSharedPost {
-
-        this._modelFeedSharedPost.id = undefined; // prevent overwriting existing comments from the same user
-        this._modelFeedSharedPost.user_id = followeeId;
-        this._modelFeedSharedPost.shared_post_id = sharedPostId;
-        this._modelFeedSharedPost.classification = 'SHARED_POST';
-
-        return this._modelFeedSharedPost;
+        return this._model;
     }
 
     /**
@@ -54,26 +35,17 @@ class FeedRepository implements IFeedRepository {
      */
     getFeed(pagination: {page: number, size: number}, userCognitoSub: string): Promise<feedTypes[]> {
         return new Promise(async (resolve, reject) => {
-            const {page, size} = pagination;
 
-            const feeds: {
-                id: string,
-                user_id: string,
-                post_id: string,
-                classification: string,
-                created_at: Date | number,
-                updated_at: Date | number,
-                deleted_at: Date | number
-            }[] = await getManager()
-                .query(`
-                    SELECT * FROM user_feed_post
-                    WHERE user_id = '${userCognitoSub}'
-                    UNION
-                    SELECT * FROM user_feed_shared_post
-                    WHERE user_id = '${userCognitoSub}'
-                    ORDER BY created_at DESC
-                    OFFSET ${(page - 1) * size} ROWS FETCH NEXT ${size} ROWS ONLY
-                    `)
+            const feeds: UserFeeds[] | void = await getRepository(UserFeeds)
+                .createQueryBuilder('user_feeds')
+                .select('user_feeds')
+                .where('user_id = :userId', { userId: userCognitoSub })
+                .orderBy({
+                    'created_at': 'DESC'
+                })
+                .take(pagination.size)
+                .skip(pagination.size * (pagination.page - 1))
+                .getMany()
                 .catch((error: QueryFailedError) => {
                     return reject(error);
                 });
@@ -249,6 +221,63 @@ class FeedRepository implements IFeedRepository {
             } else {
                 return reject('Invalid data type for feed.');
             }
+        });
+    }
+
+    /**
+     * Get feed by Post ID.
+     * @param postId
+     * @returns Promise<feedRawType[]>
+     */
+    getFeedsByPostId(postId: string): Promise<feedRawType[]> {
+
+        return new Promise(async (resolve, reject) => {
+
+            const feeds = await getRepository(UserFeeds)
+                .createQueryBuilder('user_feeds')
+                .select('user_feeds')
+                .where('post_id = :postId', { postId })
+                .getMany()
+                .catch((error) => {
+                    return reject(error);
+                });
+
+            if (feeds) {
+                const newFeeds = feeds.map((feed) => {
+                    return {
+                        id: feed.id || '',
+                        userId: feed.user_id || '',
+                        postId: feed.post_id || '',
+                        classification: feed.classification || '',
+                        createdAt: feed.created_at || 0,
+                        updatedAt: feed.updated_at || 0
+                    }
+                });
+
+                return resolve(newFeeds);
+            } else {
+                return reject(`Unable to retrieve feed: ${feeds}`);
+            }
+        });
+    }
+
+    /**
+     * Soft delete a feed by its ID.
+     * @param id: string
+     * @returns Promise<boolean>
+     */
+    softDeleteFeedById(id: string): Promise<boolean> {
+
+        return new Promise(async (resolve, reject) => {
+            await getRepository(UserFeeds)
+                .createQueryBuilder('user_feeds')
+                .where("id = :id", { id })
+                .softDelete()
+                .execute()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+            return resolve(true);
         });
     }
 }

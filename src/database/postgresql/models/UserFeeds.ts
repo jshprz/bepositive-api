@@ -9,8 +9,8 @@ import {
   BeforeInsert
 } from "typeorm";
 
-@Entity({name: "user_feed_post"})
-export class UserFeedPost extends BaseEntity {
+@Entity({name: "user_feeds"})
+export class UserFeeds extends BaseEntity {
 
   @PrimaryGeneratedColumn('uuid')
   id?: string;
@@ -21,7 +21,7 @@ export class UserFeedPost extends BaseEntity {
   @Column('uuid', {nullable: false})
   post_id?: string;
 
-  @Column({type: "varchar", length: 50, default: "REGULAR_POST"})
+  @Column({type: "varchar", length: 50, nullable: false})
   classification?: string;
 
   @CreateDateColumn({type: 'timestamptz'})
