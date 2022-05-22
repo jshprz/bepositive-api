@@ -62,41 +62,41 @@ class FeedController {
                 size: Number(req.query.size)
             };
 
-            const feed = await this._feedFacade.getFeed(userCognitoSub, pagination);
+            const getFeedResult = await this._feedFacade.getFeed(userCognitoSub, pagination);
 
-            for (const f of feed.data) {
+            for (const feed of getFeedResult.data) {
 
-                if (f) {
+                if (feed) {
                     const timestamps = {
-                        createdAt: f.content.createdAt,
-                        updatedAt: f.content.updatedAt
+                        createdAt: feed.content.createdAt,
+                        updatedAt: feed.content.updatedAt
                     }
 
                     // Change the createdAt and updatedAt datetime format to unix timestamp
                     // We do this as format convention for createdAt and updatedAt
                     const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
-                    f.content.createdAt = unixTimestamps.createdAt;
-                    f.content.updatedAt = unixTimestamps.updatedAt;
+                    feed.content.createdAt = unixTimestamps.createdAt;
+                    feed.content.updatedAt = unixTimestamps.updatedAt;
 
-                    if (f.content.originalPost) {
+                    if (feed.content.originalPost) {
                         const timestamps = {
-                            createdAt: f.content.originalPost.content.createdAt,
-                            updatedAt: f.content.originalPost.content.updatedAt
+                            createdAt: feed.content.originalPost.content.createdAt,
+                            updatedAt: feed.content.originalPost.content.updatedAt
                         }
 
                         // Change the createdAt and updatedAt datetime format to unix timestamp
                         // We do this as format convention for createdAt and updatedAt
                         const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
-                        f.content.originalPost.content.createdAt = unixTimestamps.createdAt;
-                        f.content.originalPost.content.updatedAt = unixTimestamps.updatedAt;
+                        feed.content.originalPost.content.createdAt = unixTimestamps.createdAt;
+                        feed.content.originalPost.content.updatedAt = unixTimestamps.updatedAt;
                     }
                 }
             }
 
-            return res.status(feed.code).json({
-                message: feed.message,
-                payload: feed.data,
-                status: feed.code
+            return res.status(getFeedResult.code).json({
+                message: getFeedResult.message,
+                payload: getFeedResult.data,
+                status: getFeedResult.code
             });
         } catch (error: any) {
             if (error.code && error.code === 500) {
@@ -156,6 +156,35 @@ class FeedController {
 
             const popularityThreshold = 1;
             const trendingFeed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold, userCognitoSub);
+
+            for (const feed of trendingFeed.data) {
+
+                if (feed) {
+                    const timestamps = {
+                        createdAt: feed.content.createdAt,
+                        updatedAt: feed.content.updatedAt
+                    }
+
+                    // Change the createdAt and updatedAt datetime format to unix timestamp
+                    // We do this as format convention for createdAt and updatedAt
+                    const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+                    feed.content.createdAt = unixTimestamps.createdAt;
+                    feed.content.updatedAt = unixTimestamps.updatedAt;
+
+                    if (feed.content.originalPost) {
+                        const timestamps = {
+                            createdAt: feed.content.originalPost.content.createdAt,
+                            updatedAt: feed.content.originalPost.content.updatedAt
+                        }
+
+                        // Change the createdAt and updatedAt datetime format to unix timestamp
+                        // We do this as format convention for createdAt and updatedAt
+                        const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+                        feed.content.originalPost.content.createdAt = unixTimestamps.createdAt;
+                        feed.content.originalPost.content.updatedAt = unixTimestamps.updatedAt;
+                    }
+                }
+            }
 
             return res.status(trendingFeed.code).json({
                 message: trendingFeed.message,
