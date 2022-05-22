@@ -11,7 +11,7 @@ import IUserRelationshipRepository from "../../user-service/infras/repositories/
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type {feedRawType, postType, sharedPostType} from '../../types';
+import type {feedRawType, getPostLikeType, postType, sharedPostType} from '../../types';
 
 import IUserProfileRepository from "../../user-service/infras/repositories/IUserProfileRepository"; // External
 
@@ -334,6 +334,84 @@ class PostFacade {
                     code: 500
                 });
             }
+        });
+    }
+
+    /**
+     * Get the posts that have liked by user.
+     * @param userId
+     * Promise<{
+     *         message: string,
+     *         data: postType[],
+     *         code: number
+     *     }>
+     */
+    getFavoritePostsByUserId(userId: string): Promise<{
+        message: string,
+        data: postType[],
+        code: number
+    }>  {
+
+        const posts: postType[] = [];
+
+        return new Promise(async (resolve, reject) => {
+            const likedPosts: getPostLikeType[] | void = await this._postLikeRepository.getByUserId(userId).catch((error) => {
+                this._log.error({
+                    function: 'getFavoritePostsByUserId()',
+                    message: error.toString(),
+                    payload: { userId }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (likedPosts) {
+                for (const likedPost of likedPosts) {
+                    const post: postType | void = await this._postRepository.getPostById(likedPost.postId).catch((error) => {});
+
+                    if (post && post.content.postId && post.content.postId !== '') {
+                        if (post.content.googleMapsPlaceId) {
+                            // Retrieve post location details
+                            const place = await this._googleapis.placeDetails({
+                                params: {
+                                    place_id: post.content.googleMapsPlaceId,
+                                    key: `${process.env.GOOGLE_MAPS_API_KEY}`
+                                }
+                            }).catch((error) => {
+                                throw error.stack;
+                            });
+                            post.content.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
+                        }
+
+                        if (post.content.attachments) {
+                            post.content.attachments.forEach((file) => {
+                                file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                            });
+                        }
+
+                        // Get the user of a post.
+                        if (post.actor) {
+                            const userProfileData = await this._userProfileRepository.getUserProfileByUserId(post.actor.userId).catch((error) => {
+                                throw error;
+                            });
+
+                            post.actor.name = userProfileData.name || '';
+                            post.actor.avatar.url = userProfileData.avatar || '';
+                        }
+
+                        posts.push(post);
+                    }
+                }
+            }
+
+            return resolve({
+                message: 'Favorite posts was successfully retrieved.',
+                data: posts,
+                code: 200
+            });
         });
     }
 

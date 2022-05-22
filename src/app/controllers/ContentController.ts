@@ -209,6 +209,55 @@ class ContentController {
         }
     }
 
+    async getFavoritePostsByUser(req: Request, res: Response) {
+
+        try {
+            // We'll first consider if a userId param is provided, which means that our intention is to retrieve the profile of another user.
+            // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
+            const userId: string = req.params.userId || req.body.userCognitoSub;
+            const getFavoritePostsByUserIdResult = await this._postFacade.getFavoritePostsByUserId(userId);
+
+            // Change the createdAt and updatedAt datetime format to unix timestamp
+            // We do this as format convention for createdAt and updatedAt
+            getFavoritePostsByUserIdResult.data.forEach((post) => {
+                const timestamps = {
+                    createdAt: post.content.createdAt,
+                    updatedAt: post.content.updatedAt
+                }
+                const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+
+                post.content.createdAt = unixTimestamps.createdAt;
+                post.content.updatedAt = unixTimestamps.updatedAt;
+            });
+
+            return res.status(getFavoritePostsByUserIdResult.code).json({
+                message: getFavoritePostsByUserIdResult.message,
+                payload: getFavoritePostsByUserIdResult.data,
+                status: getFavoritePostsByUserIdResult.code
+            });
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
     async getPostById(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 

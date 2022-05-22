@@ -59,6 +59,41 @@ class PostLikeRepository implements IPostLikeRepository {
         });
     }
 
+    /**
+     * Get PostLike by User ID.
+     * @param userId: string
+     * @returns Promise<getPostLikeType[]>
+     */
+    getByUserId(userId: string): Promise<getPostLikeType[]> {
+
+        return  new Promise(async (resolve, reject) => {
+            const postLike = await getRepository(PostLikes)
+                .createQueryBuilder('post_likes')
+                .select('post_likes')
+                .where('user_id = :userId', { userId })
+                .getMany()
+                .catch((error) => {
+                    return reject(error);
+                });
+
+            if (postLike) {
+                const newPostLike = postLike.map((item) => {
+                    return {
+                        id: item.id || '',
+                        postId: item.post_id || '',
+                        userId: item.user_id || '',
+                        createdAt: item.created_at || 0,
+                        updatedAt: item.updated_at || 0
+                    }
+                });
+
+                return resolve(newPostLike);
+            } else {
+                return reject(`Unable to retrieve postlike: ${postLike}`);
+            }
+        });
+    }
+
 
     /**
      * Deletes post_like record in the database.
