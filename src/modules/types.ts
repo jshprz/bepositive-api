@@ -259,3 +259,12 @@ export type feedTypes = {
     }
   }
 } | null;
+
+export type feedRawType = {
+  id: string,
+  userId: string,
+  postId: string,
+  classification: string,
+  createdAt: Date | number
+  updatedAt: Date | number
+}
