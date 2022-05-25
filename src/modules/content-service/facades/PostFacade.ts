@@ -758,6 +758,18 @@ class PostFacade {
                         userCognitoSub
                     }
                 });
+
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Post not found.',
+                        code: 404
+                    });
+                }
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
             });
 
             if (like && postLiked) {
