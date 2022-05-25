@@ -580,6 +580,18 @@ class CommentFacade {
                         userCognitoSub
                     }
                 });
+
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: commentType == 'comment' ? 'Comment not found.' : 'Comment reply not found.',
+                        code: 404
+                    });
+                }
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
             });
 
             if (like && commentLiked) {
