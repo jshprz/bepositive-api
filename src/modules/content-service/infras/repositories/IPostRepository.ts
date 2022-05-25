@@ -4,7 +4,7 @@ import { FlaggedPosts } from "../../../../database/postgresql/models/FlaggedPost
 import type { postType, sharedPostType } from "../../../types";
 
 interface IPostRepository {
-    create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Posts;
+    create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googleMapsPlaceId: string }): Posts;
     getPostsByUserCognitoSub(userCognitoSub: string): Promise<postType[]>;
     getPostById(id: string): Promise<postType>;
     getSharedPostById(id: string): Promise<sharedPostType>;

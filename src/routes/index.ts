@@ -5,6 +5,7 @@ import UserFeedApi from './UserFeedApi';
 import LocationApi from './LocationApi';
 import CommentApi from './CommentApi';
 import SearchApi from './SearchApi';
+import AdvertisementApi from './AdvertisementApi';
 
 export const apis = {
   UserApi,
@@ -13,5 +14,6 @@ export const apis = {
   UserFeedApi,
   LocationApi,
   CommentApi,
-  SearchApi
+  SearchApi,
+  AdvertisementApi
 }

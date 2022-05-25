@@ -63,9 +63,9 @@ class ContentController {
             });
         }
 
-        if (errors.googlemapsPlaceId) {
+        if (errors.googleMapsPlaceId) {
             return res.status(400).json({
-                message: errors.google_maps_place_id.msg,
+                message: errors.googleMapsPlaceId.msg,
                 error: 'Bad request error',
                 status: 400
             });
@@ -73,7 +73,7 @@ class ContentController {
 
         try {
             const userCognitoSub: string = req.body.userCognitoSub;
-            const { caption, files, googlemapsPlaceId } = req.body;
+            const { caption, files, googleMapsPlaceId } = req.body;
 
             const hashtagNames: string[] = this._getHashtagsInCaption(caption);
 
@@ -87,7 +87,7 @@ class ContentController {
                 });
             }
 
-            const createPostResult = await this._postFacade.createPost({userCognitoSub, caption, files, googlemapsPlaceId});
+            const createPostResult = await this._postFacade.createPost({userCognitoSub, caption, files, googleMapsPlaceId});
 
             await this._postFacade.createPostsHashtags(createdHashtagIds.data, createPostResult.data.postId);
 

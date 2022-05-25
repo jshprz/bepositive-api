@@ -3,9 +3,10 @@ import FeedFacade from "../../modules/feed-service/facades/FeedFacade";
 
 import {Request, Response} from "express";
 import { validationResult } from "express-validator";
+import Logger from '../../config/Logger';
 
 import ResponseMutator from "../../utils/ResponseMutator";
-import type { timestampsType } from '../../modules/types';
+import type { advertisementFeedTypes, feedTypes, timestampsType } from '../../modules/types';
 
 import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository"; // External
 import PostLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository"; // External
@@ -15,7 +16,10 @@ import PostShareRepository from "../../modules/content-service/infras/repositori
 import UserAccountFacade from "../../modules/user-service/facades/UserAccountFacade"; // External
 import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // External
 import AwsS3 from "../../modules/user-service/infras/aws/AwsS3"; // External
+import AdAwsS3 from "../../modules/advertisement-service/infras/aws/AwsS3"; // External
 import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
+import AdvertisementRepository from "../../modules/advertisement-service/infras/repositories/AdvertisementRepository";
+import AdvertisementFacade from "../../modules/advertisement-service/facades/AdvertisementFacade";
 
 
 class FeedController {
@@ -23,6 +27,8 @@ class FeedController {
     private _feedFacade;
     private _utilResponseMutator;
     private _userAccountFacade;
+    private _advertisementFacade;
+    private _log;
 
     constructor() {
         this._feedFacade = new FeedFacade(
@@ -30,10 +36,14 @@ class FeedController {
             new PostLikeRepository(),
             new UserProfileRepository(),
             new PostRepository(),
-            new PostShareRepository()
+            new PostShareRepository(),
+            new AdvertisementRepository()
         );
         this._utilResponseMutator = new ResponseMutator();
         this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
+        this._advertisementFacade = new AdvertisementFacade(new AdAwsS3(), new AdvertisementRepository(), new PostLikeRepository());
+        this._log = Logger.createLogger('FeedController.ts');
+
     }
 
     async getFeed(req: Request, res: Response) {
@@ -63,6 +73,7 @@ class FeedController {
             };
 
             const getFeedResult = await this._feedFacade.getFeed(userCognitoSub, pagination);
+            const adsforFeed= await this._feedFacade.getAdsforFeed(userCognitoSub);
 
             for (const feed of getFeedResult.data) {
 
@@ -93,11 +104,30 @@ class FeedController {
                 }
             }
 
+            for (const ads of adsforFeed.data) {
+
+                if (ads) {
+                    const timestamps = {
+                        createdAt: ads.content.createdAt,
+                        updatedAt: ads.content.updatedAt
+                    }
+
+                    // Change the createdAt and updatedAt datetime format to unix timestamp
+                    // We do this as format convention for createdAt and updatedAt
+                    const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+                    ads.content.createdAt = unixTimestamps.createdAt;
+                    ads.content.updatedAt = unixTimestamps.updatedAt;
+                }
+            }
+
+            const arrangeFeedResult = await this._feedFacade.combinePostAndSharedFeedWithAdvertisementFeed(getFeedResult.data, adsforFeed.data);
+
             return res.status(getFeedResult.code).json({
                 message: getFeedResult.message,
-                payload: getFeedResult.data,
+                payload: adsforFeed.data.length > 0 ? arrangeFeedResult.data : getFeedResult.data,
                 status: getFeedResult.code
             });
+
         } catch (error: any) {
             if (error.code && error.code === 500) {
                 return res.status(500).json({
