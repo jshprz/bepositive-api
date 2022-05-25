@@ -24,6 +24,7 @@ const main = async () => {
   app.use('/api/v1/location', apis.LocationApi);
   app.use('/api/v1/comment', apis.CommentApi);
   app.use('/api/v1/search', apis.SearchApi);
+  app.use('/api/v1/advertisement', apis.AdvertisementApi);
 
   app.listen(port, () => {
     logger.info({

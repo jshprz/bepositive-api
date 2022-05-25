@@ -7,9 +7,10 @@ import IUserProfileRepository from "../../user-service/infras/repositories/IUser
 import IPostLikeRepository from "../../content-service/infras/repositories/IPostLikeRepository"; // External
 import IPostRepository from "../../content-service/infras/repositories/IPostRepository"; // External
 import IPostShareRepository from "../../content-service/infras/repositories/IPostShareRepository"; // External
+import IAdvertisementRepository from "../../advertisement-service/infras/repositories/IAdvertisementRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type { feedTypes, postType, getPostLikeType } from '../../types';
+import type { feedTypes, postType, getPostLikeType, advertisementFeedTypes, advertisementType } from '../../types';
 
 class FeedFacade {
     private _log;
@@ -20,7 +21,8 @@ class FeedFacade {
         private _postLikeRepository: IPostLikeRepository,
         private _userProfileRepository: IUserProfileRepository,
         private _postRepository: IPostRepository,
-        private _postShareRepository: IPostShareRepository
+        private _postShareRepository: IPostShareRepository,
+        private _advertisementRepository: IAdvertisementRepository
     ) {
         this._log = Logger.createLogger('FeedFacade.ts');
         this._googleapis = new Client({});
@@ -216,6 +218,88 @@ class FeedFacade {
         });
     }
 
+     /**
+     * Build the ads to be injected in the feed (append ad data, append ad location details, ad media files complete URL, ad like status, and ad user information).
+     * @param ad: advertisementFeedTypes
+     * @returns Promise<advertisementFeedTypes>
+     */
+      private _adsforFeedBuilder(ad: advertisementType, loggedInUserId: string = ''): Promise<advertisementFeedTypes> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const newAd: advertisementFeedTypes = {
+                    content: {
+                        classification: "ADVERTISEMENT_POST",
+                        advertisementId: ad.content.advertisementId,
+                        caption: ad.content.caption,
+                        googleMapsPlaceId: ad.content.googleMapsPlaceId,
+                        locationDetails: ad.content.locationDetails,
+                        link: ad.content.link,
+                        attachments: ad.content.attachments,
+                        originalPost: null,
+                        isLiked: false,
+                        isSponsored: ad.content.isSponsored,
+                        createdAt: ad.content.createdAt,
+                        updatedAt: ad.content.updatedAt,
+                    },
+                    actor: {
+                        userId: ad.actor.userId,
+                        name: ad.actor.name,
+                        avatar: ad.actor.avatar
+                    }
+                }
+
+                // To provide the complete URL of the post attachments from S3 bucket.
+                if (newAd.content.attachments) {
+                    newAd.content.attachments.forEach((file) => {
+                        file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                    });
+                }
+
+                // To set the post like status - if the logged-in user liked the post or not.
+                if (newAd.content.isLiked === false || newAd.content.isLiked === true) {
+                    const getPostLikeByUserIdResult: number | getPostLikeType = await this._postLikeRepository.getByIdAndUserId(newAd.content.advertisementId, loggedInUserId).catch((error) => {
+                        throw error;
+                    });
+
+                    if (typeof getPostLikeByUserIdResult !== 'number') {
+                        // BEP-85: uncomment this when advertisement accounts have finally been implemented
+                        // if (getPostLikeByUserIdResult.userId === newAd.actor.userId) {
+                        //     newAd.content.isLiked = true;
+                        // } else {
+                        //     newAd.content.isLiked = false;
+                        // }
+                        newAd.content.isLiked = true;
+                    }
+                }
+
+                // Retrieve original post location details.
+                if (newAd.content.googleMapsPlaceId) {
+                    const place = await this._googleapis.placeDetails({
+                        params: {
+                            place_id: newAd.content.googleMapsPlaceId,
+                            key: `${process.env.GOOGLE_MAPS_API_KEY}`
+                        }
+                    }).catch((error) => {
+                        throw error.stack;
+                    });
+                    newAd.content.locationDetails = `${place.data.result.name}, ${place.data.result.vicinity}`;
+                }
+
+                return resolve(newAd);
+            } catch(error: any) {
+                this._log.error({
+                    function: '_adsforFeedBuilder()',
+                    message: (error.includes('NOT_FOUND'))? 'Advertisement not found' : `${error}`,
+                    payload: {
+                        ad,
+                        loggedInUserId
+                    }
+                });
+                return reject(error);
+            }
+        });
+    }
+
     /**
      * Build the feed (append posts data, append post location details, post media files complete URL, post like status, and post user information).
      * @param feed: feedTypes
@@ -382,6 +466,162 @@ class FeedFacade {
                 return reject(error);
             }
         });
+    }
+
+    /**
+     * Get the ads for feed.
+     * @param userCognitoSub: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: advertisementFeedTypes[],
+     *         code: number
+     *     }>
+     */
+     getAdsforFeed(userCognitoSub: string): Promise<{
+        message: string,
+        data: advertisementFeedTypes[],
+        code: number
+    }> {
+
+        return new Promise(async (resolve, reject) => {
+            const ads = await this._advertisementRepository.getAllAdvertisements().catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'getAllAdvertisements()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {}
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (Array.isArray(ads)) {
+                const adsforFeedPromises: Promise<advertisementFeedTypes>[] = [];
+
+                ads.forEach((ad) => {
+                    if (ad) {
+                        adsforFeedPromises.push(this._adsforFeedBuilder(ad, userCognitoSub));
+                    }
+                });
+
+                Promise.allSettled(adsforFeedPromises).then((results) => {
+
+                    const tempAdData = {
+                        content: {
+                            classification: '',
+                            advertisementId: '',
+                            caption: '',
+                            googleMapsPlaceId: '',
+                            locationDetails: '',
+                            link: '',
+                            viewCount: 0,
+                            attachments: [{
+                                key: '',
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }],
+                            originalPost: null,
+                            isLiked: false,
+                            isSponsored: false,
+                            createdAt: 0,
+                            updatedAt: 0,
+                        },
+                        actor: {
+                            userId: '',
+                            name: '',
+                            avatar: {
+                                url: '',
+                                type: '',
+                                height: '',
+                                width: ''
+                            }
+                        }
+                    }
+
+                    const resultsMap = results.map(r => r.status !== 'rejected'? r.value : tempAdData);
+
+                    return resolve({
+                        message: 'Ads successfully retrieved.',
+                        data: resultsMap.filter(r => r !== null && r.content.advertisementId !== ''),
+                        code: 200
+                    });
+                });
+            } else {
+                return reject({
+                    message: 'Invalid type for adsforFeed.',
+                    code: 500
+                });
+            }
+        });
+    }
+
+    /**
+     * Get the ads for feed.
+     * @param feed: feedTypes[]
+     * @param adsFeed: advertisementFeedTypes[]
+     * @returns Promise<{
+     *         message: string,
+     *         data: (feedTypes|advertisementFeedTypes)[],
+     *         code: number
+     *     }>
+     */
+    combinePostAndSharedFeedWithAdvertisementFeed(feed: feedTypes[], adsFeed: advertisementFeedTypes[]): Promise<{
+        message: string,
+        data: (feedTypes|advertisementFeedTypes)[],
+        code: number
+    }> {
+
+        // insert advertisement for every 5 posts displayed
+        // once an ad is injected to the feed, increase the view count by 1 to ensure all ads are displayed as equally as possible
+        const newFeed: (feedTypes|advertisementFeedTypes)[] = [];
+        const index = 5; // number of posts before inserting an ad
+
+        return new Promise(async (resolve) => {
+
+             if (feed && feed.length > 0 && adsFeed && adsFeed.length > 0) {
+                 let postCount = 0;
+
+                 for (let i = 0; i < feed.length; i++) {
+
+                     postCount += 1;
+                     newFeed.push(feed[i]);
+
+                     if (postCount === index) {
+
+                         const adIndex = (Math.floor((i)/index));
+
+                         // for cases when advertisements are not enough in numbers
+                         if (adsFeed[adIndex] != undefined) {
+                             const updateAdViewCountResult = await this._advertisementRepository.updateAdViewCount(adsFeed[adIndex]!.content.advertisementId).catch((error: QueryFailedError) => {
+                                 this._log.error({
+                                     function: 'arrangeFeed() - updateAdViewCount',
+                                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                                     payload: {
+                                         feed,
+                                         adsFeed
+                                     }
+                                 });
+                             });
+
+                             if (updateAdViewCountResult) {
+                                 newFeed.push(adsFeed[adIndex]);
+                                 postCount = 0;
+                             }
+                         }
+                     }
+                 }
+             }
+
+             return resolve({
+                 message: 'Feed successfully retrieved.',
+                 data: newFeed,
+                 code: 200
+             });
+         });
     }
 }
 

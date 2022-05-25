@@ -19,14 +19,14 @@ class PostRepository implements IPostRepository {
      * @param item: {userCognitoSub: string, caption: string, s3Files: {key: string, type: string}[] }
      * @returns instance of Posts
      */
-    create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Posts {
+    create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googleMapsPlaceId: string }): Posts {
 
         this._model.id = undefined; // prevent overwriting existing posts from the same user
         this._model.user_id = item.userCognitoSub;
         this._model.caption = item.caption;
         this._model.status = 'active';
         this._model.view_count = 0;
-        this._model.google_maps_place_id = item.googlemapsPlaceId;
+        this._model.google_maps_place_id = item.googleMapsPlaceId;
         this._model.s3_files = item.files;
 
         return this._model;

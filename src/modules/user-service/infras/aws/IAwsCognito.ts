@@ -1,7 +1,7 @@
 import { CognitoUserPool, CognitoUserAttribute, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
 import AWS from "aws-sdk";
 
-interface  IAwsCognito {
+interface IAwsCognito {
     userPool(): CognitoUserPool;
     cognitoUserAttributeList(email: string, name: string): CognitoUserAttribute[];
     getCognitoUser(email: string): CognitoUser;

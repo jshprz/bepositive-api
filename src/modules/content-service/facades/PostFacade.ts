@@ -36,14 +36,14 @@ class PostFacade {
 
     /**
      * Creates a post.
-     * @param item: { userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }
+     * @param item: { userCognitoSub: string, caption: string, files: {key: string, type: string}[], googleMapsPlaceId: string }
      * @returns Promise<{
      *         message: string,
      *         data: string[],
      *         code: number
      *     }>
      */
-    createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googlemapsPlaceId: string }): Promise<{
+    createPost(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googleMapsPlaceId: string }): Promise<{
         message: string,
         data: {
             postId: string,

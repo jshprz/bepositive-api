@@ -77,7 +77,7 @@ export const createPostApiValidation = [
       return Promise.reject(errorMessage);
     }
   }),
-  check('google_maps_place_id').isString().withMessage('google_maps_place_id should be type of string.')
+  check('googleMapsPlaceId').isString().withMessage('googleMapsPlaceId should be type of string.')
 ];
 
 export const likeOrUnlikePostApiValidation = [
