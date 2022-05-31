@@ -214,7 +214,7 @@ class RegistrationFacade {
             return resolve({
                 message: 'user profile data was created successfully',
                 data: {},
-                code: 201
+                code: 200
             });
         });
     }
