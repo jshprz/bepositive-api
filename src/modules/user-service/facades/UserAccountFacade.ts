@@ -58,33 +58,11 @@ class UserAccountFacade {
             });
 
             if (userProfileData) {
-                const newUserProfileData = {
-                    id: (userProfileData.id)? userProfileData.id : '',
-                    userId: (userProfileData.user_id)? userProfileData.user_id : '',
-                    email: (userProfileData.email)? userProfileData.email : '',
-                    name: (userProfileData.name)? userProfileData.name : '',
-                    avatar: (userProfileData.avatar)? userProfileData.avatar : '',
-                    gender: (userProfileData.gender)? userProfileData.gender : '',
-                    profileTitle: (userProfileData.profile_title)? userProfileData.profile_title : '',
-                    profileDescription: (userProfileData.profile_description)? userProfileData.profile_description : '',
-                    dateOfBirth: (userProfileData.date_of_birth)? userProfileData.date_of_birth : '',
-                    website: (userProfileData.website)? userProfileData.website : '',
-                    city: (userProfileData.city)? userProfileData.city : '',
-                    state: (userProfileData.state)? userProfileData.state : '',
-                    zipcode: (userProfileData.zipcode)? userProfileData.zipcode : '',
-                    country: (userProfileData.country)? userProfileData.country : '',
-                    phoneNumber: (userProfileData.phone_number)? userProfileData.phone_number : '',
-                    isPublic: (userProfileData.is_public)? userProfileData.is_public : false,
-                    createdAt: (userProfileData.created_at)? userProfileData.created_at : 0,
-                    updatedAt: (userProfileData.updated_at)? userProfileData.updated_at : 0
-                }
-
                 return resolve({
                     message: 'User profile successfully retrieved',
-                    data: newUserProfileData,
+                    data: userProfileData,
                     code: 200
                 });
-
             }
         });
     }
