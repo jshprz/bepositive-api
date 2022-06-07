@@ -1,6 +1,7 @@
 import IUserProfileRepository from "./IUserProfileRepository";
 import {getConnection, getRepository, InsertResult, QueryFailedError, UpdateResult} from "typeorm";
 import {UserProfiles} from "../../../../database/postgresql/models/UserProfiles";
+import {userProfileType} from "../../../types";
 
 class UserProfileRepository implements IUserProfileRepository {
     constructor() {}
@@ -53,7 +54,7 @@ class UserProfileRepository implements IUserProfileRepository {
      * @param userId: string
      * @returns Promise<UserProfiles>
      */
-    getUserProfileByUserId(userId: string): Promise<UserProfiles> {
+    getUserProfileByUserId(userId: string): Promise<userProfileType> {
         return new Promise(async (resolve, reject) => {
             const userProfile = await getRepository(UserProfiles)
                 .createQueryBuilder('user_profiles')
@@ -64,11 +65,28 @@ class UserProfileRepository implements IUserProfileRepository {
                     return reject(error);
                 });
 
-            if (userProfile) {
-                return resolve(userProfile);
-            } else {
-                return reject('NOT_FOUND');
+            const newUserProfile = {
+                id: userProfile?.id || '',
+                userId: userProfile?.user_id || '',
+                email: userProfile?.email || '',
+                name: userProfile?.name || '',
+                avatar: userProfile?.avatar || '',
+                gender: userProfile?.gender || '',
+                profileTitle: userProfile?.profile_title || '',
+                profileDescription: userProfile?.profile_description || '',
+                dateOfBirth: userProfile?.date_of_birth || '',
+                website: userProfile?.website || '',
+                city: userProfile?.city || '',
+                state: userProfile?.state || '',
+                zipcode: userProfile?.zipcode || '',
+                country: userProfile?.country || '',
+                phoneNumber: userProfile?.phone_number || '',
+                isPublic: userProfile?.is_public || false,
+                createdAt: userProfile?.created_at || 0,
+                updatedAt: userProfile?.updated_at || 0,
             }
+
+            return resolve(newUserProfile);
         });
     }
 
