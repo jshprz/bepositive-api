@@ -352,8 +352,8 @@ class FeedFacade {
      * @returns Promise<feedTypes>
      */
     private async _feedBuilder(feed: feedTypes, loggedInUserId: string = ''): Promise<feedTypes> {
-        if (feed?.content.postId === '') {
-            return feed;
+        if (!feed?.content.postId) {
+            throw Error;
         }
 
         if (feed && feed.content.postId) {
@@ -393,6 +393,11 @@ class FeedFacade {
                 const originalPost: postType = await this._postRepository.getPostById(sharedPost.postId).catch((error) => {
                     throw error;
                 });
+
+                if (!originalPost.content.postId || !originalPost.actor.userId) {
+                    throw Error;
+                }
+
                 feed.actor.userId = sharedPost.userId;
                 feed.content.caption = sharedPost.shareCaption;
                 feed.content.googleMapsPlaceId = '';
