@@ -435,7 +435,13 @@ class UserController {
                 return res.status(userProfile.code).json({
                     message: userProfile.message,
                     payload: {
-                        profile: userProfile.data
+                        profile: {
+                            name: userProfile.data.name,
+                            avatar: userProfile.data.avatar,
+                            profileTitle: userProfile.data.profileTitle,
+                            profileDescription: userProfile.data.profileDescription,
+                            website: userProfile.data.website
+                        }
                     },
                     status: userProfile.code
                 });
