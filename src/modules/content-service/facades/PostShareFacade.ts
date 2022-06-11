@@ -270,7 +270,11 @@ class PostShareFacade {
 
             return resolve({
                 message: 'The shared post has been updated successfully',
-                data: {},
+                data: {
+                    updatedItem: {
+                        shareCaption
+                    }
+                },
                 code: 200
             });
         });
