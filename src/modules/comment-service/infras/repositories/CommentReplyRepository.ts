@@ -30,7 +30,6 @@ class CommentReplyRepository implements ICommentReplyRepository {
             return resolve({
                 id: reply?.id || '',
                 commentId: reply?.comment_id || '',
-                userId: reply?.user_id || '',
                 content: reply?.content || '',
                 createdAt: reply?.created_at || 0,
                 updatedAt: reply?.updated_at || 0,

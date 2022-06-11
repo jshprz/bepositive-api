@@ -123,7 +123,6 @@ class CommentRepository implements ICommentRepository {
                 }) => {
                     return {
                         id: comment.comments_id,
-                        userId: comment.comments_user_id,
                         postId: comment.comments_post_id,
                         content: comment.comments_content,
                         status: comment.comments_status,
@@ -260,7 +259,6 @@ class CommentRepository implements ICommentRepository {
                 }) => {
                     return {
                         id: reply.comment_replies_id,
-                        userId: reply.comment_replies_user_id,
                         commentId: reply.comment_replies_comment_id,
                         content: reply.comment_replies_content,
                         createdAt: reply.comment_replies_created_at,

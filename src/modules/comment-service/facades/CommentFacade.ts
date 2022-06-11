@@ -227,7 +227,6 @@ class CommentFacade {
 
         await (async function recursiveFunction(commentId: string) {
             const commentRepository: ICommentRepository = new CommentRepository();
-            const userProfileRepository: IUserProfileRepository = new UserProfileRepository();
             const repliesArr2: getCommentRepliesByCommentIdReturnType[] = await commentRepository.getCommentRepliesByCommentId(commentId);
 
             if (repliesArrHolder.length < 1) {

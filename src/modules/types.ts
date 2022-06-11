@@ -64,7 +64,6 @@ export type getByIdAndUserCognitoSubReturnTypes = {
 
 export type getCommentsByPostIdReturnType = {
   id: string,
-  userId: string,
   postId: string,
   content: string,
   status: string,
@@ -86,7 +85,6 @@ export type getCommentsByPostIdReturnType = {
 export type getCommentRepliesByCommentIdReturnType = {
   id: string,
   commentId: string,
-  userId: string,
   content: string,
   createdAt: Date | number,
   updatedAt: Date | number,
@@ -142,7 +140,6 @@ export type timestampsType = {
 
 export type commentType = {
   id: string,
-  userId: string,
   postId: string,
   content: string,
   status: string,
