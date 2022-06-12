@@ -108,6 +108,25 @@ class CommentFacade {
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
+            const post: void | postType = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'getCommentsByPostId()',
+                    message: error.toString(),
+                    payload: { postId }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (post && !post.content.postId) {
+                return reject({
+                    message: 'Post not found.',
+                    code: 404
+                });
+            }
             const comments: getCommentsByPostIdReturnType[] | void = await this._commentRepository.getCommentsByPostId(postId).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'getCommentsByPostId()',
