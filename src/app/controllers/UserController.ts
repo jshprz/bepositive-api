@@ -436,6 +436,7 @@ class UserController {
                     message: userProfile.message,
                     payload: {
                         profile: {
+                            userId: userProfile.data.userId,
                             name: userProfile.data.name,
                             avatar: userProfile.data.avatar,
                             profileTitle: userProfile.data.profileTitle,
