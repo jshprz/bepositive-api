@@ -1,7 +1,7 @@
 import IUserProfileRepository from "./IUserProfileRepository";
-import {getConnection, getRepository, InsertResult, QueryFailedError, UpdateResult} from "typeorm";
-import {UserProfiles} from "../../../../database/postgresql/models/UserProfiles";
-import {userProfileType} from "../../../types";
+import { getConnection, getRepository, InsertResult, QueryFailedError, UpdateResult } from "typeorm";
+import { UserProfiles } from "../../database/postgresql/models/UserProfiles";
+import type { userProfileType } from "../../modules/user-service/types";
 
 class UserProfileRepository implements IUserProfileRepository {
     constructor() {}

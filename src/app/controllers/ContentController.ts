@@ -5,9 +5,9 @@ import PostLikeRepository from "../../modules/content-service/infras/repositorie
 import HashtagRepository from "../../modules/content-service/infras/repositories/HashtagRepository";
 import PostHashtagRepository from "../../modules/content-service/infras/repositories/PostHashtagRepository";
 
-import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
+import UserRelationshipRepository from "../../infras/repositories/UserRelationshipRepository"; // External
 import FeedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
-import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository"; // External
+import UserProfileRepository from "../../infras/repositories/UserProfileRepository"; // External
 
 import PostFacade from "../../modules/content-service/facades/PostFacade";
 import PostShareFacade from "../../modules/content-service/facades/PostShareFacade";

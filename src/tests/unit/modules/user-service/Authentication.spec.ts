@@ -1,19 +1,19 @@
-import LoginFacade from "../../../../../modules/user-service/facades/LoginFacade";
-import AwsCognito from "../../../../../modules/user-service/infras/aws/AwsCognito";
-import AccessTokenRepository from "../../../../../modules/user-service/infras/repositories/AccessTokenRepository";
+import Authentication from "../../../../modules/user-service/Authentication";
+import AwsCognito from "../../../../infras/aws/AwsCognito";
+import AccessTokenRepository from "../../../../infras/repositories/AccessTokenRepository";
 
-jest.mock('../../../../../modules/user-service/infras/aws/AwsCognito');
-jest.mock('../../../../../modules/user-service/infras/repositories/AccessTokenRepository');
-jest.mock('../../../../../modules/user-service/facades/LoginFacade');
+jest.mock('../../../../infras/aws/AwsCognito');
+jest.mock('../../../../infras/repositories/AccessTokenRepository');
+jest.mock('../../../../modules/user-service/Authentication');
 
-const loginFacadeMock = LoginFacade as jest.MockedClass<typeof LoginFacade>;
+const authenticationMock = Authentication as jest.MockedClass<typeof Authentication>;
 const awsCognitoMock = AwsCognito as jest.MockedClass<typeof AwsCognito>;
 const accessTokenRepositoryMock = AccessTokenRepository as jest.MockedClass<typeof AccessTokenRepository>;
 
 describe('Facades :: LoginFacade', () => {
     beforeEach(() => {
         // Clear all instances and calls to constructor and all methods:
-        loginFacadeMock.mockClear();
+        authenticationMock.mockClear();
         awsCognitoMock.mockClear();
         accessTokenRepositoryMock.mockClear();
     });
@@ -26,40 +26,40 @@ describe('Facades :: LoginFacade', () => {
         expect(accessTokenRepositoryMock).toHaveBeenCalledTimes(1);
     });
     it('should call the instance of class LoginFacade once', () => {
-        const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
-        expect(loginFacadeMock).toHaveBeenCalledTimes(1);
+        const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
+        expect(authenticationMock).toHaveBeenCalledTimes(1);
     });
     describe(':: normalLogin', () => {
         describe('#execute', () => {
             it('should call the normalLogin() once with the expected arguments', () => {
                 // To show that mockClear() is working:
-                expect(loginFacadeMock).not.toHaveBeenCalled();
+                expect(authenticationMock).not.toHaveBeenCalled();
                 expect(awsCognitoMock).not.toHaveBeenCalled();
                 expect(accessTokenRepositoryMock).not.toHaveBeenCalled();
 
-                const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
-                expect(loginFacadeMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
+                const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
+                expect(authenticationMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
 
                 const normalLoginArgs = {
                     email: 'test',
                     password: 'test'
                 };
 
-                loginFacadeInstance.normalLogin(normalLoginArgs);
+                authenticationInstance.normalLogin(normalLoginArgs);
 
                 // To make sure that we call the function with the expected arguments:
-                expect(loginFacadeMock.prototype.normalLogin).toHaveBeenCalledWith(normalLoginArgs);
+                expect(authenticationMock.prototype.normalLogin).toHaveBeenCalledWith(normalLoginArgs);
 
                 // To make sure we called the function once:
-                expect(loginFacadeMock.prototype.normalLogin).toHaveBeenCalledTimes(1);
+                expect(authenticationMock.prototype.normalLogin).toHaveBeenCalledTimes(1);
             });
 
             it('should return user authentication details', () => {
-                const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
+                const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
-                jest.spyOn(loginFacadeInstance, 'normalLogin').mockImplementation(() => {
+                jest.spyOn(authenticationInstance, 'normalLogin').mockImplementation(() => {
                     const normalLoginReturnData = {
                         idToken: {
                             payload: {
@@ -104,7 +104,7 @@ describe('Facades :: LoginFacade', () => {
                     }
                 };
 
-                expect(loginFacadeInstance.normalLogin(normalLoginArgs)).toStrictEqual(normalLoginReturnData);
+                expect(authenticationInstance.normalLogin(normalLoginArgs)).toStrictEqual(normalLoginReturnData);
             });
         });
     });
@@ -113,32 +113,32 @@ describe('Facades :: LoginFacade', () => {
         describe('#execute', () => {
             it('should call the logout() once with the expected arguments', () => {
                 // To show that mockClear() is working:
-                expect(loginFacadeMock).not.toHaveBeenCalled();
+                expect(authenticationMock).not.toHaveBeenCalled();
                 expect(awsCognitoMock).not.toHaveBeenCalled();
                 expect(accessTokenRepositoryMock).not.toHaveBeenCalled();
 
-                const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
-                expect(loginFacadeMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
+                const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
+                expect(authenticationMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
 
                 const req: any = {
                     session: {}
                 };
 
-                loginFacadeInstance.logout(req);
+                authenticationInstance.logout(req);
 
                 // To make sure that we call the function with the expected arguments:
-                expect(loginFacadeMock.prototype.logout).toHaveBeenCalledWith(req);
+                expect(authenticationMock.prototype.logout).toHaveBeenCalledWith(req);
 
                 // To make sure we called the function once:
-                expect(loginFacadeMock.prototype.logout).toHaveBeenCalledTimes(1);
+                expect(authenticationMock.prototype.logout).toHaveBeenCalledTimes(1);
             });
 
             it('should return a boolean true', () => {
-                const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
+                const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
-                jest.spyOn(loginFacadeInstance, 'logout').mockImplementation(() => {
+                jest.spyOn(authenticationInstance, 'logout').mockImplementation(() => {
                     return true;
                 });
 
@@ -146,7 +146,7 @@ describe('Facades :: LoginFacade', () => {
                     session: {}
                 };
 
-                expect(loginFacadeInstance.logout(req)).toStrictEqual(true);
+                expect(authenticationInstance.logout(req)).toStrictEqual(true);
             });
         });
     });
@@ -155,38 +155,38 @@ describe('Facades :: LoginFacade', () => {
         describe('#execute', () => {
             it('should call the createAccessTokenItem() once with the expected arguments', () => {
                 // To show that mockClear() is working:
-                expect(loginFacadeMock).not.toHaveBeenCalled();
+                expect(authenticationMock).not.toHaveBeenCalled();
                 expect(awsCognitoMock).not.toHaveBeenCalled();
                 expect(accessTokenRepositoryMock).not.toHaveBeenCalled();
 
-                const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
-                expect(loginFacadeMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
+                const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
+                expect(authenticationMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
 
                 const accessToken = 'test';
                 const email = 'test@test.com';
 
-                loginFacadeInstance.createAccessTokenItem(accessToken, email);
+                authenticationInstance.createAccessTokenItem(accessToken, email);
 
                 // To make sure that we call the function with the expected arguments:
-                expect(loginFacadeMock.prototype.createAccessTokenItem).toHaveBeenCalledWith(accessToken, email);
+                expect(authenticationMock.prototype.createAccessTokenItem).toHaveBeenCalledWith(accessToken, email);
 
                 // To make sure we called the function once:
-                expect(loginFacadeMock.prototype.createAccessTokenItem).toHaveBeenCalledTimes(1);
+                expect(authenticationMock.prototype.createAccessTokenItem).toHaveBeenCalledTimes(1);
             });
 
             it('should return a boolean true', () => {
-                const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
+                const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
-                jest.spyOn(loginFacadeInstance, 'createAccessTokenItem').mockImplementation(() => {
+                jest.spyOn(authenticationInstance, 'createAccessTokenItem').mockImplementation(() => {
                     return true;
                 });
 
                 const accessToken = 'test';
                 const email = 'test@test.com';
 
-                expect(loginFacadeInstance.createAccessTokenItem(accessToken, email)).toStrictEqual(true);
+                expect(authenticationInstance.createAccessTokenItem(accessToken, email)).toStrictEqual(true);
             });
         });
     });
@@ -195,36 +195,36 @@ describe('Facades :: LoginFacade', () => {
         describe('#execute', () => {
             it('should call the deleteAccessTokenItem() once with the expected arguments', () => {
                 // To show that mockClear() is working:
-                expect(loginFacadeMock).not.toHaveBeenCalled();
+                expect(authenticationMock).not.toHaveBeenCalled();
                 expect(awsCognitoMock).not.toHaveBeenCalled();
                 expect(accessTokenRepositoryMock).not.toHaveBeenCalled();
 
-                const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
-                expect(loginFacadeMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
+                const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
+                expect(authenticationMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
 
                 const email = 'test@test.com';
 
-                loginFacadeInstance.deleteAccessTokenItem(email);
+                authenticationInstance.deleteAccessTokenItem(email);
 
                 // To make sure that we call the function with the expected arguments:
-                expect(loginFacadeMock.prototype.deleteAccessTokenItem).toHaveBeenCalledWith(email);
+                expect(authenticationMock.prototype.deleteAccessTokenItem).toHaveBeenCalledWith(email);
 
                 // To make sure we called the function once:
-                expect(loginFacadeMock.prototype.deleteAccessTokenItem).toHaveBeenCalledTimes(1);
+                expect(authenticationMock.prototype.deleteAccessTokenItem).toHaveBeenCalledTimes(1);
             });
 
             it('should return a boolean true', () => {
-                const loginFacadeInstance = new LoginFacade(new AwsCognito(), new AccessTokenRepository());
+                const authenticationInstance = new Authentication(new AwsCognito(), new AccessTokenRepository());
 
                 // Switch the function actual implementation with the mocked one
                 // @ts-ignore
-                jest.spyOn(loginFacadeInstance, 'deleteAccessTokenItem').mockImplementation(() => {
+                jest.spyOn(authenticationInstance, 'deleteAccessTokenItem').mockImplementation(() => {
                     return true;
                 });
 
                 const email = 'test@test.com';
 
-                expect(loginFacadeInstance.deleteAccessTokenItem(email)).toStrictEqual(true);
+                expect(authenticationInstance.deleteAccessTokenItem(email)).toStrictEqual(true);
             });
         });
     });

@@ -1,15 +1,9 @@
-import IAwsCognito from '../infras/aws/IAwsCognito';
-import Logger from '../../../config/Logger';
-import Error from "../../../config/Error";
+import IAwsCognito from "../../infras/aws/IAwsCognito";
+import Logger from "../../config/Logger";
+import Error from "../../config/Error";
+import IPassword from "./IPassword";
 
-type resetPasswordParamTypes = {
-    email: string,
-    verifyCode: string,
-    newPassword: string
-}
-
-class Password {
-
+class Password  implements IPassword {
     private _log;
 
     constructor(private _awsCognito: IAwsCognito) {
@@ -45,7 +39,7 @@ class Password {
      * @param body: { email: string, verifyCode: string, newPassword: string }
      * @returns Promise<string>
      */
-    resetPassword(body: resetPasswordParamTypes): Promise<string> {
+    resetPassword(body: { email: string, verifyCode: string, newPassword: string }): Promise<string> {
         return new Promise((resolve, reject) => {
             this._awsCognito.getCognitoUser(body.email).confirmPassword(body.verifyCode, body.newPassword, {
                 onSuccess: (result: string | PromiseLike<string>) => resolve(result),

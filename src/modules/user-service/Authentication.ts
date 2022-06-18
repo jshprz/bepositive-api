@@ -1,24 +1,20 @@
-import IAwsCognito from '../infras/aws/IAwsCognito';
-import IAccessTokenRepository from "../infras/repositories/IAccessTokenRepository";
-import Logger from '../../../config/Logger';
-import Error from "../../../config/Error";
+import IAwsCognito from '../../infras/aws/IAwsCognito';
+import IAccessTokenRepository from "../../infras/repositories/IAccessTokenRepository";
+import Logger from '../../config/Logger';
+import Error from "../../config/Error";
 import { Request } from 'express';
 import { QueryFailedError } from "typeorm";
 import { CognitoUserSession } from "amazon-cognito-identity-js";
 import { InitiateAuthResponse } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { AWSError } from "aws-sdk";
+import IAuthentication from "./IAuthentication";
 
-type normalLoginParam = {
-  email: string,
-  password: string
-};
-
-class LoginFacade {
+class Authentication implements IAuthentication {
 
     private _log;
 
     constructor(private _awsCognito: IAwsCognito, private _accessTokenRepository: IAccessTokenRepository) {
-        this._log = Logger.createLogger('LoginFacade.ts');
+        this._log = Logger.createLogger('Authentication.ts');
     }
 
     /**
@@ -26,25 +22,25 @@ class LoginFacade {
      * @param body { email: string, password: string }
      * @returns Promise<CognitoUserSession>
      */
-    normalLogin(body: normalLoginParam): Promise<CognitoUserSession> {
+    normalLogin(body: { email: string, password: string }): Promise<CognitoUserSession> {
         return new Promise((resolve, reject) => {
-           const authenticationDetails = this._awsCognito.getAuthenticationDetails(body);
+            const authenticationDetails = this._awsCognito.getAuthenticationDetails(body);
 
-           this._awsCognito.getCognitoUser(body.email).authenticateUser(authenticationDetails, {
-               onSuccess: (result: CognitoUserSession) => resolve(result),
-               onFailure: (error: { message: string, code: string }) => {
-                   this._log.error({
-                       function: 'normalLogin()',
-                       message: error.message,
-                       payload: body
-                   });
-                   if (error.code && (error.code === 'NotAuthorizedException' || error.code === 'UserNotConfirmedException')) {
-                       return reject(error);
-                   }
+            this._awsCognito.getCognitoUser(body.email).authenticateUser(authenticationDetails, {
+                onSuccess: (result: CognitoUserSession) => resolve(result),
+                onFailure: (error: { message: string, code: string }) => {
+                    this._log.error({
+                        function: 'normalLogin()',
+                        message: error.message,
+                        payload: body
+                    });
+                    if (error.code && (error.code === 'NotAuthorizedException' || error.code === 'UserNotConfirmedException')) {
+                        return reject(error);
+                    }
 
-                   return reject(Error.AWS_COGNITO_ERROR);
-               }
-           });
+                    return reject(Error.AWS_COGNITO_ERROR);
+                }
+            });
         });
     }
 
@@ -55,22 +51,22 @@ class LoginFacade {
      */
     logout(req: Request): Promise<boolean> {
         return new Promise((resolve, reject) => {
-           const param = {
-               AccessToken: req.body.accessToken,
-           };
-           this._awsCognito.getAwsCognitoClient().globalSignOut(param, (error: Error) => {
-              if (error) {
-                  this._log.error({
-                      function: 'logout()',
-                      message: error.toString(),
-                      payload: param
-                  });
+            const param = {
+                AccessToken: req.body.accessToken,
+            };
+            this._awsCognito.getAwsCognitoClient().globalSignOut(param, (error: Error) => {
+                if (error) {
+                    this._log.error({
+                        function: 'logout()',
+                        message: error.toString(),
+                        payload: param
+                    });
 
-                  return reject(Error.AWS_COGNITO_ERROR);
-              }
+                    return reject(Error.AWS_COGNITO_ERROR);
+                }
 
-              return resolve(true);
-           });
+                return resolve(true);
+            });
         });
     }
 
@@ -161,4 +157,4 @@ class LoginFacade {
     }
 }
 
-export default LoginFacade;
+export default Authentication;

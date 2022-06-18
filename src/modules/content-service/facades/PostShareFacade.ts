@@ -1,7 +1,7 @@
 import IPostShareRepository from "../infras/repositories/IPostShareRepository";
 import IPostRepository from "../infras/repositories/IPostRepository";
 
-import IUserRelationshipRepository from "../../user-service/infras/repositories/IUserRelationshipRepository"; // External
+import IUserRelationshipRepository from "../../../infras/repositories/IUserRelationshipRepository"; // External
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
 import Logger from "../../../config/Logger";

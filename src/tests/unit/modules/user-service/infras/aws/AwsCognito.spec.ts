@@ -1,8 +1,8 @@
-import AwsCognito from '../../../../../../modules/user-service/infras/aws/AwsCognito';
+import AwsCognito from '../../../../../../infras/aws/AwsCognito';
 import AWS from 'aws-sdk';
 import { CognitoUserPool, CognitoUserAttribute, CognitoUser, AuthenticationDetails } from 'amazon-cognito-identity-js';
 
-jest.mock('../../../../../../modules/user-service/infras/aws/AwsCognito');
+jest.mock('../../../../../../infras/aws/AwsCognito');
 jest.mock('aws-sdk');
 jest.mock('amazon-cognito-identity-js');
 

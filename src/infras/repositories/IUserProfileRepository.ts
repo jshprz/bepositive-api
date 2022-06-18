@@ -1,6 +1,6 @@
-import {InsertResult, UpdateResult} from "typeorm";
-import {UserProfiles} from "../../../../database/postgresql/models/UserProfiles";
-import {userProfileType} from "../../../types";
+import { InsertResult, UpdateResult } from "typeorm";
+import { UserProfiles } from "../../database/postgresql/models/UserProfiles";
+import type { userProfileType } from "../../modules/user-service/types";
 
 interface IUserProfileRepository {
     create(item: {userId: string, email: string, name: string}): Promise<InsertResult>;

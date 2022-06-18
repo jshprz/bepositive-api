@@ -1,8 +1,13 @@
 import AWS from 'aws-sdk';
-import type { s3UploadParamsType } from "../../../types";
 import { ManagedUpload } from "aws-sdk/clients/s3";
-import IAwsS3 from "./IAwsS3";
 
+type s3UploadParamsType = {
+    Bucket: string,
+    Key: string,
+    ContentType: string,
+    Body: Buffer,
+    ACL: string
+};
 
 class AwsS3 {
 

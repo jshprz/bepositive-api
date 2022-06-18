@@ -3,7 +3,7 @@ import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
 import { Client } from '@googlemaps/google-maps-services-js';
 
-import IUserProfileRepository from "../../user-service/infras/repositories/IUserProfileRepository"; // External
+import IUserProfileRepository from "../../../infras/repositories/IUserProfileRepository"; // External
 import IPostLikeRepository from "../../content-service/infras/repositories/IPostLikeRepository"; // External
 import IPostRepository from "../../content-service/infras/repositories/IPostRepository"; // External
 import IPostShareRepository from "../../content-service/infras/repositories/IPostShareRepository"; // External

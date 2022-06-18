@@ -10,22 +10,16 @@ import { validationResult } from 'express-validator';
 import ResponseMutator from "../../utils/ResponseMutator";
 import type { getCommentRepliesByCommentIdReturnType, timestampsType } from '../../modules/types';
 
-import UserAccountFacade from "../../modules/user-service/facades/UserAccountFacade"; // External
-import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito"; // External
-import AwsS3 from "../../modules/user-service/infras/aws/AwsS3"; // External
-import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository"; // External
-import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository"; // External
+import UserProfileRepository from "../../infras/repositories/UserProfileRepository"; // External
 import CommentLikeRepository from "../../modules/comment-service/infras/repositories/CommentLikeRepository";
 
 class CommentController {
     private _commentFacade;
     private _utilResponseMutator;
-    private _userAccountFacade;
 
     constructor() {
         this._commentFacade = new CommentFacade(new CommentRepository(), new PostRepository(), new CommentLikeRepository(), new UserProfileRepository());
         this._utilResponseMutator = new ResponseMutator();
-        this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
     }
 
     async addComment(req: Request, res: Response) {

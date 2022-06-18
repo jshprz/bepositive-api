@@ -1,8 +1,6 @@
-import UserRelationshipRepository from '../../../../../../modules/user-service/infras/repositories/UserRelationshipRepository';
-import {exec} from "child_process";
-import {type} from "os";
+import UserRelationshipRepository from '../../../../../../infras/repositories/UserRelationshipRepository';
 
-jest.mock('../../../../../../modules/user-service/infras/repositories/UserRelationshipRepository');
+jest.mock('../../../../../../infras/repositories/UserRelationshipRepository');
 
 const userRelationshipRepositoryMock = UserRelationshipRepository as jest.MockedClass<typeof UserRelationshipRepository>;
 

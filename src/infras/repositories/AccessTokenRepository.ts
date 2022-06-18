@@ -1,5 +1,5 @@
 import { getConnection, InsertResult, DeleteResult } from 'typeorm';
-import { AccessTokens } from "../../../../database/postgresql/models/AccessTokens";
+import { AccessTokens } from "../../database/postgresql/models/AccessTokens";
 import IAccessTokenRepository from "./IAccessTokenRepository";
 
 class AccessTokenRepository implements IAccessTokenRepository {

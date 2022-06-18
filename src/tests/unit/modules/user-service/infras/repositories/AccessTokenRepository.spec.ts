@@ -1,6 +1,6 @@
-import AccessTokenRepository from '../../../../../../modules/user-service/infras/repositories/AccessTokenRepository';
+import AccessTokenRepository from '../../../../../../infras/repositories/AccessTokenRepository';
 
-jest.mock('../../../../../../modules/user-service/infras/repositories/AccessTokenRepository');
+jest.mock('../../../../../../infras/repositories/AccessTokenRepository');
 
 const accessTokenRepositoryMock = AccessTokenRepository as jest.MockedClass<typeof AccessTokenRepository>;
 

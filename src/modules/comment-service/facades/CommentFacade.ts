@@ -15,8 +15,7 @@ import type {
 } from '../../types';
 
 import CommentRepository from "../infras/repositories/CommentRepository";
-import UserProfileRepository from "../../user-service/infras/repositories/UserProfileRepository";
-import IUserProfileRepository from "../../user-service/infras/repositories/IUserProfileRepository";
+import UserProfileRepository from "../../../infras/repositories/UserProfileRepository";
 
 class CommentFacade {
     private _log;

@@ -3,17 +3,16 @@ import mime from "mime";
 import path from "path";
 
 // Infras
-import AwsCognito from "../../modules/user-service/infras/aws/AwsCognito";
-import AwsS3 from "../../modules/user-service/infras/aws/AwsS3";
-import AccessTokenRepository from "../../modules/user-service/infras/repositories/AccessTokenRepository";
-import UserRelationshipRepository from "../../modules/user-service/infras/repositories/UserRelationshipRepository";
-import UserProfileRepository from "../../modules/user-service/infras/repositories/UserProfileRepository";
+import AwsCognito from "../../infras/aws/AwsCognito";
+import AwsS3 from "../../infras/aws/AwsS3";
+import AccessTokenRepository from "../../infras/repositories/AccessTokenRepository";
+import UserRelationshipRepository from "../../infras/repositories/UserRelationshipRepository";
+import UserProfileRepository from "../../infras/repositories/UserProfileRepository";
 
-// Facades
-import LoginFacade from "../../modules/user-service/facades/LoginFacade";
-import PasswordFacade from "../../modules/user-service/facades/PasswordFacade";
-import RegistrationFacade from "../../modules/user-service/facades/RegistrationFacade";
-import UserAccountFacade from "../../modules/user-service/facades/UserAccountFacade";
+// User Modules
+import Authentication from "../../modules/user-service/Authentication";
+import Password from "../../modules/user-service/Password";
+import UserAccount from "../../modules/user-service/UserAccount";
 
 import { Request, Response } from 'express';
 import { validationResult } from "express-validator";
@@ -33,18 +32,19 @@ type validateFileMimeTypeType = {
 
 class UserController {
 
-    private _loginFacade;
-    private _passwordFacade;
-    private _registrationFacade;
-    private _userAccountFacade;
+    private _authentication;
+    private _password;
+    private _userAccount;
     private _upload;
     private _utilResponseMutator;
 
     constructor() {
-        this._loginFacade = new LoginFacade(new AwsCognito, new AccessTokenRepository());
-        this._passwordFacade = new PasswordFacade(new AwsCognito());
-        this._registrationFacade = new RegistrationFacade(new AwsCognito(), new UserProfileRepository());
-        this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
+        // this._loginFacade = new LoginFacade(new AwsCognito, new AccessTokenRepository());
+        this._authentication = new Authentication(new AwsCognito(), new AccessTokenRepository());
+        // this._passwordFacade = new PasswordFacade(new AwsCognito());
+        this._password = new Password(new AwsCognito());
+        // this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
+        this._userAccount = new UserAccount(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
         this._upload = multer().single('avatarFile');
         this._utilResponseMutator = new ResponseMutator();
     }
@@ -69,7 +69,7 @@ class UserController {
         }
 
         try {
-            const signin = await this._loginFacade.normalLogin(req.body);
+            const signin = await this._authentication.normalLogin(req.body);
 
             const accessToken: string = signin.accessToken.jwtToken;
             const refreshToken: string = signin.refreshToken.token;
@@ -77,7 +77,7 @@ class UserController {
             const userCognitoSub: string = signin.idToken.payload.sub;
 
             // Creates accessToken record within the access_tokens table.
-            await this._loginFacade.createAccessTokenItem(accessToken, userCognitoSub);
+            await this._authentication.createAccessTokenItem(accessToken, userCognitoSub);
 
             return res.status(200).json({
                 message: 'Successfully logged in',
@@ -128,8 +128,8 @@ class UserController {
         try {
             const userCognitoSub: string = req.body.userCognitoSub;
 
-            await this._loginFacade.logout(req);
-            await this._loginFacade.deleteAccessTokenItem(userCognitoSub);
+            await this._authentication.logout(req);
+            await this._authentication.deleteAccessTokenItem(userCognitoSub);
 
             return res.status(200).json({
                 message: 'User successfully logged out',
@@ -158,7 +158,7 @@ class UserController {
 
         try {
             const { email } = req.body;
-            await this._passwordFacade.forgotPassword(email);
+            await this._password.forgotPassword(email);
 
             return res.status(200).json({
                 message: `Reset password token successfully sent to this email: ${email}`,
@@ -202,7 +202,7 @@ class UserController {
         }
 
         try {
-            await this._passwordFacade.resetPassword(req.body);
+            await this._password.resetPassword(req.body);
 
             return res.status(200).json({
                 message: 'Password reset successfully',
@@ -275,14 +275,14 @@ class UserController {
         try {
             const { email, name, password } = req.body;
 
-            const registerResult = await this._registrationFacade.register({
+            const registerResult = await this._userAccount.register({
                 email,
                 name,
                 password
             });
             // We create user profile data in user_profiles table every user registration
             // so that we don't need to rely on AWS Cognito when we need to retrieve a user profile data.
-            const createUserProfileData = await this._registrationFacade.createUserProfileData({
+            const createUserProfileData = await this._userAccount.createUserProfileData({
                 userId: registerResult.data.userSub,
                 email,
                 name
@@ -337,8 +337,8 @@ class UserController {
 
         try {
             const { email } = req.body;
-            await this._registrationFacade.verifyUser(req.body);
-            await this._registrationFacade.updateEmailVerifiedToTrue(email);
+            await this._userAccount.verifyUser(req.body);
+            await this._userAccount.updateEmailVerifiedToTrue(email);
 
             return res.status(200).json({
                 message: 'Verified successfully.',
@@ -393,7 +393,7 @@ class UserController {
         }
 
         try {
-            await this._registrationFacade.resendAccountConfirmationCode(req.body.email);
+            await this._userAccount.resendAccountConfirmationCode(req.body.email);
 
             return res.status(200).json({
                 message: `The verification code has been re-sent to this email: ${req.body.email}`,
@@ -414,7 +414,7 @@ class UserController {
             // We'll first consider if a userId param is provided, which means that our intention is to retrieve the profile of another user.
             // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
             const userId: string = req.params.userId || req.body.userCognitoSub;
-            const userProfile = await this._userAccountFacade.getUserProfile(userId);
+            const userProfile = await this._userAccount.getUserProfile(userId);
 
             // Logged-in users can access their own profiles whether their privacy is set to public or not.
             // Logged-in users can only access other users' profiles that are set to public.
@@ -505,10 +505,10 @@ class UserController {
 
             // Check the existence of the followeeCognitoSub and followerCognitoSub first.
             for (const item of [followeeCognitoSub, followerCognitoSub]) {
-                await this._userAccountFacade.getUser(item);
+                await this._userAccount.getUser(item);
             }
 
-            const followUserResult = await this._userAccountFacade.followUser(followeeCognitoSub, followerCognitoSub);
+            const followUserResult = await this._userAccount.followUser(followeeCognitoSub, followerCognitoSub);
 
             return res.status(followUserResult.code).json({
                 message: followUserResult.message,
@@ -568,10 +568,10 @@ class UserController {
 
             // Check the existence of the followeeCognitoSub and followerCognitoSub first.
             for (const item of [followeeCognitoSub, followerCognitoSub]) {
-                await this._userAccountFacade.getUser(item);
+                await this._userAccount.getUser(item);
             }
 
-            const followUserResult = await this._userAccountFacade.unfollowUser(followeeCognitoSub, followerCognitoSub);
+            const followUserResult = await this._userAccount.unfollowUser(followeeCognitoSub, followerCognitoSub);
 
             return res.status(followUserResult.code).json({
                 message: followUserResult.message,
@@ -650,7 +650,7 @@ class UserController {
 
                     try {
                         if (req.file?.buffer) {
-                            const uploadProfileAvatarResult = await this._userAccountFacade.uploadProfileAvatar(userId, req.file.originalname, req.file.mimetype, req.file.buffer);
+                            const uploadProfileAvatarResult = await this._userAccount.uploadProfileAvatar(userId, req.file.originalname, req.file.mimetype, req.file.buffer);
 
                             return res.status(uploadProfileAvatarResult.code).json({
                                 message: uploadProfileAvatarResult.message,
@@ -712,7 +712,7 @@ class UserController {
             const userId: string = req.body.userCognitoSub;
             const isPublic: boolean = req.body.isPublic;
 
-            const updatePrivacyResult = await this._userAccountFacade.updatePrivacyStatus(userId, isPublic);
+            const updatePrivacyResult = await this._userAccount.updatePrivacyStatus(userId, isPublic);
 
             return res.status(200).json({
                 message: updatePrivacyResult.message,
@@ -770,7 +770,7 @@ class UserController {
             const accessToken: string = req.body.accessToken;
             const refreshToken: string = req.body.refreshToken;
             const decodedAccessToken: { sub: string } = await jwtDecode(accessToken);
-            const generateNewAccessTokenResult = await this._loginFacade.generateNewAccessToken(refreshToken);
+            const generateNewAccessTokenResult = await this._authentication.generateNewAccessToken(refreshToken);
 
             if (generateNewAccessTokenResult.data.AuthenticationResult && generateNewAccessTokenResult.data.AuthenticationResult.AccessToken) {
                 const newAccessToken: string = generateNewAccessTokenResult.data.AuthenticationResult.AccessToken;
@@ -783,10 +783,10 @@ class UserController {
                     };
                 }
                 // Revoke the access token.
-                await this._loginFacade.deleteAccessTokenItem(decodedAccessToken.sub);
+                await this._authentication.deleteAccessTokenItem(decodedAccessToken.sub);
 
                 // We store the access token in our database, so we can manipulate it.
-                await this._loginFacade.createAccessTokenItem(newAccessToken, decodedNewAccessToken.sub);
+                await this._authentication.createAccessTokenItem(newAccessToken, decodedNewAccessToken.sub);
 
                 const accessTokenExpiration: number = Number(moment().unix()) + Number(generateNewAccessTokenResult.data.AuthenticationResult.ExpiresIn);
 
@@ -938,7 +938,7 @@ class UserController {
 
             if (cognitoUpdate.length) {
                 try {
-                    await this._userAccountFacade.updateNameInCognito(cognitoUpdate, userCognitoSub);
+                    await this._userAccount.updateNameInCognito(cognitoUpdate, userCognitoSub);
                 } catch (error: any) {
                     return res.status(520).json({
                         message: error.message,
@@ -949,7 +949,7 @@ class UserController {
             }
             // continue with the update of the other fields
             if (attributes) {
-                const updateProfileResult = await this._userAccountFacade.updateProfile(attributes, userCognitoSub);
+                const updateProfileResult = await this._userAccount.updateProfile(attributes, userCognitoSub);
 
                 return res.status(200).json({
                     message: updateProfileResult.message,

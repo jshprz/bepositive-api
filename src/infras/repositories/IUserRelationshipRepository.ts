@@ -1,5 +1,5 @@
-import { UserRelationships } from "../../../../database/postgresql/models/UserRelationships";
-import type { userRelationshipTypes } from '../../../types';
+import { UserRelationships } from "../../database/postgresql/models/UserRelationships";
+import type { userRelationshipTypes } from '../../modules/user-service/types';
 
 interface IUserRelationshipRepository {
     create(followeeCognitoSub: string, followerCognitoSub: string): UserRelationships;

@@ -7,13 +7,13 @@ import Logger from '../../../config/Logger';
 import Error from '../../../config/Error';
 import { Client } from '@googlemaps/google-maps-services-js';
 
-import IUserRelationshipRepository from "../../user-service/infras/repositories/IUserRelationshipRepository"; // External
+import IUserRelationshipRepository from "../../../infras/repositories/IUserRelationshipRepository"; // External
 import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
 import type {feedRawType, getPostLikeType, postType, sharedPostType} from '../../types';
 
-import IUserProfileRepository from "../../user-service/infras/repositories/IUserProfileRepository"; // External
+import IUserProfileRepository from "../../../infras/repositories/UserProfileRepository"; // External
 
 class PostFacade {
     private _log;

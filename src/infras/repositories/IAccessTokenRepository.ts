@@ -1,4 +1,4 @@
-import {DeleteResult, InsertResult} from "typeorm";
+import { DeleteResult, InsertResult } from "typeorm";
 
 interface IAccessTokenRepository {
     create(item: {accessToken: string, userCognitoSub: string}): Promise<InsertResult>;
