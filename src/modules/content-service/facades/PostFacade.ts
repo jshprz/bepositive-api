@@ -13,6 +13,7 @@ import IFeedRepository from "../../feed-service/infras/repositories/IFeedReposit
 import { QueryFailedError } from "typeorm";
 import type {feedRawType, getPostLikeType, postType, sharedPostType} from '../../types';
 
+import IPostShareRepository from "../infras/repositories/IPostShareRepository";
 import IUserProfileRepository from "../../../infras/repositories/UserProfileRepository"; // External
 
 class PostFacade {
@@ -22,6 +23,7 @@ class PostFacade {
     constructor(
         private _awsS3: IAwsS3,
         private _postRepository: IPostRepository,
+        private _sharedPostRepository: IPostShareRepository,
         private _postLikeRepository: IPostLikeRepository,
         private _userRelationshipRepository: IUserRelationshipRepository,
         private _feedRepository: IFeedRepository,
@@ -561,26 +563,27 @@ class PostFacade {
     /**
      * Remove a post by ID.
      * @param userId: string
-     * @param id: string
+     * @param postId: string
      * @returns Promise<{
      *   message: string,
      *   data: {},
      *   code: number
      * }>
      */
-    removePost(userId: string, id: string): Promise<{
+    removePost(userId: string, postId: string): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const post: postType | void = await this._postRepository.getPostById(id).catch((error: QueryFailedError) => {
+
+            const post: postType | void = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'removePost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         userId,
-                        id
+                        postId
                     }
                 });
 
@@ -604,13 +607,13 @@ class PostFacade {
                 });
             }
 
-            const getFeedsByPostIdResult: feedRawType[] | void = await this._feedRepository.getFeedsByPostId(id).catch((error) => {
+            const getFeedsByPostIdResult: feedRawType[] | void = await this._feedRepository.getFeedsByPostId(postId).catch((error) => {
                 this._log.error({
                     function: 'removePost()',
                     message: error.toString(),
                     payload: {
                         userId,
-                        id
+                        postId
                     }
                 });
 
@@ -624,13 +627,13 @@ class PostFacade {
                 await this._toDeleteFeedsByPostId(getFeedsByPostIdResult);
             }
 
-            await this._postRepository.softDelete(id).catch((error: QueryFailedError) => {
+            await this._postRepository.softDelete(postId).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'removePost()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
                         userId,
-                        id
+                        postId
                     }
                 });
 

@@ -28,6 +28,7 @@ class ContentController {
     constructor() {
         this._postFacade = new PostFacade(
             new AwsS3(), new PostRepository(),
+            new PostShareRepository(),
             new PostLikeRepository(),
             new UserRelationshipRepository(),
             new FeedRepository(),
@@ -384,14 +385,36 @@ class ContentController {
             });
         }
 
-        try {
-            const id: string = req.params.id;
-            const removePostResult = await this._postFacade.removePost(req.body.userCognitoSub, id);
+        if (errors.classification) {
+            return res.status(400).json({
+                message: errors.classification.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
 
-            return res.status(removePostResult.code).json({
-                message: removePostResult.message,
-                payload: removePostResult.data,
-                status: removePostResult.code
+        try {
+            const postId: string = req.params.id;
+            const classification: string = req.body.classification;
+            let responseData: {
+                message: string,
+                data: {},
+                code: number
+            } = {message: '', data: {}, code: 0};
+
+            if (classification === 'REGULAR_POST') {
+                const removeRegularPost = await this._postFacade.removePost(req.body.userCognitoSub, postId);
+                responseData = removeRegularPost;
+            }
+            if (classification === 'SHARED_POST') {
+                const removeSharedPost = await this._postShareFacade.removeSharedPost(req.body.userCognitoSub, postId);
+                responseData = removeSharedPost;
+            }
+
+            return res.status(responseData.code).json({
+                message: responseData.message,
+                payload: responseData.data,
+                status: responseData.code
             });
 
         } catch (error: any) {

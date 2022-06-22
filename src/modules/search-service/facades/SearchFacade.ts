@@ -90,7 +90,6 @@ class SearchFacade {
                         });
                     }
                 default:
-
                     const searchUserResult2 = await this._userProfileRepository.search(trimmedSearchQuery).catch((error: QueryFailedError) => {
                         this._log.error({
                             function: 'searchUserOrHashtag',

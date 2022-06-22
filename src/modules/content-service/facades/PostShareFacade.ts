@@ -7,7 +7,7 @@ import IFeedRepository from "../../feed-service/infras/repositories/IFeedReposit
 import Logger from "../../../config/Logger";
 import Error from '../../../config/Error';
 import { QueryFailedError } from "typeorm";
-import {getByIdAndUserCognitoSubReturnTypes, postType, sharedPostType} from "../../types";
+import {feedRawType, getByIdAndUserCognitoSubReturnTypes, postType, sharedPostType} from "../../types";
 
 class PostShareFacade {
     private _log;
@@ -277,6 +277,112 @@ class PostShareFacade {
                 },
                 code: 200
             });
+        });
+    }
+
+    /**
+     * Remove a shared post by ID.
+     * @param userId: string
+     * @param postId: string
+     * @returns Promise<{
+     *   message: string,
+     *   data: {},
+     *   code: number
+     * }>
+     */
+    removeSharedPost(userId: string, postId: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+
+            const sharedPost: sharedPostType | void = await this._postShareRepository.getByIdAndUserCognitoSub(postId, userId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'removeSharedPost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        userId,
+                        postId
+                    }
+                });
+
+                if (error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
+                        message: 'Shared post not found.',
+                        code: 404
+                    });
+                }
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (!sharedPost || (sharedPost && (!sharedPost.id || sharedPost.id == '')) || userId !== sharedPost.userId) {
+                return reject({
+                    message: 'Shared post not found.',
+                    code: 404
+                });
+            }
+
+            const getFeedsByPostIdResult: feedRawType[] | void = await this._feedRepository.getFeedsByPostId(postId).catch((error) => {
+                this._log.error({
+                    function: 'removeSharedPost()',
+                    message: error.toString(),
+                    payload: {
+                        userId,
+                        postId
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
+            });
+
+            if (getFeedsByPostIdResult) {
+                await this._toDeleteFeedsByPostId(getFeedsByPostIdResult);
+            }
+
+            await this._postShareRepository.softDelete(postId).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'removeSharedPost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        userId,
+                        postId
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.UPDATE,
+                    code: 500
+                });
+            });
+
+            return resolve({
+                message: 'A shared post was successfully deleted.',
+                data: {},
+                code: 200
+            });
+        });
+    }
+
+    /**
+     * To delete the feed related to a post.
+     * @param feeds: feedRawType[]
+     * @returns Promise<boolean>
+     */
+    private _toDeleteFeedsByPostId(feeds: feedRawType[]): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            for (const feed of feeds) {
+                await this._feedRepository.softDeleteFeedById(feed.id);
+            }
+
+            return resolve(true);
         });
     }
 }
