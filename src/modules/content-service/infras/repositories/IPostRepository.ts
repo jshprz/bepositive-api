@@ -9,7 +9,7 @@ interface IPostRepository {
     getPostById(id: string): Promise<postType>;
     getSharedPostById(id: string): Promise<sharedPostType>;
     update(id: string, caption: string): Promise<UpdateResult>;
-    softDelete(id: string): Promise<boolean>;
+    softDelete(postId: string): Promise<boolean>;
     flagPost(userId: string, postId: string, classification: string, reason: string): FlaggedPosts
 }
 

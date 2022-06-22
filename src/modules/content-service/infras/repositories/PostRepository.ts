@@ -213,21 +213,23 @@ class PostRepository implements IPostRepository {
 
     /**
      * Performs soft delete for Posts
-     * @param id: string
+     * @param postId: string
      * @returns Promise<boolean>
      */
-    softDelete(id: string): Promise<boolean> {
+    softDelete(postId: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
+
             await getRepository(Posts)
                 .createQueryBuilder()
-                .where("id = :id", {id})
+                .where("id = :postId", { postId })
                 .softDelete()
                 .execute()
                 .catch((error: QueryFailedError) => {
                     return reject(error);
                 });
+
             return resolve(true);
-        })
+        });
     }
 
     /**

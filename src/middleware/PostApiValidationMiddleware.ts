@@ -36,6 +36,7 @@ export const sharePostByIdApiValidation = [
 
 export const removePostApiValidation = [
   check('id').not().isEmpty().withMessage('id parameter is required.').isString().withMessage('id parameter should be a type of string.'),
+  check('classification').not().isEmpty().withMessage('classification property is required').isIn(['REGULAR_POST', 'SHARED_POST']).withMessage("classification property should only be 'REGULAR_POST' or 'SHARED_POST'.")
 ];
 
 export const updatePostApiValidation = [

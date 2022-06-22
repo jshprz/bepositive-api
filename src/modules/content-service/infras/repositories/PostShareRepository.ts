@@ -3,6 +3,7 @@ import { PostShares } from "../../../../database/postgresql/models/PostShares";
 import IPostShareRepository from "./IPostShareRepository";
 import type { getByIdAndUserCognitoSubReturnTypes } from '../../../types';
 import { sharedPostType } from "../../../types";
+import {Posts} from "../../../../database/postgresql/models/Posts";
 
 class PostShareRepository implements IPostShareRepository {
 
@@ -104,6 +105,25 @@ class PostShareRepository implements IPostShareRepository {
             .set({share_caption: shareCaption})
             .where('id = :id', { id })
             .execute();
+    }
+
+    /**
+     * Performs soft delete for shared post.
+     * @param postId: string
+     * @returns Promise<boolean>
+     */
+    softDelete(postId: string): Promise<boolean> {
+        return new Promise(async (resolve, reject) => {
+            await getRepository(PostShares)
+                .createQueryBuilder()
+                .where("id = :postId", { postId })
+                .softDelete()
+                .execute()
+                .catch((error: QueryFailedError) => {
+                    return reject(error);
+                });
+            return resolve(true);
+        })
     }
 }
 
