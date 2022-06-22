@@ -420,6 +420,9 @@ class UserController {
             // Logged-in users can only access other users' profiles that are set to public.
             if (userProfile.data.isPublic || userProfile.data.userId === req.body.userCognitoSub) {
 
+                const userFollowers = await this._userAccount.getFollowers(userId);
+                const userFollowings = await this._userAccount.getFollowings(userId);
+
                 // Change the createdAt and updatedAt datetime format to unix timestamp
                 // We do this as format convention for createdAt and updatedAt
                 const timestamps = {
@@ -441,7 +444,9 @@ class UserController {
                             avatar: userProfile.data.avatar,
                             profileTitle: userProfile.data.profileTitle,
                             profileDescription: userProfile.data.profileDescription,
-                            website: userProfile.data.website
+                            website: userProfile.data.website,
+                            followers: userFollowers.data.length,
+                            followings: userFollowings.data.length
                         }
                     },
                     status: userProfile.code
@@ -969,6 +974,162 @@ class UserController {
                     message: error.message,
                     error: 'Internal server error',
                     status: 500
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async getUserFollowersProfiles(req: Request, res: Response) {
+        try {
+            const errors = validationResult(req).mapped();
+
+            if (errors.userId) {
+                return res.status(400).json({
+                    message: errors.userId.msg,
+                    error: 'Bad request error',
+                    status: 400
+                });
+            }
+
+            const userId: string = req.params.userId;
+            const userFollowers = await this._userAccount.getFollowers(userId);
+
+            const userFollowersProfiles: {
+                userId: string,
+                name: string,
+                avatar: string,
+                profileTitle: string,
+                profileDescription: string,
+                website: string,
+            }[] = [];
+
+            for (const follower of userFollowers.data) {
+                const userProfile = await this._userAccount.getUserProfile(follower.followerId);
+
+                userFollowersProfiles.push({
+                    userId: userProfile.data.userId,
+                    name: userProfile.data.name,
+                    avatar: userProfile.data.avatar,
+                    profileTitle: userProfile.data.profileTitle,
+                    profileDescription: userProfile.data.profileDescription,
+                    website: userProfile.data.website,
+                });
+            }
+
+            return res.status(userFollowers.code).json({
+                message: userFollowers.message,
+                payload: userFollowersProfiles,
+                status: userFollowers.code
+            });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 409) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Conflict',
+                    status: 409
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async getUserFollowingsProfiles(req: Request, res: Response) {
+        try {
+            const errors = validationResult(req).mapped();
+
+            if (errors.userId) {
+                return res.status(400).json({
+                    message: errors.userId.msg,
+                    error: 'Bad request error',
+                    status: 400
+                });
+            }
+
+            const userId: string = req.params.userId;
+            const userFollowings = await this._userAccount.getFollowings(userId);
+
+            const userFollowingsProfiles: {
+                userId: string,
+                name: string,
+                avatar: string,
+                profileTitle: string,
+                profileDescription: string,
+                website: string,
+            }[] = [];
+
+            for (const following of userFollowings.data) {
+                const userProfile = await this._userAccount.getUserProfile(following.followeeId);
+
+                userFollowingsProfiles.push({
+                    userId: userProfile.data.userId,
+                    name: userProfile.data.name,
+                    avatar: userProfile.data.avatar,
+                    profileTitle: userProfile.data.profileTitle,
+                    profileDescription: userProfile.data.profileDescription,
+                    website: userProfile.data.website,
+                });
+            }
+
+            return res.status(userFollowings.code).json({
+                message: userFollowings.message,
+                payload: userFollowingsProfiles,
+                status: userFollowings.code
+            });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 409) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Conflict',
+                    status: 409
                 });
             } else if (error.code && error.code === 404) {
                 return res.status(404).json({
