@@ -1,7 +1,13 @@
 import express from 'express';
 import UserController from "../app/controllers/UserController";
 import authMiddleWare from '../middleware/AuthorizationMiddleware';
-import { followUserApiValidation, profileUpdateApiValidation, updatePrivacyApiValidation } from '../middleware/UserApiValidationMiddleware';
+import {
+    followUserApiValidation,
+    profileUpdateApiValidation,
+    updatePrivacyApiValidation,
+    getFollowersApiValidation,
+    getFollowingsApiValidation
+} from '../middleware/UserApiValidationMiddleware';
 
 const router = express.Router();
 const userController = new UserController();
@@ -12,5 +18,7 @@ router.post('/follow/:followeeCognitoSub', [authMiddleWare, ...followUserApiVali
 router.patch('/unfollow/:followeeCognitoSub', [authMiddleWare, ...followUserApiValidation], (req: any, res: any) => userController.unfollowUser(req, res));
 router.patch('/profile/update', [authMiddleWare, ...profileUpdateApiValidation], (req: any, res: any) => userController.updateProfile(req, res));
 router.patch('/privacy-update/', [authMiddleWare, ...updatePrivacyApiValidation], (req: any, res: any) => userController.updatePrivacy(req, res));
+router.get('/getFollowers/:userId?', [authMiddleWare, ...getFollowersApiValidation], (req: any, res: any) => userController.getUserFollowersProfiles(req, res));
+router.get('/getFollowings/:userId?', [authMiddleWare, ...getFollowingsApiValidation], (req: any, res: any) => userController.getUserFollowingsProfiles(req, res));
 
 export default router;

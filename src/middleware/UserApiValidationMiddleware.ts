@@ -22,3 +22,11 @@ export const profileUpdateApiValidation = [
 export const updatePrivacyApiValidation = [
     check('isPublic').not().isEmpty().withMessage('isPublic parameter is required.').isBoolean().withMessage('isPublic parameter should be a type of boolean.')
 ];
+
+export const getFollowersApiValidation = [
+    check('userId').not().isEmpty().withMessage('userId parameter is required.').isString().withMessage('userId parameter should be a type of string.')
+];
+
+export const getFollowingsApiValidation = [
+    check('userId').not().isEmpty().withMessage('userId parameter is required.').isString().withMessage('userId parameter should be a type of string.')
+];
