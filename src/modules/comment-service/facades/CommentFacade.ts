@@ -101,7 +101,7 @@ class CommentFacade {
      *         code: number
      *     }>
      */
-    getCommentsByPostId(postId: string): Promise<{
+    getCommentsByPostId(postId: string, loggedInUserId: string): Promise<{
         message: string,
         data: commentType[],
         code: number
@@ -160,7 +160,16 @@ class CommentFacade {
                         comment.actor.avatar.url = userProfileData.avatar || '';
                     }
 
-                    promises.push(this._getConsolidatedCommentReplies(comment.id));
+                    const commentLike = await this._commentLikeRepository.getByIdAndUserId(comment.id, loggedInUserId).catch((error) => {
+                        throw error;
+                    });
+
+                    // To set the comment like status - if the logged-in user liked the comment/reply or not.
+                    if (commentLike && commentLike.id) {
+                        comment.isLiked = true;
+                    }
+
+                    promises.push(this._getConsolidatedCommentReplies(comment.id, loggedInUserId));
                 }
 
                 Promise.allSettled(promises).then((results) => {
@@ -203,13 +212,13 @@ class CommentFacade {
      * @param commentId: string
      * @returns Promise<getCommentRepliesByCommentIdReturnType[]>
      */
-    private async _getConsolidatedCommentReplies(commentId: string): Promise<getCommentRepliesByCommentIdReturnType[]> {
+    private async _getConsolidatedCommentReplies(commentId: string, loggedInUserId: string): Promise<getCommentRepliesByCommentIdReturnType[]> {
         return new Promise(async (resolve, reject) => {
             const replies: getCommentRepliesByCommentIdReturnType[] | void = await this._commentRepository.getCommentRepliesByCommentId(commentId)
                 .catch((error: QueryFailedError) => {
                     return reject(error);
                 });
-            if (Array.isArray(replies) && replies.length > 0) {
+            if (Array.isArray(replies)) {
                 for (const reply of replies) {
                     // Get the user of a reply.
                     if (reply.actor) {
@@ -221,12 +230,19 @@ class CommentFacade {
                         reply.actor.avatar.url = userProfileData.avatar || '';
                     }
 
-                    const repliesOfReplyResult = await this._getRepliesOfReply(reply.id);
+                    const commentLike = await this._commentLikeRepository.getByIdAndUserId(reply.id, loggedInUserId).catch((error) => {
+                        throw error;
+                    });
+
+                    // To set the comment like status - if the logged-in user liked the comment/reply or not.
+                    if (commentLike && commentLike.id) {
+                        reply.isLiked = true;
+                    }
+
+                    const repliesOfReplyResult = await this._getRepliesOfReply(reply.id, loggedInUserId);
                     reply.replies = repliesOfReplyResult;
                 }
                 return resolve(replies);
-            } else {
-                return reject(false);
             }
         });
     }
@@ -236,7 +252,7 @@ class CommentFacade {
      * @param commentId: string
      * @returns Promise<getCommentRepliesByCommentIdReturnType[]>
      */
-    private async _getRepliesOfReply(commentId: string): Promise<getCommentRepliesByCommentIdReturnType[]> {
+    private async _getRepliesOfReply(commentId: string, loggedInUserId: string): Promise<getCommentRepliesByCommentIdReturnType[]> {
         const repliesOfReplyHolder: getCommentRepliesByCommentIdReturnType[] = [];
         const repliesArr: getCommentRepliesByCommentIdReturnType[] = await this._commentRepository.getCommentRepliesByCommentId(commentId);
         let repliesArrHolder: getCommentRepliesByCommentIdReturnType[] = [...repliesArr];
@@ -281,6 +297,15 @@ class CommentFacade {
 
                 reply.actor.name = userProfileData.name || '';
                 reply.actor.avatar.url = userProfileData.avatar || '';
+            }
+
+            const commentLike = await this._commentLikeRepository.getByIdAndUserId(reply.id, loggedInUserId).catch((error) => {
+                throw error;
+            });
+
+            // To set the comment like status - if the logged-in user liked the comment/reply or not.
+            if (commentLike && commentLike.id) {
+                reply.isLiked = true;
             }
         }
         // reverse the repliesOfReplyHolder object for the order to be correct in terms of createdAt property

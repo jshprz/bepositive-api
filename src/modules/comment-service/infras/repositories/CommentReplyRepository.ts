@@ -31,6 +31,7 @@ class CommentReplyRepository implements ICommentReplyRepository {
                 id: reply?.id || '',
                 commentId: reply?.comment_id || '',
                 content: reply?.content || '',
+                isLiked: false,
                 createdAt: reply?.created_at || 0,
                 updatedAt: reply?.updated_at || 0,
                 actor: {},

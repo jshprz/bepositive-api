@@ -85,6 +85,7 @@ class PostRepository implements IPostRepository {
                                 height: '',
                                 width: ''
                             }],
+                            isLiked: false,
                             createdAt: post.posts_created_at,
                             updatedAt: post.posts_updated_at,
                         },
@@ -146,6 +147,7 @@ class PostRepository implements IPostRepository {
                         height: '',
                         width: ''
                     }],
+                    isLiked: false,
                     createdAt: post?.created_at || 0,
                     updatedAt: post?.updated_at || 0,
                 },

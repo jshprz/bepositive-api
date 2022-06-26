@@ -264,7 +264,7 @@ class PostFacade {
      *         code: number
      *     }>
      */
-    getPostsByUser(userCognitoSub: string): Promise<{
+    getPostsByUser(userCognitoSub: string, loggedInUserId: string): Promise<{
         message: string,
         data: postType[],
         code: number
@@ -290,7 +290,7 @@ class PostFacade {
 
                 // To add a location details and complete URL of the S3 file key on each of the post within the post gallery.
                 posts.forEach((post) => {
-                    promises.push(this._processPostsLocationAndMediaFiles(post));
+                    promises.push(this._processPostsLocationAndMediaFiles(post, loggedInUserId));
                 });
 
                 Promise.allSettled(promises).then((results) => {
@@ -308,6 +308,7 @@ class PostFacade {
                                 height: '',
                                 width: ''
                             }],
+                            isLiked: false,
                             createdAt: 0,
                             updatedAt: 0,
                         },
@@ -348,7 +349,7 @@ class PostFacade {
      *         code: number
      *     }>
      */
-    getFavoritePostsByUserId(userId: string): Promise<{
+    getFavoritePostsByUserId(userId: string, loggedInUserId: string): Promise<{
         message: string,
         data: postType[],
         code: number
@@ -404,6 +405,11 @@ class PostFacade {
                             post.actor.avatar.url = userProfileData.avatar || '';
                         }
 
+                        // To set the post like status - if the logged-in user liked the post or not.
+                        if (likedPost.userId === loggedInUserId) {
+                            post.content.isLiked = true;
+                        }
+
                         posts.push(post);
                     }
                 }
@@ -426,7 +432,7 @@ class PostFacade {
      *   code: number
      * }>
      */
-    getPostById(id: string): Promise<{
+    getPostById(id: string, loggedInUserId: string): Promise<{
         message: string,
         data: postType,
         code: number
@@ -480,6 +486,16 @@ class PostFacade {
 
                     post.actor.name = userProfileData.name || '';
                     post.actor.avatar.url = userProfileData.avatar || '';
+                }
+
+                // To set the post like status - if the logged-in user liked the post or not.
+                if (post.content.isLiked === false || post.content.isLiked === true) {
+                    const getPostLikeByUserIdResult: number | getPostLikeType = await this._postLikeRepository.getByIdAndUserId(post.content.postId, loggedInUserId).catch((error) => {
+                        throw error;
+                    });
+                    if (typeof getPostLikeByUserIdResult !== 'number' && getPostLikeByUserIdResult.id) {
+                        post.content.isLiked = true;
+                    }
                 }
 
                 return resolve({
@@ -883,7 +899,7 @@ class PostFacade {
      * @param post: postType
      * @private Promise<postType>
      */
-    private async _processPostsLocationAndMediaFiles(post: postType): Promise<postType> {
+    private async _processPostsLocationAndMediaFiles(post: postType, loggedInUserId: string = ''): Promise<postType> {
         if (post.content.postId === '' || post.actor.userId === '') {
             return post;
         }
@@ -915,6 +931,16 @@ class PostFacade {
 
             post.actor.name = userProfileData.name || '';
             post.actor.avatar.url = userProfileData.avatar || '';
+        }
+
+        // To set the post like status - if the logged-in user liked the post or not.
+        if (post.content.isLiked === false || post.content.isLiked === true) {
+            const getPostLikeByUserIdResult: number | getPostLikeType = await this._postLikeRepository.getByIdAndUserId(post.content.postId, loggedInUserId).catch((error) => {
+                throw error;
+            });
+            if (typeof getPostLikeByUserIdResult !== 'number' && getPostLikeByUserIdResult.id) {
+                post.content.isLiked = true;
+            }
         }
 
         return post;

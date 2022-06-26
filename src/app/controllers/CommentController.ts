@@ -90,7 +90,7 @@ class CommentController {
 
         try {
             const postId: string = req.params.postId;
-            const comments = await this._commentFacade.getCommentsByPostId(postId);
+            const comments = await this._commentFacade.getCommentsByPostId(postId, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp for all comments/replies under the post
             // We do this as format convention for createdAt and updatedAt

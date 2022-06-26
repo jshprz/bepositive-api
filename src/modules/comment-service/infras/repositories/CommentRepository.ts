@@ -126,6 +126,7 @@ class CommentRepository implements ICommentRepository {
                         postId: comment.comments_post_id,
                         content: comment.comments_content,
                         status: comment.comments_status,
+                        isLiked: false,
                         createdAt: comment.comments_created_at,
                         updatedAt: comment.comments_updated_at,
                         actor: {
@@ -261,6 +262,7 @@ class CommentRepository implements ICommentRepository {
                         id: reply.comment_replies_id,
                         commentId: reply.comment_replies_comment_id,
                         content: reply.comment_replies_content,
+                        isLiked: false,
                         createdAt: reply.comment_replies_created_at,
                         updatedAt: reply.comment_replies_updated_at,
                         actor: {

@@ -307,13 +307,7 @@ class FeedFacade {
                         throw error;
                     });
 
-                    if (typeof getPostLikeByUserIdResult !== 'number') {
-                        // BEP-85: uncomment this when advertisement accounts have finally been implemented
-                        // if (getPostLikeByUserIdResult.userId === newAd.actor.userId) {
-                        //     newAd.content.isLiked = true;
-                        // } else {
-                        //     newAd.content.isLiked = false;
-                        // }
+                    if (typeof getPostLikeByUserIdResult !== 'number' && getPostLikeByUserIdResult.id) {
                         newAd.content.isLiked = true;
                     }
                 }
@@ -485,12 +479,8 @@ class FeedFacade {
                 const getPostLikeByUserIdResult: number | getPostLikeType = await this._postLikeRepository.getByIdAndUserId(feed.content.postId, loggedInUserId).catch((error) => {
                     throw error;
                 });
-                if (typeof getPostLikeByUserIdResult !== 'number') {
-                    if (getPostLikeByUserIdResult.userId === feed.actor.userId) {
-                        feed.content.isLiked = true;
-                    } else {
-                        feed.content.isLiked = false;
-                    }
+                if (typeof getPostLikeByUserIdResult !== 'number' && getPostLikeByUserIdResult.id) {
+                    feed.content.isLiked = true;
                 }
             }
 
