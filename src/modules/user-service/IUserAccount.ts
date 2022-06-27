@@ -5,7 +5,7 @@ import { ISignUpResult } from "amazon-cognito-identity-js";
 
 interface IUserAccount {
 
-    getUserProfile(userId: string): Promise<{
+    getUserProfile(userId: string, loggedInUserId: string): Promise<{
         message: string,
         data: userProfileType,
         code: number

@@ -3,7 +3,7 @@ import IAwsS3 from "../../infras/aws/IAwsS3";
 import IUserRelationshipRepository from "../../infras/repositories/IUserRelationshipRepository";
 import IUserProfileRepository from "../../infras/repositories/IUserProfileRepository";
 import Logger from "../../config/Logger";
-import { userProfileType } from "./types";
+import type {userProfileType, userRelationshipTypes} from "./types";
 import { QueryFailedError } from "typeorm";
 import Error from "../../config/Error";
 import { ListUsersResponse } from "aws-sdk/clients/cognitoidentityserviceprovider";
@@ -29,19 +29,20 @@ class UserAccount implements IUserAccount {
     /**
      * Gets user information from AWS Cognito using access token.
      * @param userId: string
+     * @param loggedInUserId: string
      * @returns Promise<{
      *         message: string,
      *         data: UserProfiles,
      *         code: number
      *     }>
      */
-    getUserProfile(userId: string): Promise<{
+    getUserProfile(userId: string, loggedInUserId: string): Promise<{
         message: string,
         data: userProfileType,
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const userProfileData = await this._userProfileRepository.getUserProfileByUserId(userId).catch((error: QueryFailedError | string) => {
+            const userProfileData: void | userProfileType  = await this._userProfileRepository.getUserProfileByUserId(userId).catch((error: QueryFailedError | string) => {
                 if (String(error) === 'NOT_FOUND') {
                     return reject({
                         message: 'User not found',
@@ -61,6 +62,27 @@ class UserAccount implements IUserAccount {
             });
 
             if (userProfileData) {
+                const userFollowing: void | userRelationshipTypes[] = await this._userRelationshipRepository.getByFolloweeIdAndFollowerId(userId, loggedInUserId).catch((error: QueryFailedError) => {
+                    this._log.error({
+                        function: 'getUserProfile()',
+                        message: error.toString(),
+                        payload: {
+                            userId,
+                            loggedInUserId
+                        }
+                    });
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
+
+                // To set the isFollowed status - if the logged-in user has followed the another user or not.
+                if (Array.isArray(userFollowing) && userFollowing.length > 0) {
+                    userProfileData.isFollowed = true;
+                }
+
                 return resolve({
                     message: 'User profile successfully retrieved',
                     data: userProfileData,

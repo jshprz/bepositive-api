@@ -414,7 +414,7 @@ class UserController {
             // We'll first consider if a userId param is provided, which means that our intention is to retrieve the profile of another user.
             // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
             const userId: string = req.params.userId || req.body.userCognitoSub;
-            const userProfile = await this._userAccount.getUserProfile(userId);
+            const userProfile = await this._userAccount.getUserProfile(userId, req.body.userCognitoSub);
 
             // Logged-in users can access their own profiles whether their privacy is set to public or not.
             // Logged-in users can only access other users' profiles that are set to public.
@@ -446,7 +446,8 @@ class UserController {
                             profileDescription: userProfile.data.profileDescription,
                             website: userProfile.data.website,
                             followers: userFollowers.data.length,
-                            followings: userFollowings.data.length
+                            followings: userFollowings.data.length,
+                            isFollowed: userProfile.data.isFollowed
                         }
                     },
                     status: userProfile.code
@@ -1019,10 +1020,11 @@ class UserController {
                 profileTitle: string,
                 profileDescription: string,
                 website: string,
+                isFollowed: boolean
             }[] = [];
 
             for (const follower of userFollowers.data) {
-                const userProfile = await this._userAccount.getUserProfile(follower.followerId);
+                const userProfile = await this._userAccount.getUserProfile(follower.followerId, req.body.userCognitoSub);
 
                 userFollowersProfiles.push({
                     userId: userProfile.data.userId,
@@ -1031,6 +1033,7 @@ class UserController {
                     profileTitle: userProfile.data.profileTitle,
                     profileDescription: userProfile.data.profileDescription,
                     website: userProfile.data.website,
+                    isFollowed: userProfile.data.isFollowed
                 });
             }
 
@@ -1097,10 +1100,11 @@ class UserController {
                 profileTitle: string,
                 profileDescription: string,
                 website: string,
+                isFollowed: boolean
             }[] = [];
 
             for (const following of userFollowings.data) {
-                const userProfile = await this._userAccount.getUserProfile(following.followeeId);
+                const userProfile = await this._userAccount.getUserProfile(following.followeeId, req.body.userCognitoSub);
 
                 userFollowingsProfiles.push({
                     userId: userProfile.data.userId,
@@ -1109,6 +1113,7 @@ class UserController {
                     profileTitle: userProfile.data.profileTitle,
                     profileDescription: userProfile.data.profileDescription,
                     website: userProfile.data.website,
+                    isFollowed: userProfile.data.isFollowed
                 });
             }
 

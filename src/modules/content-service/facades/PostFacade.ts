@@ -258,6 +258,7 @@ class PostFacade {
     /**
      * Get all the posts of the user by their cognito sub.
      * @param userCognitoSub: string
+     * @param loggedInUserId: string
      * @returns Promise<{
      *         message: string,
      *         data: postType[],
@@ -343,6 +344,7 @@ class PostFacade {
     /**
      * Get the posts that have liked by user.
      * @param userId
+     * @param loggedInUserId: string
      * Promise<{
      *         message: string,
      *         data: postType[],
@@ -426,6 +428,7 @@ class PostFacade {
     /**
      * Get a post by its ID.
      * @param id: string
+     * @param loggedInUserId: string
      * @returns Promise<{
      *   message: string,
      *   data: postType,
@@ -897,6 +900,7 @@ class PostFacade {
     /**
      * To add a location details and complete URL of the S3 file key on a post object.
      * @param post: postType
+     * @param loggedInUserId: string
      * @private Promise<postType>
      */
     private async _processPostsLocationAndMediaFiles(post: postType, loggedInUserId: string = ''): Promise<postType> {

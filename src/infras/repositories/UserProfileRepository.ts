@@ -82,6 +82,7 @@ class UserProfileRepository implements IUserProfileRepository {
                 country: userProfile?.country || '',
                 phoneNumber: userProfile?.phone_number || '',
                 isPublic: userProfile?.is_public || false,
+                isFollowed: false,
                 createdAt: userProfile?.created_at || 0,
                 updatedAt: userProfile?.updated_at || 0,
             }
