@@ -70,7 +70,7 @@ describe('Facades :: UserAccountFacade', () => {
                 userAccountInstance.getUserProfile(userId, loggedInUserId);
 
                 // To make sure that we call the function with the expected arguments:
-                expect(userAccountMock.prototype.getUserProfile).toHaveBeenCalledWith(userId);
+                expect(userAccountMock.prototype.getUserProfile).toHaveBeenCalledWith(userId, loggedInUserId);
 
                 // To make sure we called the function once:
                 expect(userAccountMock.prototype.getUserProfile).toHaveBeenCalledTimes(1);
@@ -132,7 +132,7 @@ describe('Facades :: UserAccountFacade', () => {
                 }
 
                 expect(typeof userAccountInstance.getUserProfile(userId, loggedInUserId)).toBe('object');
-                expect(userAccountInstance.getUserProfile).toHaveBeenCalledWith('87d28326-6ce8-4f68-a30e-dc7cf84df9b7');
+                expect(userAccountInstance.getUserProfile).toHaveBeenCalledWith('87d28326-6ce8-4f68-a30e-dc7cf84df9b7', '87d28326-6ce8-4f68-a30e-dc7cf84df9b7');
                 expect(userAccountInstance.getUserProfile(userId, loggedInUserId)).toStrictEqual({
                     message: 'User profile successfully retrieved',
                     data: getUserProfileReturnData,
