@@ -167,7 +167,7 @@ class ContentController {
             // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
             const userCognitoSub: string = req.params.userId || req.body.userCognitoSub;
 
-            const posts = await this._postFacade.getPostsByUser(userCognitoSub);
+            const posts = await this._postFacade.getPostsByUser(userCognitoSub, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
@@ -216,7 +216,7 @@ class ContentController {
             // We'll first consider if a userId param is provided, which means that our intention is to retrieve the profile of another user.
             // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
             const userId: string = req.params.userId || req.body.userCognitoSub;
-            const getFavoritePostsByUserIdResult = await this._postFacade.getFavoritePostsByUserId(userId);
+            const getFavoritePostsByUserIdResult = await this._postFacade.getFavoritePostsByUserId(userId, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
@@ -272,7 +272,7 @@ class ContentController {
 
         try {
             const id: string = req.params.id;
-            const post = await this._postFacade.getPostById(id);
+            const post = await this._postFacade.getPostById(id, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt

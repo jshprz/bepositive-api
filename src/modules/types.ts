@@ -58,6 +58,7 @@ export type getCommentsByPostIdReturnType = {
   postId: string,
   content: string,
   status: string,
+  isLiked: boolean,
   createdAt: Date | number,
   updatedAt: Date | number,
   actor: {
@@ -77,6 +78,7 @@ export type getCommentRepliesByCommentIdReturnType = {
   id: string,
   commentId: string,
   content: string,
+  isLiked: boolean,
   createdAt: Date | number,
   updatedAt: Date | number,
   actor: any,
@@ -137,6 +139,7 @@ export type postType = {
       key: string,
       type: string
     }[]) | null,
+    isLiked: boolean,
     createdAt: Date | number,
     updatedAt: Date | number,
   },
