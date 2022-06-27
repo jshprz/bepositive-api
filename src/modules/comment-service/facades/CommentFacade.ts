@@ -95,6 +95,7 @@ class CommentFacade {
     /**
      * Get all the comments and replies under a post .
      * @param postId: string
+     * @param loggedInUserId: string
      * @returns Promise<{
      *         message: string,
      *         data: commentType[],
@@ -210,6 +211,7 @@ class CommentFacade {
     /**
      * Get the replies of a comment.
      * @param commentId: string
+     * @param loggedInUserId: string
      * @returns Promise<getCommentRepliesByCommentIdReturnType[]>
      */
     private async _getConsolidatedCommentReplies(commentId: string, loggedInUserId: string): Promise<getCommentRepliesByCommentIdReturnType[]> {
@@ -250,6 +252,7 @@ class CommentFacade {
     /**
      * Recursively get the replies of a reply.
      * @param commentId: string
+     * @param loggedInUserId: string
      * @returns Promise<getCommentRepliesByCommentIdReturnType[]>
      */
     private async _getRepliesOfReply(commentId: string, loggedInUserId: string): Promise<getCommentRepliesByCommentIdReturnType[]> {
