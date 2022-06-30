@@ -10,6 +10,15 @@ const main = async () => {
   const app = express();
   const port = process.env.PORT;
 
+  app.use((req, res, next) => {
+    res.header({
+      "Access-Control-Allow-Origin": "https://main.bepositive-staging.smedia.com.au",
+      "Access-Control-Allow-Headers": "Content-Type,Accept,Authorization",
+      "Access-Control-Allow-Methods": "POST,GET,OPTIONS,PUT,PATCH,DELETE"
+    });
+    next();
+  });
+
   app.use(express.urlencoded({extended: true}));
   app.use(express.json());
 
