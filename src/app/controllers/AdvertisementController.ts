@@ -523,8 +523,6 @@ class AdvertisementController {
                     status: 520
                 });
             } else {
-
-
                 if (req.body) {
                     if (req.body.advertisementId == undefined || !req.body.advertisementId || req.body.advertisementId == null || req.body.advertisementId == '') {
                         // middleware cannot detect req.body.advertisementId since it's included in a form-data
