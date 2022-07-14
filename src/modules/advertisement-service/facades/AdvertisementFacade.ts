@@ -37,7 +37,7 @@ class AdvertisementFacade {
      */
     createAdvertisement(item: { userCognitoSub: string, name: string, link: string, caption: string, files: {key: string, type: string}[], googleMapsPlaceId: string, isSponsored: boolean }): Promise<{
         message: string,
-        data: { uploadSignedURLs: string[] },
+        data: { uploadSignedURLs: string[], advertisementId: string},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
@@ -80,7 +80,8 @@ class AdvertisementFacade {
                 return resolve({
                     message: 'Advertisement created successfully.',
                     data: {
-                        uploadSignedURLs: resultsMap.filter(result => result !== '')
+                        uploadSignedURLs: resultsMap.filter(result => result !== ''),
+                        advertisementId: advertisement?.id || ''
                     },
                     code: 200
                 });
@@ -767,8 +768,8 @@ class AdvertisementFacade {
 
             const unixTimeNow = moment().unix();
             const params = {
-                Bucket: `${process.env.AWS_S3_BUCKET}`,
-                Key: `advertisements/avatars/${unixTimeNow}_${originalName}`,
+                Bucket: `bepositive-staging/advertisements/avatars`,
+                Key: `${unixTimeNow}_${originalName}`,
                 ContentType: mimeType,
                 Body: data,
                 ACL: 'public-read'
@@ -780,8 +781,7 @@ class AdvertisementFacade {
                     message: error.message,
                     payload: {
                         originalName,
-                        mimeType,
-                        data
+                        mimeType
                     }
                 });
 
@@ -792,8 +792,6 @@ class AdvertisementFacade {
             });
 
             if (s3Upload) {
-
-
                 await this._advertisementRepository.uploadAdvertisementAvatar(advertisementId, s3Upload.Location).catch((error: QueryFailedError) => {
                     this._log.error({
                         function: 'uploadAdvertisementAvatar()',
@@ -801,8 +799,7 @@ class AdvertisementFacade {
                         payload: {
                             advertisementId,
                             originalName,
-                            mimeType,
-                            data
+                            mimeType
                         }
                     });
 
