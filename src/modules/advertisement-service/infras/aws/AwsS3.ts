@@ -29,7 +29,7 @@ class AwsS3 {
         type paramsType = {Bucket: string, Key: string, Expires: number, ContentType: string, ACL: string};
 
         const params: paramsType = {
-            Bucket: `bepositive-staging`,
+            Bucket: `${process.env.AWS_S3_BUCKET}`,
             Key: s3FilenameKey,
             Expires: 300,
             ContentType: contentType,

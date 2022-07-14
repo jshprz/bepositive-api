@@ -768,8 +768,8 @@ class AdvertisementFacade {
 
             const unixTimeNow = moment().unix();
             const params = {
-                Bucket: `bepositive-staging/advertisements/avatars`,
-                Key: `${unixTimeNow}_${originalName}`,
+                Bucket: `${process.env.AWS_S3_BUCKET}`,
+                Key: `advertisements/avatars${unixTimeNow}_${originalName}`,
                 ContentType: mimeType,
                 Body: data,
                 ACL: 'public-read'
