@@ -13,7 +13,7 @@ const main = async () => {
   app.use((req, res, next) => {
     res.header({
       "Access-Control-Allow-Origin": "https://main.bepositive-staging.smedia.com.au",
-      "Access-Control-Allow-Headers": "Content-Type,Accept,Authorization",
+      "Access-Control-Allow-Headers": "*",
       "Access-Control-Allow-Methods": "POST,GET,OPTIONS,PUT,PATCH,DELETE"
     });
     next();
