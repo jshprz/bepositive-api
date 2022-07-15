@@ -70,6 +70,39 @@ export const flagAdvertisementApiValidation = [
   check('reason').not().isEmpty().withMessage('reason property is required.')
 ];
 
+export const uploadAdAvatarApiValidation = [
+  check('advertisementId').not().isEmpty().withMessage('Advertisement ID property is required.'),
+  check('files').not().isEmpty().withMessage('files property is required.').isObject().withMessage('file property should be object type.').custom((file: {key: string, type: string}) => {
+
+    let errorMessage: string | null = '';
+
+      if (!file.key || !file.type) {
+        errorMessage = 'file object should contain key and type property.';
+        return;
+      } else {
+        const extension: string = (path.extname(file.key)).toLowerCase();
+        const keyValidation: {isFailed: boolean, message: string | null} = validateKey(extension);
+
+        if (keyValidation.isFailed) {
+          errorMessage = keyValidation.message;
+          return;
+        }
+
+        if (keyValidation.message !== file.type) {
+          errorMessage = `key extension and type property mismatch: key(${file.key}) : type(${file.type})`;
+          return;
+        }
+      }
+
+    if (errorMessage.length <= 0) {
+      return Promise.resolve();
+    } else {
+      return Promise.reject(errorMessage);
+    }
+
+  }),
+];
+
 function validateKey(extension: string): {isFailed: boolean, message: string | null} {
     switch (extension) {
       case '.jpg':
