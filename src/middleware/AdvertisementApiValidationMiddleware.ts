@@ -72,7 +72,7 @@ export const flagAdvertisementApiValidation = [
 
 export const uploadAdAvatarApiValidation = [
   check('advertisementId').not().isEmpty().withMessage('Advertisement ID property is required.'),
-  check('files').not().isEmpty().withMessage('files property is required.').isObject().withMessage('file property should be object type.').custom((file: {key: string, type: string}) => {
+  check('file').not().isEmpty().withMessage('file property is required.').isObject().withMessage('file property should be object type.').custom((file: {key: string, type: string}) => {
 
     let errorMessage: string | null = '';
 
