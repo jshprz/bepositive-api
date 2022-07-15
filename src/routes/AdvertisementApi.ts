@@ -10,6 +10,7 @@ import {
   updateAdViewCountApiValidation,
   likeOrUnlikeAdvertisementApiValidation,
   flagAdvertisementApiValidation,
+  uploadAdAvatarApiValidation,
 } from '../middleware/AdvertisementApiValidationMiddleware';
 
 const router = express.Router();
@@ -23,6 +24,6 @@ router.patch('/remove/:id', [authMiddleWare, ...removeAdApiValidation], (req: Re
 router.patch('/update/view-count/:id', [authMiddleWare, ...updateAdViewCountApiValidation], (req: Request, res: Response) => advertisementController.updateAdViewCount(req, res));
 router.post('/like', [authMiddleWare, ...likeOrUnlikeAdvertisementApiValidation], (req: Request, res: Response) => advertisementController.likeOrUnlikeAdvertisement(req, res));
 router.patch('/flag/:id', [authMiddleWare, ...flagAdvertisementApiValidation], (req: Request, res: Response) => advertisementController.flagAdvertisement(req, res));
-router.post('/avatar/upload', authMiddleWare, (req: any, res: any) => advertisementController.uploadAdvertisementAvatar(req, res));
+router.post('/avatar/upload', [authMiddleWare, ...uploadAdAvatarApiValidation], (req: any, res: any) => advertisementController.uploadAdvertisementAvatar(req, res));
 
 export default router;

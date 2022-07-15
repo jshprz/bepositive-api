@@ -233,6 +233,12 @@ class AdvertisementFacade {
                     });
                 }
 
+                if (advertisement && advertisement.actor.avatar && advertisement.actor.avatar.url) {
+                    if (advertisement.actor.avatar.url !== '') {
+                        advertisement.actor.avatar.url = `${process.env.AWS_S3_BUCKET_URL}/${advertisement.actor.avatar.url}`; // S3 object file URL.
+                    }
+                }
+
                 return resolve({
                     message: 'Advertisement retrieved',
                     data: advertisement,
@@ -719,29 +725,30 @@ class AdvertisementFacade {
     /**
      * Upload advertisement avatar to S3 and update the advertisement avatar in the database record.
      * @param advertisementId: string
-     * @param originalName: string
-     * @param mimeType: string
-     * @param data: Buffer
+     * @param file: {
+     *  key: string,
+     *  type: string
+     * }
      * @returns Promise<{
      *     message: string,
      *     data: SendData,
      *     code: number
      * }>
      */
-     uploadAdvertisementAvatar(advertisementId: string, originalName: string, mimeType: string, data: Buffer): Promise<{
+    uploadAdvertisementAvatar(advertisementId: string, file: {key: string, type: string}): Promise<{
         message: string,
-        data: SendData,
+        data: { uploadSignedURL: string},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
 
-             // check if advertisementId exists
-             const ad = await this._advertisementRepository.getAdvertisementById(advertisementId).catch((error: QueryFailedError) => {
+            const advertisement: advertisementType | void = await this._advertisementRepository.getAdvertisementById(advertisementId).catch((error: QueryFailedError) => {
                 this._log.error({
-                    function: 'getAdvertisementById()',
+                    function: 'updateAdvertisement()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
-                        advertisementId
+                        advertisementId,
+                        file
                     }
                 });
 
@@ -753,35 +760,25 @@ class AdvertisementFacade {
                 }
 
                 return reject({
-                    message: Error.DATABASE_ERROR.UPDATE,
+                    message: Error.DATABASE_ERROR.GET,
                     code: 500
                 });
-            })
+            });
 
-            // check if ad exists first.
-            if (!ad || (ad && ad.content.advertisementId == "" ) || (ad && !ad.content.advertisementId)) {
+            if (!advertisement || (advertisement && (!advertisement.content.advertisementId || advertisement.content.advertisementId == ''))) {
                 return reject({
-                    message: 'Advertisement does not exist.',
+                    message: 'Advertisement not found.',
                     code: 404
                 });
             }
-
-            const unixTimeNow = moment().unix();
-            const params = {
-                Bucket: `${process.env.AWS_S3_BUCKET}`,
-                Key: `advertisements/avatars${unixTimeNow}_${originalName}`,
-                ContentType: mimeType,
-                Body: data,
-                ACL: 'public-read'
-            }
-
-            const s3Upload = await this._awsS3.upload(params).promise().catch((error: Error) => {
+            
+            const presignedPutUrl: string | void = await this._awsS3.presignedPutUrl(file.key, file.type, 'public-read').catch((error: Error) => {
                 this._log.error({
-                    function: 'uploadAdvertisementAvatar()',
+                    function: 'uploadAdvertisementAvatar() & presignedPutUrl()',
                     message: error.message,
                     payload: {
-                        originalName,
-                        mimeType
+                        advertisementId,
+                        file
                     }
                 });
 
@@ -791,30 +788,28 @@ class AdvertisementFacade {
                 });
             });
 
-            if (s3Upload) {
-                await this._advertisementRepository.uploadAdvertisementAvatar(advertisementId, s3Upload.Location).catch((error: QueryFailedError) => {
-                    this._log.error({
-                        function: 'uploadAdvertisementAvatar()',
-                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                        payload: {
-                            advertisementId,
-                            originalName,
-                            mimeType
-                        }
-                    });
-
-                    return reject({
-                        message: Error.DATABASE_ERROR.UPDATE,
-                        code: 500
-                    });
+            // update advertisement with avatar
+            await this._advertisementRepository.uploadAdvertisementAvatar(advertisementId, file.key).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'uploadAdvertisementAvatar()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        advertisementId,
+                        file
+                    }
                 });
 
-                return resolve({
-                    message: 'advertisement avatar was successfully uploaded.',
-                    data: s3Upload,
-                    code: 200
+                return reject({
+                    message: Error.DATABASE_ERROR.UPDATE,
+                    code: 500
                 });
-            }
+            });
+
+            return resolve({
+                message: 'advertisement avatar was successfully uploaded.',
+                data: { uploadSignedURL : presignedPutUrl || '' },
+                code: 200
+            });
         });
     }
 }

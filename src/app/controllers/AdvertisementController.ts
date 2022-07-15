@@ -507,110 +507,61 @@ class AdvertisementController {
 
     async uploadAdvertisementAvatar(req: Request, res: Response) {
 
-        this._upload(req, res, async (error) =>
-        {
+        const errors = validationResult(req).mapped();
 
-            if (error instanceof multer.MulterError) {
-                return res.status(400).json({
-                    message: 'A Multer error occurred when uploading',
-                    error: 'Bad request error',
-                    status: 400
+        if (errors.advertisementId) {
+            return res.status(400).json({
+                message: errors.advertisementId.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.file) {
+            return res.status(400).json({
+                message: errors.file.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const { advertisementId, file } = req.body;
+
+
+            // file
+            file.key = `${config.ADVERTISEMENT_AVATAR_FOLDER_PATH}/${uniqid()}_${file.key}`;
+
+            const uploadAdvAvatarResult = await this._advertisementFacade.uploadAdvertisementAvatar(advertisementId, file);
+
+            return res.status(uploadAdvAvatarResult.code).json({
+                message: uploadAdvAvatarResult.message,
+                payload: uploadAdvAvatarResult.data,
+                status: uploadAdvAvatarResult.code
+            });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
                 });
-            } else if (error) {
+
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+
+            } else {
                 return res.status(520).json({
-                    message: 'An unknown error occurred when uploading',
+                    message: error.message,
                     error: 'Unknown server error',
                     status: 520
                 });
-            } else {
-                if (req.body) {
-                    if (req.body.advertisementId == undefined || !req.body.advertisementId || req.body.advertisementId == null || req.body.advertisementId == '') {
-                        // middleware cannot detect req.body.advertisementId since it's included in a form-data
-                        return res.status(400).json({
-                            message: 'advertisementId parameter is required.',
-                            error: 'Bad request error',
-                            status: 400
-                        });
-                    } else if (typeof(req.body.advertisementId) != 'string') {
-                        return res.status(400).json({
-                            message: 'advertisementId parameter should be a type of string.',
-                            error: 'Bad request error',
-                            status: 400
-                        });
-                    }
-                }
-
-                if (req.file) {
-                    const fileExtension = path.extname(req.file.originalname);
-                    const mimeType = req.file.mimetype;
-
-                    if (this._validateFileMimeType(mimeType).isFailed) {
-                        return res.status(400).json({
-                            message: this._validateFileMimeType(mimeType).message,
-                            error: 'Bad request error',
-                            status: 400
-                        });
-                    }
-
-                    // To check if the avatar filename extension is equal to the extension generated based on the mime type of the avatar file
-                    // for recognizing whether the avatar extension is valid or not.
-                    if (`.${this._validateFileMimeType(mimeType).message}` !== fileExtension && `${this._validateFileMimeType(mimeType).message}` !== 'jpeg') {
-                        return res.status(400).json({
-                            message: `invalid file extension: ${fileExtension} - ${this._validateFileMimeType(mimeType).message}`,
-                            error: 'Bad request error',
-                            status: 400
-                        });
-                    }
-
-                    try {
-                        if (req.file?.buffer) {
-                            const uploadAdvertisementAvatarResult = await this._advertisementFacade.uploadAdvertisementAvatar(req.body.advertisementId, req.file.originalname, req.file.mimetype, req.file.buffer);
-
-                            return res.status(
-                                uploadAdvertisementAvatarResult.code).json({
-                                message:
-                                uploadAdvertisementAvatarResult.message,
-                                payload: {
-                                    location:
-                                    uploadAdvertisementAvatarResult.data.Location
-                                },
-                                status:
-                                uploadAdvertisementAvatarResult.code
-                            });
-                        }
-                    } catch (error: any) {
-                        return res.status(500).json({
-                            message: error.message,
-                            error: 'Internal server error',
-                            status: 500
-                        });
-                    }
-
-                } else {
-                    return res.status(400).json({
-                        message: 'form-data key avatarFile is required',
-                        error: 'Bad request error',
-                        status: 400
-                    });
-                }
             }
-        });
-    }
-
-    private _validateFileMimeType(mimeType: string): validateFileMimeTypeType {
-        switch (mimeType) {
-            case 'image/jpeg':
-            case 'image/png':
-                return {
-                    isFailed: false,
-                    message: mime.getExtension(mimeType)
-                }
-            case '':
-            default:
-                return {
-                    isFailed: true,
-                    message: 'unsupported file extension. This API only accepts (jpg/jpeg, png)'
-                }
         }
     }
 }
