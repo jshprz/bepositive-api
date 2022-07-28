@@ -11,6 +11,7 @@ import IAdvertisementRepository from "../../advertisement-service/infras/reposit
 
 import { QueryFailedError } from "typeorm";
 import type { feedTypes, postType, getPostLikeType, advertisementFeedTypes, advertisementType } from '../../types';
+import IAwsS3 from "../../../infras/aws/IAwsS3";
 
 class FeedFacade {
     private _log;
@@ -22,7 +23,8 @@ class FeedFacade {
         private _userProfileRepository: IUserProfileRepository,
         private _postRepository: IPostRepository,
         private _postShareRepository: IPostShareRepository,
-        private _advertisementRepository: IAdvertisementRepository
+        private _advertisementRepository: IAdvertisementRepository,
+        private _awsS3: IAwsS3,
     ) {
         this._log = Logger.createLogger('FeedFacade.ts');
         this._googleapis = new Client({});
@@ -296,9 +298,14 @@ class FeedFacade {
 
                 // To provide the complete URL of the post attachments from S3 bucket.
                 if (newAd.content.attachments) {
-                    newAd.content.attachments.forEach((file) => {
+                    for await (const file of newAd.content.attachments) {
                         file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
-                    });
+
+                        // check if the file exists in AWS S3
+                        await this._awsS3.headObject({Bucket: `${process.env.AWS_S3_BUCKET}`, Key: file.key}).promise().catch((error: any) => {
+                            throw error.code;
+                        })
+                    }
                 }
 
                 // To set the post like status - if the logged-in user liked the post or not.
@@ -329,7 +336,7 @@ class FeedFacade {
             } catch(error: any) {
                 this._log.error({
                     function: '_adsforFeedBuilder()',
-                    message: (error.includes('NOT_FOUND'))? 'Advertisement not found' : `${error}`,
+                    message: (error.includes('NOT_FOUND') || error.includes('NotFound'))? 'Advertisement not found' : `${error}`,
                     payload: {
                         ad,
                         loggedInUserId
@@ -360,6 +367,8 @@ class FeedFacade {
 
                 if (post.content.attachments) {
                     const attachments = post.content.attachments.map((attachment) => {
+
+                        // check if the file exists in AWS S3
                         return {
                             key: attachment.key,
                             url: '',
@@ -368,6 +377,10 @@ class FeedFacade {
                             width: ''
                         }
                     });
+
+                    for await (const file of post.content.attachments) {
+                        file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                    }
 
                     feed.actor.userId = post.actor.userId;
                     feed.content.caption = post.content.caption;
@@ -413,6 +426,10 @@ class FeedFacade {
                             }
                         });
 
+                        for await (const file of originalPost.content.attachments) {
+                            file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
+                        }
+
                         feed.content.originalPost.actor.userId = originalPost.actor.userId;
                         feed.content.originalPost.content.postId = originalPost.content.postId;
                         feed.content.originalPost.content.caption = originalPost.content.caption;
@@ -436,9 +453,9 @@ class FeedFacade {
 
                         // To provide the complete URL of the original post attachments from S3 bucket.
                         if (feed.content.originalPost.content.attachments) {
-                            feed.content.originalPost.content.attachments.forEach((file) => {
+                            for await (const file of feed.content.originalPost.content.attachments) {
                                 file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
-                            });
+                            }
                         }
 
                         // Get the user profile data of the original post.
@@ -469,9 +486,14 @@ class FeedFacade {
 
             // To provide the complete URL of the post attachments from S3 bucket.
             if (feed.content.attachments) {
-                feed.content.attachments.forEach((file) => {
+                for await (const file of feed.content.attachments) {
                     file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
-                });
+
+                    // check if the file exists in AWS S3
+                    await this._awsS3.headObject({Bucket: `${process.env.AWS_S3_BUCKET}`, Key: file.key}).promise().catch((error: any) => {
+                        throw error.code;
+                    })
+                }
             }
 
             // To set the post like status - if the logged-in user liked the post or not.
