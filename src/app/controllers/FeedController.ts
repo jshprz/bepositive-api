@@ -180,6 +180,7 @@ class FeedController {
 
             const popularityThreshold = 1;
             const trendingFeed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold, userCognitoSub);
+            const adsforFeed = await this._feedFacade.getAdsforFeed(userCognitoSub);
 
             for (const feed of trendingFeed.data) {
 
@@ -210,9 +211,27 @@ class FeedController {
                 }
             }
 
+            for (const ads of adsforFeed.data) {
+
+                if (ads) {
+                    const timestamps = {
+                        createdAt: ads.content.createdAt,
+                        updatedAt: ads.content.updatedAt
+                    }
+
+                    // Change the createdAt and updatedAt datetime format to unix timestamp
+                    // We do this as format convention for createdAt and updatedAt
+                    const unixTimestamps = await this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+                    ads.content.createdAt = unixTimestamps.createdAt;
+                    ads.content.updatedAt = unixTimestamps.updatedAt;
+                }
+            }
+
+            const arrangeFeedResult = await this._feedFacade.combinePostAndSharedFeedWithAdvertisementFeed(trendingFeed.data, adsforFeed.data);
+
             return res.status(trendingFeed.code).json({
                 message: trendingFeed.message,
-                payload: trendingFeed.data,
+                payload: adsforFeed.data.length > 0 ? arrangeFeedResult.data : trendingFeed.data,
                 status: trendingFeed.code
             });
         } catch (error: any) {

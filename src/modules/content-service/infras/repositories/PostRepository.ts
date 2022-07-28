@@ -43,6 +43,7 @@ class PostRepository implements IPostRepository {
                 .createQueryBuilder('posts')
                 .select('posts')
                 .where('user_id = :userCognitoSub', { userCognitoSub })
+                .addOrderBy('created_at', 'DESC')
                 .getRawMany()
                 .catch((error: QueryFailedError) => {
                     return reject(error);
