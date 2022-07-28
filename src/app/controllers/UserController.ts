@@ -447,7 +447,8 @@ class UserController {
                             website: userProfile.data.website,
                             followers: userFollowers.data.length,
                             followings: userFollowings.data.length,
-                            isFollowed: userProfile.data.isFollowed
+                            isFollowed: userProfile.data.isFollowed,
+                            isPublic: userProfile.data.isPublic
                         }
                     },
                     status: userProfile.code
