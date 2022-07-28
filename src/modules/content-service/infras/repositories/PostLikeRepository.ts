@@ -71,6 +71,7 @@ class PostLikeRepository implements IPostLikeRepository {
                 .createQueryBuilder('post_likes')
                 .select('post_likes')
                 .where('user_id = :userId', { userId })
+                .addOrderBy('created_at', 'DESC')
                 .getMany()
                 .catch((error) => {
                     return reject(error);
