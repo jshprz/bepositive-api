@@ -392,9 +392,14 @@ class PostFacade {
                         }
 
                         if (post.content.attachments) {
-                            post.content.attachments.forEach((file) => {
+                            for await (const file of post.content.attachments) {
                                 file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
-                            });
+
+                                // check if the file exists in AWS S3
+                                await this._awsS3.headObject({Bucket: `${process.env.AWS_S3_BUCKET}`, Key: file.key}).promise().catch((error: any) => {
+                                    throw error.code;
+                                })
+                            }
                         }
 
                         // Get the user of a post.
@@ -476,9 +481,19 @@ class PostFacade {
                 }
 
                 if (post.content.attachments) {
-                    post.content.attachments.forEach((file) => {
+                    for await (const file of post.content.attachments) {
                         file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
-                    });
+
+                        // check if the file exists in AWS S3
+                        await this._awsS3.headObject({Bucket: `${process.env.AWS_S3_BUCKET}`, Key: file.key}).promise().catch((error: any) => {
+                            if (error.code.includes('NotFound')) {
+                                return reject({
+                                    message: 'Post not found.',
+                                    code: 404
+                                });
+                            }
+                        })
+                    }
                 }
 
                 // Get the user of a post.
@@ -922,9 +937,14 @@ class PostFacade {
         }
 
         if (post.content.attachments) {
-            post.content.attachments.forEach((file) => {
+            for await (const file of post.content.attachments) {
                 file.url = `${process.env.AWS_S3_BUCKET_URL}/${file.key}`; // S3 object file URL.
-            });
+
+                // check if the file exists in AWS S3
+                await this._awsS3.headObject({Bucket: `${process.env.AWS_S3_BUCKET}`, Key: file.key}).promise().catch((error: any) => {
+                    throw error.code;
+                })
+            }
         }
 
         // Get the user of every post.

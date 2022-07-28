@@ -771,7 +771,7 @@ class AdvertisementFacade {
                     code: 404
                 });
             }
-            
+
             const presignedPutUrl: string | void = await this._awsS3.presignedPutUrl(file.key, file.type, 'public-read').catch((error: Error) => {
                 this._log.error({
                     function: 'uploadAdvertisementAvatar() & presignedPutUrl()',

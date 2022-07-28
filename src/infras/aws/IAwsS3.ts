@@ -8,8 +8,14 @@ type s3UploadParamsType = {
     ACL: string
 };
 
+type s3HeadObjectParamsType = {
+    Bucket: string,
+    Key: string
+}
+
 interface IAwsS3 {
     upload(params: s3UploadParamsType): ManagedUpload;
+    headObject(params: s3HeadObjectParamsType): any;
 }
 
 export default IAwsS3;

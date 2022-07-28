@@ -10,6 +10,11 @@ type s3UploadParamsType = {
     ACL: string
 };
 
+type s3HeadObjectParamsType = {
+    Bucket: string,
+    Key: string
+}
+
 class AwsS3 implements IAwsS3 {
     private readonly _s3;
 
@@ -24,6 +29,13 @@ class AwsS3 implements IAwsS3 {
      */
     upload(params: s3UploadParamsType): ManagedUpload {
         return this._s3.upload(params);
+    }
+
+    /**
+     * A function to check if the object exists in the provided AWS S3 Bucket
+     */
+    headObject(params: s3HeadObjectParamsType): any {
+        return this._s3.headObject(params);
     }
 }
 
