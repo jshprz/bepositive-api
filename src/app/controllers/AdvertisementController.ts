@@ -2,21 +2,14 @@
 import AwsS3 from "../../modules/advertisement-service/infras/aws/AwsS3";
 import AdvertisementRepository from "../../modules/advertisement-service/infras/repositories/AdvertisementRepository";
 import AdvertisementFacade from "../../modules/advertisement-service/facades/AdvertisementFacade";
-import e, { Request, Response } from "express";
-import { validationResult, check } from "express-validator";
+import { Request, Response } from "express";
+import { validationResult } from "express-validator";
 import { config } from "../../config";
 import uniqid from 'uniqid';
 import ResponseMutator from "../../utils/ResponseMutator";
 import type { timestampsType } from '../../modules/types';
 import multer from "multer";
-import mime from "mime";
-import path from "path";
 import PostLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository";
-
-type validateFileMimeTypeType = {
-    isFailed: boolean,
-    message: string | null
-}
 
 class AdvertisementController {
     private _advertisementFacade;

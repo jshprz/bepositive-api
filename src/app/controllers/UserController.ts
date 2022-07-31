@@ -248,9 +248,25 @@ class UserController {
     async register(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
+        if (errors.username) {
+            return res.status(400).json({
+                message: errors.username.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
         if (errors.email) {
             return res.status(400).json({
                 message: errors.email.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.phoneNumber) {
+            return res.status(400).json({
+                message: errors.phoneNumber.msg,
                 error: 'Bad request error',
                 status: 400
             });
@@ -273,10 +289,12 @@ class UserController {
         }
 
         try {
-            const { email, name, password } = req.body;
+            const { username, email, phoneNumber, name, password } = req.body;
 
             const registerResult = await this._userAccount.register({
+                username,
                 email,
+                phoneNumber,
                 name,
                 password
             });
@@ -284,7 +302,9 @@ class UserController {
             // so that we don't need to rely on AWS Cognito when we need to retrieve a user profile data.
             const createUserProfileData = await this._userAccount.createUserProfileData({
                 userId: registerResult.data.userSub,
+                username,
                 email,
+                phoneNumber,
                 name
             });
 
@@ -337,6 +357,8 @@ class UserController {
 
         try {
             const { email } = req.body;
+            const userProfile = await this._userAccount.getUserProfileByEmail(email);
+            req.body.email = userProfile.data.username;
             await this._userAccount.verifyUser(req.body);
             await this._userAccount.updateEmailVerifiedToTrue(email);
 
@@ -353,7 +375,13 @@ class UserController {
                 status: 500
             }
 
-            if (error.code && error.code === 'CodeMismatchException') {
+            if (error.code && error.code === 404) {
+
+                response.message = error.message;
+                response.error = 'Not Found';
+                response.status = 404;
+
+            } else if (error.code && error.code === 'CodeMismatchException') {
 
                 response.message = error.message;
                 response.error = 'CodeMismatchException';
@@ -934,18 +962,26 @@ class UserController {
             const { attributes } = req.body;
             const cognitoUpdate = [];
             const userCognitoSub: string = req.body.userCognitoSub;
+            const userCognitoName: string = req.body.userCognitoName;
 
             // if changing the name , update it first in Cognito.
             if (attributes.name) {
                 cognitoUpdate.push({
                     "Name": "name",
                     "Value": attributes.name
-                })
+                });
+            }
+
+            if (attributes.phoneNumber) {
+                cognitoUpdate.push({
+                    "Name": "phone_number",
+                    "Value": attributes.phoneNumber
+                });
             }
 
             if (cognitoUpdate.length) {
                 try {
-                    await this._userAccount.updateNameInCognito(cognitoUpdate, userCognitoSub);
+                    await this._userAccount.updateNameInCognito(cognitoUpdate, userCognitoName);
                 } catch (error: any) {
                     return res.status(520).json({
                         message: error.message,
@@ -1122,6 +1158,164 @@ class UserController {
                 message: userFollowings.message,
                 payload: userFollowingsProfiles,
                 status: userFollowings.code
+            });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 409) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Conflict',
+                    status: 409
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async sendPhoneNumberVerification(req: Request, res: Response) {
+        try {
+
+            const accessToken: string = req.body.accessToken;
+            const userId: string = req.body.userCognitoSub;
+
+            const getUserResult = await this._userAccount.getUser(userId);
+            const sendPhoneNumberVerificationResult = await this._userAccount.sendPhoneNumberVerification(accessToken, getUserResult.phone_number);
+
+            return res.status(sendPhoneNumberVerificationResult.code).json({
+                message: sendPhoneNumberVerificationResult.message,
+                payload: sendPhoneNumberVerificationResult.data,
+                status: sendPhoneNumberVerificationResult.code
+            });
+
+        } catch (error: any) {
+
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 409) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Conflict',
+                    status: 409
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async verifyPhoneNumber(req: Request, res: Response) {
+        try {
+
+            const errors = validationResult(req).mapped();
+
+            if (errors.verifyCode) {
+                return res.status(400).json({
+                    message: errors.verifyCode.msg,
+                    error: 'Bad request error',
+                    status: 400
+                });
+            }
+
+            const accessToken: string = req.body.accessToken;
+            const verifyCode: string = req.body.verifyCode;
+
+            const verifyPhoneNumberResult = await this._userAccount.verifyPhoneNumber(accessToken, verifyCode);
+
+            return res.status(verifyPhoneNumberResult.code).json({
+                message: verifyPhoneNumberResult.message,
+                payload: verifyPhoneNumberResult.data,
+                status: verifyPhoneNumberResult.code
+            });
+
+        } catch (error: any) {
+
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 409) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Conflict',
+                    status: 409
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else if (error.code && error.code === 400) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Bad request',
+                    status: 400
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async getAccountVerificationStatus(req: Request, res: Response) {
+        try {
+
+            const accessToken: string = req.body.accessToken;
+            const getAccountVerificationStatusResult = await this._userAccount.getAccountVerificationStatus(accessToken);
+
+            return res.status(getAccountVerificationStatusResult.code).json({
+                message: getAccountVerificationStatusResult.message,
+                payload: getAccountVerificationStatusResult.data,
+                status: getAccountVerificationStatusResult.code
             });
 
         } catch (error: any) {

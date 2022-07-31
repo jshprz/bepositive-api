@@ -3,7 +3,7 @@ import AWS from "aws-sdk";
 
 interface IAwsCognito {
     userPool(): CognitoUserPool;
-    cognitoUserAttributeList(email: string, name: string): CognitoUserAttribute[];
+    cognitoUserAttributeList(email: string, phoneNumber: string, name: string): CognitoUserAttribute[];
     getCognitoUser(email: string): CognitoUser;
     getAuthenticationDetails(body: {email: string, password: string}): AuthenticationDetails;
     getAwsCognitoClient(): AWS.CognitoIdentityServiceProvider;

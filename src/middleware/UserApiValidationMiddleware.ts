@@ -30,3 +30,7 @@ export const getFollowersApiValidation = [
 export const getFollowingsApiValidation = [
     check('userId').not().isEmpty().withMessage('userId parameter is required.').isString().withMessage('userId parameter should be a type of string.')
 ];
+
+export const verifyPhoneNumberValidation = [
+    check('verifyCode').not().isEmpty().withMessage('verifyCode property is required.')
+];
