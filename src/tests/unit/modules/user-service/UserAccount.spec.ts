@@ -412,7 +412,9 @@ describe('Facades :: UserAccountFacade', () => {
                 expect(userAccountMock).toHaveBeenCalledTimes(1);
 
                 const body = {
+                    username: 'test',
                     email: 'test@test.com',
+                    phoneNumber: '+639258283823',
                     name: 'Test',
                     password: 'Test'
                 }
@@ -429,7 +431,9 @@ describe('Facades :: UserAccountFacade', () => {
                 const userAccountInstance = new UserAccount(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
 
                 const body = {
+                    username: 'test',
                     email: 'test@test.com',
+                    phoneNumber: '+639258283823',
                     name: 'Test',
                     password: 'Test'
                 };

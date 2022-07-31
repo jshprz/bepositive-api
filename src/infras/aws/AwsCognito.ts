@@ -33,7 +33,7 @@ class AwsCognito implements IAwsCognito{
    * @param name string
    * @returns CognitoUserAttribute[]
    */
-  cognitoUserAttributeList(email: string, name: string): CognitoUserAttribute[] {
+  cognitoUserAttributeList(email: string, phoneNumber: string, name: string): CognitoUserAttribute[] {
     const attribute = (key: string, value: string) => {
       return {
         Name: key,
@@ -43,6 +43,7 @@ class AwsCognito implements IAwsCognito{
 
     return [
       new CognitoUserAttribute(attribute('email', email)),
+      new CognitoUserAttribute(attribute('phone_number', phoneNumber)),
       new CognitoUserAttribute(attribute('name', name))
     ];
   }

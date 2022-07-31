@@ -19,6 +19,9 @@ export class UserProfiles extends BaseEntity {
     user_id?: string
 
     @Column({type: "varchar", length: 255, nullable: false, unique: true})
+    username?: string
+
+    @Column({type: "varchar", length: 255, nullable: false, unique: true})
     email?: string
 
     @Column({type: "varchar", length: 50, nullable: false})

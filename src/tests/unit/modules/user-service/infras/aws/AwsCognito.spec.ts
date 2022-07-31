@@ -74,9 +74,10 @@ describe('Infras :: AwsCognito', () => {
                expect(awsCognitoMock).toHaveBeenCalledTimes(1);
 
                const email: string = 'test@test.com';
+               const phoneNumber = '+639258283823';
                const name: string = 'Loki';
 
-               awsCognitoInstance.cognitoUserAttributeList(email, name);
+               awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name);
 
                expect(awsCognitoMock.prototype.cognitoUserAttributeList).toHaveBeenCalledWith('test@test.com', 'Loki');
                expect(awsCognitoMock.prototype.cognitoUserAttributeList).toHaveBeenCalledTimes(1);
@@ -86,6 +87,7 @@ describe('Infras :: AwsCognito', () => {
                const awsCognitoInstance = new AwsCognito();
 
                const email: string = 'test@test.com';
+               const phoneNumber = '+639258283823';
                const name: string = 'Loki';
 
                // Switch the function actual implementation with the mocked one
@@ -100,14 +102,15 @@ describe('Infras :: AwsCognito', () => {
 
                    return [
                        new CognitoUserAttribute(attribute('email', email)),
+                       new CognitoUserAttribute(attribute('phoneNumber', phoneNumber)),
                        new CognitoUserAttribute(attribute('name', name))
                    ];
                });
 
-               expect(Array.isArray(awsCognitoInstance.cognitoUserAttributeList(email, name))).toBe(true);
-               expect(awsCognitoInstance.cognitoUserAttributeList(email, name).length).toStrictEqual(2)
-               expect(awsCognitoInstance.cognitoUserAttributeList(email, name)[0]).toBeInstanceOf(CognitoUserAttribute);
-               expect(awsCognitoInstance.cognitoUserAttributeList(email, name)[1]).toBeInstanceOf(CognitoUserAttribute);
+               expect(Array.isArray(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name))).toBe(true);
+               expect(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name).length).toStrictEqual(2)
+               expect(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name)[0]).toBeInstanceOf(CognitoUserAttribute);
+               expect(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name)[1]).toBeInstanceOf(CognitoUserAttribute);
            });
        });
    });

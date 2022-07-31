@@ -6,7 +6,7 @@ import Logger from "../../config/Logger";
 import type {userProfileType, userRelationshipTypes} from "./types";
 import { QueryFailedError } from "typeorm";
 import Error from "../../config/Error";
-import { ListUsersResponse } from "aws-sdk/clients/cognitoidentityserviceprovider";
+import {AttributeType, ListUsersResponse} from "aws-sdk/clients/cognitoidentityserviceprovider";
 import moment from "moment";
 import { ManagedUpload } from "aws-sdk/lib/s3/managed_upload";
 import SendData = ManagedUpload.SendData;
@@ -149,6 +149,7 @@ class UserAccount implements IUserAccount {
         sub: string,
         name: string,
         email: string,
+        phone_number: string,
         dateCreated: Date,
         dateModified: Date,
         enabled: boolean,
@@ -198,6 +199,7 @@ class UserAccount implements IUserAccount {
                             name: '',
                             email: '',
                             email_verified: false,
+                            phone_number: '',
                             dateCreated: new Date(),
                             dateModified: new Date(),
                             enabled: false,
@@ -575,7 +577,10 @@ class UserAccount implements IUserAccount {
                 this._log.error({
                     function: 'updateNameInCognito()',
                     message: error.message,
-                    payload: {}
+                    payload: {
+                        userAttributeList,
+                        userId
+                    }
                 });
 
                 return reject({
@@ -653,15 +658,15 @@ class UserAccount implements IUserAccount {
      *         code: number
      *     }>
      */
-    register(body: { email: string; name: string; password: string; }): Promise<{
+    register(body: { username: string; email: string; phoneNumber: string; name: string; password: string; }): Promise<{
         message: string,
         data: ISignUpResult,
         code: number
     }> {
         return new Promise((resolve, reject) => {
-            const cognitoAttributeList = this._awsCognito.cognitoUserAttributeList(body.email, body.name);
+            const cognitoAttributeList = this._awsCognito.cognitoUserAttributeList(body.email, body.phoneNumber, body.name);
 
-            this._awsCognito.userPool().signUp(body.email, body.password, cognitoAttributeList, [], async (error: any, result?: ISignUpResult) => {
+            this._awsCognito.userPool().signUp(body.username, body.password, cognitoAttributeList, [], async (error: any, result?: ISignUpResult) => {
 
                 if (error) {
                     this._log.error({
@@ -705,8 +710,8 @@ class UserAccount implements IUserAccount {
      * @returns Promise<string>
      */
     verifyUser(body: { email: string, verifyCode: string }): Promise<string> {
-        return new Promise((resolve, reject) => {
-            this._awsCognito.getCognitoUser(body.email).confirmRegistration(body.verifyCode, true, (error: any, result: string) => {
+        return new Promise(async (resolve, reject) => {
+            this._awsCognito.getCognitoUser(body.email).confirmRegistration(body.verifyCode, false, (error: any, result: string) => {
                 if (error) {
                     this._log.error({
                         function: 'verifyUser()',
@@ -792,13 +797,13 @@ class UserAccount implements IUserAccount {
      *         code: number
      *     }>
      */
-    createUserProfileData(item: {userId: string, email: string, name: string}): Promise<{
+    createUserProfileData(item: {userId: string, username: string, email: string, phoneNumber: string, name: string}): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const checkUserProfileData = await this._userProfileRepository.getUserProfileByEmail(item.email).catch((error: string) => {
+            const getUserProfileByEmailResult = await this._userProfileRepository.getUserProfileByEmail(item.email).catch((error: string) => {
                 this._log.error({
                     function: 'createUserProfileData()',
                     message: error,
@@ -814,7 +819,7 @@ class UserAccount implements IUserAccount {
             });
 
             // If a user profile is already existing in the record we create it.
-            if (checkUserProfileData === 0) {
+            if (getUserProfileByEmailResult && getUserProfileByEmailResult.id === '') {
                 await this._userProfileRepository.create(item).catch((error: QueryFailedError) => {
                     this._log.error({
                         function: 'createUserProfileData()',
@@ -836,6 +841,253 @@ class UserAccount implements IUserAccount {
                 data: {},
                 code: 200
             });
+        });
+    }
+
+    /**
+     * To send verification code to logged in user's phone number.
+     * @param accessToken: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
+    sendPhoneNumberVerification(accessToken: string, phoneNumber: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+
+        return new Promise(async (resolve, reject) => {
+
+            const getUserResult = await this._awsCognito.getAwsCognitoClient().adminGetUser({
+                Username: phoneNumber,
+                UserPoolId: String(process.env.AWS_COGNITO_POOL_ID)
+            }).promise().catch((error) => {
+                if (error?.code !== 'UserNotFoundException') {
+                    this._log.error({
+                        function: 'sendPhoneNumberVerification()',
+                        message: error,
+                        payload: {
+                            accessToken,
+                            phoneNumber
+                        }
+                    });
+
+                    return reject({
+                        message: Error.AWS_COGNITO_ERROR,
+                        code: 500
+                    });
+                }
+            });
+
+            let phoneNumberToBeCompared: string = '';
+            let isPhoneNumberVerified: boolean = false;
+
+            if (getUserResult) {
+                getUserResult.UserAttributes?.forEach((userAttribute) => {
+                    if (userAttribute.Name === 'phone_number') {
+                        phoneNumberToBeCompared = userAttribute.Value || '';
+                    }
+
+                    if (userAttribute.Name === 'phone_number_verified') {
+                        isPhoneNumberVerified = (userAttribute.Value === 'true')? true : false;
+                    }
+                });
+            }
+
+            if (phoneNumber === phoneNumberToBeCompared && isPhoneNumberVerified) {
+                return reject({
+                    message: 'The phone number was successfully verified by the another user. Please update your account phone number to the right one.',
+                    code: 409
+                })
+            }
+
+            this._awsCognito.getAwsCognitoClient().getUserAttributeVerificationCode({
+                AccessToken: accessToken,
+                AttributeName: 'phone_number'
+            }, (error, data) => {
+
+                if (error) {
+                    this._log.error({
+                        function: 'sendPhoneNumberVerification()',
+                        message: error.message,
+                        payload: {
+                            accessToken
+                        }
+                    });
+
+                    return reject({
+                        message: Error.AWS_COGNITO_ERROR,
+                        code: 500
+                    });
+                } else {
+                    return resolve({
+                        message: 'Verification code has been sent.',
+                        data: {},
+                        code: 200
+                    });
+                }
+            });
+        });
+    }
+
+    /**
+     * To verify phone number through verification code.
+     * @param accessToken: string
+     * @param verifyCode: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {},
+     *         code: number
+     *     }>
+     */
+    verifyPhoneNumber(accessToken: string, verifyCode: string): Promise<{
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise((resolve, reject) => {
+
+            this._awsCognito.getAwsCognitoClient().verifyUserAttribute({
+                AccessToken: accessToken,
+                AttributeName: 'phone_number',
+                Code: verifyCode
+            }, (error, data) => {
+
+                if (error) {
+                    this._log.error({
+                        function: 'verifyPhoneNumber()',
+                        message: error.message,
+                        payload: {
+                            accessToken
+                        }
+                    });
+
+                    return reject({
+                        message: Error.AWS_COGNITO_ERROR,
+                        code: 500
+                    });
+                } else {
+                    return resolve({
+                        message: 'Phone number was successfully verified.',
+                        data: {},
+                        code: 200
+                    });
+                }
+            });
+        });
+    }
+
+    /**
+     * Get user profile by email.
+     * @param email: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: userProfileType,
+     *         code: number
+     *     }>
+     */
+    getUserProfileByEmail(email: string): Promise<{
+        message: string,
+        data: userProfileType,
+        code: number
+    }> {
+
+        return new Promise(async (resolve, reject) => {
+            const getUserProfileByEmailResult = await this._userProfileRepository.getUserProfileByEmail(email).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'createUserProfileData()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        email
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.CREATE,
+                    code: 500
+                });
+            });
+
+            if (getUserProfileByEmailResult && getUserProfileByEmailResult.id) {
+                return resolve({
+                    message: 'User profile was successfully retrieved',
+                    data: getUserProfileByEmailResult,
+                    code: 200
+                });
+            }
+
+            return reject({
+                message: 'User profile not found',
+                code: 404
+            });
+        });
+    }
+
+
+    /**
+     * Get account verification status.
+     * @param accessToken: string
+     * @returns Promise<{
+     *         message: string,
+     *         data: {
+     *             isEmailVerified: boolean,
+     *             isPhoneNumberVerified: boolean
+     *         },
+     *         code: number
+     *     }>
+     */
+    getAccountVerificationStatus(accessToken: string): Promise<{
+        message: string,
+        data: {
+            isEmailVerified: boolean,
+            isPhoneNumberVerified: boolean
+        },
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+
+            const getUserResult = await this._awsCognito.getAwsCognitoClient().getUser({
+                AccessToken: accessToken
+            }).promise().catch((error) => {
+                this._log.error({
+                    function: 'getAccountVerificationStatus()',
+                    message: error,
+                    payload: {
+                        accessToken
+                    }
+                });
+
+                return reject({
+                    message: Error.AWS_COGNITO_ERROR,
+                    code: 500
+                });
+            });
+
+            const verificationStatuses = {
+                isEmailVerified: false,
+                isPhoneNumberVerified: false
+            };
+
+            if (getUserResult) {
+                getUserResult.UserAttributes.forEach((attribute) => {
+                    if (attribute.Name === 'email_verified') {
+                        verificationStatuses.isEmailVerified = (attribute.Value === 'true')? true : false;
+                    }
+
+                    if (attribute.Name === 'phone_number_verified') {
+                        verificationStatuses.isPhoneNumberVerified = (attribute.Value === 'true')? true : false;
+                    }
+                });
+            }
+
+            return resolve({
+                message: 'Account verification status was successfully retrieved.',
+                data: verificationStatuses,
+                code: 200
+            })
         });
     }
 }

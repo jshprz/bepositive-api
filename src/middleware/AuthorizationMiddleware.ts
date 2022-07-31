@@ -27,9 +27,10 @@ export = async (req: any, res: any, next: any) => {
             status: 401
           });
         } else {
-          const decodedJwt: { sub: string } = await JwtDecode(token);
+          const decodedJwt: { sub: string, username: string } = await JwtDecode(token);
           req.body.userCognitoSub = decodedJwt.sub;
           req.body.accessToken = token;
+          req.body.userCognitoName = decodedJwt.username;
           next();
         }
       });

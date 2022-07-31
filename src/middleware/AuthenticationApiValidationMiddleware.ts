@@ -10,7 +10,9 @@ export const resendAccountConfirmationCodeApiValidation = [
 ];
 
 export const registerApiValidation = [
+    check('username').not().isEmpty().withMessage('username property is required.').isLength({ max: 32 }).withMessage('username should not exceed 32 characters.'),
     check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.'),
+    check('phoneNumber').not().isEmpty().withMessage('phone number property is required.').isMobilePhone(['en-PH', 'en-AU']).withMessage('phone number property only accepts PH or AU phone numbers'),
     check('name').not().isEmpty().withMessage('name property is required.').isAlpha('en-US', { ignore: ' ' }).withMessage('name property is alpha.').isLength({ max: 32 }).withMessage('name property maximum length is only 32 characters.'),
     check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 8 characters.').custom((value: string, { req }) => {
       if(value !== req.body.confirmPassword) {
@@ -21,13 +23,13 @@ export const registerApiValidation = [
 ];
 
 export const verifyApiValidation = [
-  check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.'),
-  check('verifyCode').not().isEmpty().withMessage('verifyCode property is required.')
+    check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.'),
+    check('verifyCode').not().isEmpty().withMessage('verifyCode property is required.')
 ];
 
 export const loginApiValidation = [
-  check('email').not().isEmpty().withMessage('email property is required.').isEmail().withMessage('email property value is invalid.'),
-  check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 8 characters.')
+    check('email').not().isEmpty().withMessage('email property is required.'),
+    check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 8 characters.')
 ];
 
 export const passwordForgotApiValidation = [

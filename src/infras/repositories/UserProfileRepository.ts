@@ -11,7 +11,7 @@ class UserProfileRepository implements IUserProfileRepository {
      * @param item: {userId: string, email: string, name: string}
      * @returns Promise<InsertResult>
      */
-    create(item: {userId: string, email: string, name: string}): Promise<InsertResult> {
+    create(item: {userId: string, username: string, email: string, phoneNumber: string, name: string}): Promise<InsertResult> {
 
         return getConnection()
             .createQueryBuilder()
@@ -19,8 +19,10 @@ class UserProfileRepository implements IUserProfileRepository {
             .into(UserProfiles)
             .values([{
                 user_id: item.userId,
+                username: item.username,
                 email: item.email,
-                name: item.name
+                name: item.name,
+                phone_number: item.phoneNumber
             }]).execute();
     }
 
@@ -28,9 +30,10 @@ class UserProfileRepository implements IUserProfileRepository {
     /**
      * Get the user profile by email.
      * @param email: string
-     * @returns Promise<UserProfiles | number>
+     * @returns Promise<userProfileType>
      */
-    getUserProfileByEmail(email: string): Promise<UserProfiles | number> {
+    getUserProfileByEmail(email: string): Promise<userProfileType> {
+
         return new Promise(async (resolve, reject) => {
             const userProfile = await getRepository(UserProfiles)
                 .createQueryBuilder('user_profiles')
@@ -41,11 +44,30 @@ class UserProfileRepository implements IUserProfileRepository {
                     return reject(error);
                 });
 
-            if (userProfile) {
-                return resolve(userProfile);
-            } else {
-                return resolve(0);
-            }
+            const newUserProfile = {
+                id: userProfile?.id || '',
+                userId: userProfile?.user_id || '',
+                username: userProfile?.username || '',
+                email: userProfile?.email || '',
+                name: userProfile?.name || '',
+                avatar: userProfile?.avatar || '',
+                gender: userProfile?.gender || '',
+                profileTitle: userProfile?.profile_title || '',
+                profileDescription: userProfile?.profile_description || '',
+                dateOfBirth: userProfile?.date_of_birth || '',
+                website: userProfile?.website || '',
+                city: userProfile?.city || '',
+                state: userProfile?.state || '',
+                zipcode: userProfile?.zipcode || '',
+                country: userProfile?.country || '',
+                phoneNumber: userProfile?.phone_number || '',
+                isPublic: userProfile?.is_public || false,
+                isFollowed: false,
+                createdAt: userProfile?.created_at || 0,
+                updatedAt: userProfile?.updated_at || 0,
+            };
+
+            return resolve(newUserProfile);
         });
     }
 
@@ -68,6 +90,7 @@ class UserProfileRepository implements IUserProfileRepository {
             const newUserProfile = {
                 id: userProfile?.id || '',
                 userId: userProfile?.user_id || '',
+                username: userProfile?.username || '',
                 email: userProfile?.email || '',
                 name: userProfile?.name || '',
                 avatar: userProfile?.avatar || '',
