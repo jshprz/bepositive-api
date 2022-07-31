@@ -79,7 +79,7 @@ describe('Infras :: AwsCognito', () => {
 
                awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name);
 
-               expect(awsCognitoMock.prototype.cognitoUserAttributeList).toHaveBeenCalledWith('test@test.com', 'Loki');
+               expect(awsCognitoMock.prototype.cognitoUserAttributeList).toHaveBeenCalledWith('test@test.com', '+639258283823', 'Loki');
                expect(awsCognitoMock.prototype.cognitoUserAttributeList).toHaveBeenCalledTimes(1);
            });
 
@@ -108,7 +108,7 @@ describe('Infras :: AwsCognito', () => {
                });
 
                expect(Array.isArray(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name))).toBe(true);
-               expect(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name).length).toStrictEqual(2)
+               expect(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name).length).toStrictEqual(3)
                expect(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name)[0]).toBeInstanceOf(CognitoUserAttribute);
                expect(awsCognitoInstance.cognitoUserAttributeList(email, phoneNumber, name)[1]).toBeInstanceOf(CognitoUserAttribute);
            });
