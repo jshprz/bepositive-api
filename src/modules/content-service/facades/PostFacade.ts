@@ -404,7 +404,7 @@ class PostFacade {
 
                         // Get the user of a post.
                         if (post.actor) {
-                            const userProfileData = await this._userProfileRepository.getUserProfileByUserId(post.actor.userId).catch((error) => {
+                            const userProfileData = await this._userProfileRepository.getUserProfileBy(post.actor.userId, 'user_id').catch((error) => {
                                 throw error;
                             });
 
@@ -498,7 +498,7 @@ class PostFacade {
 
                 // Get the user of a post.
                 if (post.actor) {
-                    const userProfileData = await this._userProfileRepository.getUserProfileByUserId(post.actor.userId).catch((error) => {
+                    const userProfileData = await this._userProfileRepository.getUserProfileBy(post.actor.userId, 'user_id').catch((error) => {
                         throw error;
                     });
 
@@ -949,7 +949,7 @@ class PostFacade {
 
         // Get the user of every post.
         if (post.actor) {
-            const userProfileData = await this._userProfileRepository.getUserProfileByUserId(post.actor.userId).catch((error) => {
+            const userProfileData = await this._userProfileRepository.getUserProfileBy(post.actor.userId, 'user_id').catch((error) => {
                 throw error;
             });
 

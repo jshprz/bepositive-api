@@ -22,11 +22,11 @@ class Authentication implements IAuthentication {
      * @param body { email: string, password: string }
      * @returns Promise<CognitoUserSession>
      */
-    normalLogin(body: { email: string, password: string }): Promise<CognitoUserSession> {
+    normalLogin(body: { user: string, password: string }): Promise<CognitoUserSession> {
         return new Promise((resolve, reject) => {
             const authenticationDetails = this._awsCognito.getAuthenticationDetails(body);
 
-            this._awsCognito.getCognitoUser(body.email).authenticateUser(authenticationDetails, {
+            this._awsCognito.getCognitoUser(body.user).authenticateUser(authenticationDetails, {
                 onSuccess: (result: CognitoUserSession) => resolve(result),
                 onFailure: (error: { message: string, code: string }) => {
                     this._log.error({

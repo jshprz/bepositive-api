@@ -67,8 +67,8 @@ class AwsCognito implements IAwsCognito{
    * @param body {email: string, password: string}
    * @returns instance of AuthenticationDetails from 'amazon-cognito-identity-js' library.
    */
-  getAuthenticationDetails(body: {email: string, password: string}): AuthenticationDetails {
-    const authenticationData = { Username: body.email, Password: body.password };
+  getAuthenticationDetails(body: {user: string, password: string}): AuthenticationDetails {
+    const authenticationData = { Username: body.user, Password: body.password };
 
     return new AuthenticationDetails(authenticationData);
   }

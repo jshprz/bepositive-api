@@ -5,7 +5,7 @@ interface IAwsCognito {
     userPool(): CognitoUserPool;
     cognitoUserAttributeList(email: string, phoneNumber: string, name: string): CognitoUserAttribute[];
     getCognitoUser(email: string): CognitoUser;
-    getAuthenticationDetails(body: {email: string, password: string}): AuthenticationDetails;
+    getAuthenticationDetails(body: {user: string, password: string}): AuthenticationDetails;
     getAwsCognitoClient(): AWS.CognitoIdentityServiceProvider;
 }
 

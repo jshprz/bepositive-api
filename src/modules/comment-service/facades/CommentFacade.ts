@@ -153,7 +153,7 @@ class CommentFacade {
                 for (const comment of comments) {
                     // Get the user of a comment.
                     if (comment.actor) {
-                        const userProfileData = await this._userProfileRepository.getUserProfileByUserId(comment.actor.userId).catch((error) => {
+                        const userProfileData = await this._userProfileRepository.getUserProfileBy(comment.actor.userId, 'user_id').catch((error) => {
                             throw error;
                         });
 
@@ -224,7 +224,7 @@ class CommentFacade {
                 for (const reply of replies) {
                     // Get the user of a reply.
                     if (reply.actor) {
-                        const userProfileData = await this._userProfileRepository.getUserProfileByUserId(reply.actor.userId).catch((error) => {
+                        const userProfileData = await this._userProfileRepository.getUserProfileBy(reply.actor.userId, 'user_id').catch((error) => {
                             throw error;
                         });
 
@@ -294,7 +294,7 @@ class CommentFacade {
         for (const reply of repliesOfReplyHolder) {
             // Get the user of a child reply.
             if (reply.actor) {
-                const userProfileData = await this._userProfileRepository.getUserProfileByUserId(reply.actor.userId).catch((error) => {
+                const userProfileData = await this._userProfileRepository.getUserProfileBy(reply.actor.userId, 'user_id').catch((error) => {
                     throw error;
                 });
 

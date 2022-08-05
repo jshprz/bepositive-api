@@ -39,11 +39,8 @@ class UserController {
     private _utilResponseMutator;
 
     constructor() {
-        // this._loginFacade = new LoginFacade(new AwsCognito, new AccessTokenRepository());
         this._authentication = new Authentication(new AwsCognito(), new AccessTokenRepository());
-        // this._passwordFacade = new PasswordFacade(new AwsCognito());
         this._password = new Password(new AwsCognito());
-        // this._userAccountFacade = new UserAccountFacade(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
         this._userAccount = new UserAccount(new AwsCognito(), new AwsS3(), new UserRelationshipRepository(), new UserProfileRepository());
         this._upload = multer().single('avatarFile');
         this._utilResponseMutator = new ResponseMutator();
@@ -52,9 +49,9 @@ class UserController {
     async normalLogin(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
-        if (errors.email) {
+        if (errors.user) {
             return res.status(400).json({
-                message: errors.email.msg,
+                message: errors.user.msg,
                 error: 'Bad request error',
                 status: 400
             });
@@ -69,12 +66,32 @@ class UserController {
         }
 
         try {
-            const signin = await this._authentication.normalLogin(req.body);
+            const fieldName = this.getUsernameAlias(req.body.user);
+            const getUserprofileBy = await this._userAccount.getUserProfileBy(req.body.user, fieldName);
+
+            const userCredentials = {
+                user: getUserprofileBy.data.username,
+                password: req.body.password
+            }
+
+            const signin = await this._authentication.normalLogin(userCredentials);
 
             const accessToken: string = signin.accessToken.jwtToken;
             const refreshToken: string = signin.refreshToken.token;
             const accessTokenExpiration: number = signin.accessToken.payload.exp;
             const userCognitoSub: string = signin.idToken.payload.sub;
+
+            const getAccountVerificationStatusResult = await this._userAccount.getAccountVerificationStatus(accessToken);
+
+            // If the user tries to sign in with their phone number, we check whether the phone number is verified or not.
+            // We don't let them use their phone number if it isn't verified yet.
+            if (fieldName === 'phone_number' && !getAccountVerificationStatusResult.data.isPhoneNumberVerified) {
+                return res.status(403).json({
+                    message: 'User is not confirmed.',
+                    error: 'Forbidden',
+                    status: 403
+                });
+            }
 
             // Creates accessToken record within the access_tokens table.
             await this._authentication.createAccessTokenItem(accessToken, userCognitoSub);
@@ -96,13 +113,13 @@ class UserController {
                 status: 500
             }
 
-            if (error.code && error.code === 'NotAuthorizedException') {
+            if (error.code && (error.code === 'NotAuthorizedException' || error.code === 401 || error.code === 404)) {
 
-                response.message = error.message;
+                response.message = (error.code === 404)? 'Incorrect username or password.' : error.message;
                 response.error = 'Unauthorized';
                 response.status = 401;
 
-            } else if (error.code && error.code === 'UserNotConfirmedException') {
+            } else if (error.code && (error.code === 'UserNotConfirmedException' || error.code === 403)) {
 
                 response.message = error.message;
                 response.error = 'Forbidden';
@@ -110,7 +127,7 @@ class UserController {
 
             } else {
 
-                response.message = error;
+                response.message = error.message;
                 response.error = 'Internal server error';
                 response.status = 500;
 
@@ -357,7 +374,7 @@ class UserController {
 
         try {
             const { email } = req.body;
-            const userProfile = await this._userAccount.getUserProfileByEmail(email);
+            const userProfile = await this._userAccount.getUserProfileBy(email, 'email');
             req.body.email = userProfile.data.username;
             await this._userAccount.verifyUser(req.body);
             await this._userAccount.updateEmailVerifiedToTrue(email);
@@ -1351,6 +1368,23 @@ class UserController {
                 });
             }
         }
+    }
+
+    private getUsernameAlias(email: string) {
+
+        let usernameAlias = '';
+        const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/
+        const phoneNumberRegex = /^\+([0-9]{4})\)?[-. ]?([0-9]{4})[-. ]?([0-9]{4})$/
+
+        if (emailRegex.test(email)) {
+            usernameAlias = 'email';
+        } else if (phoneNumberRegex.test((email))) {
+            usernameAlias = 'phone_number';
+        } else {
+            usernameAlias = 'username';
+        }
+
+        return usernameAlias;
     }
 }
 
