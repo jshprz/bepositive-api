@@ -490,6 +490,7 @@ class UserController {
                             profileTitle: userProfile.data.profileTitle,
                             profileDescription: userProfile.data.profileDescription,
                             website: userProfile.data.website,
+                            phoneNumber: userProfile.data.phoneNumber,
                             followers: userFollowers.data.length,
                             followings: userFollowings.data.length,
                             isFollowed: userProfile.data.isFollowed,
