@@ -156,11 +156,11 @@ describe('Infras :: AwsCognito', () => {
                 const awsCognitoInstance = new AwsCognito();
                 expect(awsCognitoMock).toHaveBeenCalledTimes(1);
 
-                const body = {email: 'test@test.com', password: 'mypassword'};
+                const body = {user: 'test@test.com', password: 'mypassword'};
 
                 awsCognitoInstance.getAuthenticationDetails(body);
 
-                expect(awsCognitoMock.prototype.getAuthenticationDetails).toHaveBeenCalledWith({email: 'test@test.com', password: 'mypassword'});
+                expect(awsCognitoMock.prototype.getAuthenticationDetails).toHaveBeenCalledWith({user: 'test@test.com', password: 'mypassword'});
                 expect(awsCognitoMock.prototype.getAuthenticationDetails).toHaveBeenCalledTimes(1);
             });
 
@@ -175,7 +175,7 @@ describe('Infras :: AwsCognito', () => {
                     return new AuthenticationDetails(authenticationData);
                 });
 
-                const body = { email: 'test@test.com', password: 'mypassword' };
+                const body = { user: 'test@test.com', password: 'mypassword' };
 
                 expect(awsCognitoInstance.getAuthenticationDetails(body)).toBeInstanceOf(AuthenticationDetails);
             });

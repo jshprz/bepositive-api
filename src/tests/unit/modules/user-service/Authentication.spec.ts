@@ -41,7 +41,7 @@ describe('Facades :: LoginFacade', () => {
                 expect(authenticationMock).toHaveBeenCalledTimes(1); // Just to make sure that we call this class once
 
                 const normalLoginArgs = {
-                    email: 'test',
+                    user: 'test',
                     password: 'test'
                 };
 
@@ -82,7 +82,7 @@ describe('Facades :: LoginFacade', () => {
                 });
 
                 const normalLoginArgs = {
-                    email: 'test',
+                    user: 'test',
                     password: 'test'
                 };
 

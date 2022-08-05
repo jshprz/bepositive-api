@@ -26,19 +26,20 @@ class UserProfileRepository implements IUserProfileRepository {
             }]).execute();
     }
 
-
     /**
-     * Get the user profile by email.
-     * @param email: string
+     * Get the user profile.
+     * @param input: string
+     * @param field: string
      * @returns Promise<userProfileType>
      */
-    getUserProfileByEmail(email: string): Promise<userProfileType> {
+    getUserProfileBy(input: string, field: string): Promise<userProfileType> {
 
         return new Promise(async (resolve, reject) => {
+
             const userProfile = await getRepository(UserProfiles)
                 .createQueryBuilder('user_profiles')
                 .select('user_profiles')
-                .where('email = :email', { email })
+                .where(`${field} = :input`, { input })
                 .getOne()
                 .catch((error: QueryFailedError) => {
                     return reject(error);
@@ -66,49 +67,6 @@ class UserProfileRepository implements IUserProfileRepository {
                 createdAt: userProfile?.created_at || 0,
                 updatedAt: userProfile?.updated_at || 0,
             };
-
-            return resolve(newUserProfile);
-        });
-    }
-
-    /**
-     * Get a user profile record by user cognito sub.
-     * @param userId: string
-     * @returns Promise<UserProfiles>
-     */
-    getUserProfileByUserId(userId: string): Promise<userProfileType> {
-        return new Promise(async (resolve, reject) => {
-            const userProfile = await getRepository(UserProfiles)
-                .createQueryBuilder('user_profiles')
-                .select('user_profiles')
-                .where('user_id = :userId', { userId })
-                .getOne()
-                .catch((error: QueryFailedError) => {
-                    return reject(error);
-                });
-
-            const newUserProfile = {
-                id: userProfile?.id || '',
-                userId: userProfile?.user_id || '',
-                username: userProfile?.username || '',
-                email: userProfile?.email || '',
-                name: userProfile?.name || '',
-                avatar: userProfile?.avatar || '',
-                gender: userProfile?.gender || '',
-                profileTitle: userProfile?.profile_title || '',
-                profileDescription: userProfile?.profile_description || '',
-                dateOfBirth: userProfile?.date_of_birth || '',
-                website: userProfile?.website || '',
-                city: userProfile?.city || '',
-                state: userProfile?.state || '',
-                zipcode: userProfile?.zipcode || '',
-                country: userProfile?.country || '',
-                phoneNumber: userProfile?.phone_number || '',
-                isPublic: userProfile?.is_public || false,
-                isFollowed: false,
-                createdAt: userProfile?.created_at || 0,
-                updatedAt: userProfile?.updated_at || 0,
-            }
 
             return resolve(newUserProfile);
         });

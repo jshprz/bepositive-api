@@ -42,7 +42,7 @@ class UserAccount implements IUserAccount {
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const userProfileData: void | userProfileType  = await this._userProfileRepository.getUserProfileByUserId(userId).catch((error: QueryFailedError | string) => {
+            const userProfileData: void | userProfileType  = await this._userProfileRepository.getUserProfileBy(userId, 'user_id').catch((error: QueryFailedError | string) => {
                 if (String(error) === 'NOT_FOUND') {
                     return reject({
                         message: 'User not found',
@@ -803,7 +803,7 @@ class UserAccount implements IUserAccount {
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const getUserProfileByEmailResult = await this._userProfileRepository.getUserProfileByEmail(item.email).catch((error: string) => {
+            const getUserProfileByResult = await this._userProfileRepository.getUserProfileBy(item.email, 'email').catch((error: string) => {
                 this._log.error({
                     function: 'createUserProfileData()',
                     message: error,
@@ -819,7 +819,7 @@ class UserAccount implements IUserAccount {
             });
 
             // If a user profile is already existing in the record we create it.
-            if (getUserProfileByEmailResult && getUserProfileByEmailResult.id === '') {
+            if (getUserProfileByResult && getUserProfileByResult.id === '') {
                 await this._userProfileRepository.create(item).catch((error: QueryFailedError) => {
                     this._log.error({
                         function: 'createUserProfileData()',
@@ -981,53 +981,6 @@ class UserAccount implements IUserAccount {
     }
 
     /**
-     * Get user profile by email.
-     * @param email: string
-     * @returns Promise<{
-     *         message: string,
-     *         data: userProfileType,
-     *         code: number
-     *     }>
-     */
-    getUserProfileByEmail(email: string): Promise<{
-        message: string,
-        data: userProfileType,
-        code: number
-    }> {
-
-        return new Promise(async (resolve, reject) => {
-            const getUserProfileByEmailResult = await this._userProfileRepository.getUserProfileByEmail(email).catch((error: QueryFailedError) => {
-                this._log.error({
-                    function: 'createUserProfileData()',
-                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                    payload: {
-                        email
-                    }
-                });
-
-                return reject({
-                    message: Error.DATABASE_ERROR.CREATE,
-                    code: 500
-                });
-            });
-
-            if (getUserProfileByEmailResult && getUserProfileByEmailResult.id) {
-                return resolve({
-                    message: 'User profile was successfully retrieved',
-                    data: getUserProfileByEmailResult,
-                    code: 200
-                });
-            }
-
-            return reject({
-                message: 'User profile not found',
-                code: 404
-            });
-        });
-    }
-
-
-    /**
      * Get account verification status.
      * @param accessToken: string
      * @returns Promise<{
@@ -1088,6 +1041,44 @@ class UserAccount implements IUserAccount {
                 data: verificationStatuses,
                 code: 200
             })
+        });
+    }
+
+    getUserProfileBy(input: string, field: string): Promise<{
+        message: string,
+        data: userProfileType,
+        code: number
+    }> {
+
+        return new Promise(async (resolve, reject) => {
+            const getUserProfileByResult = await this._userProfileRepository.getUserProfileBy(input, field).catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'getUserProfileBy()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        input,
+                        field
+                    }
+                });
+
+                return reject({
+                    message: Error.DATABASE_ERROR.CREATE,
+                    code: 500
+                });
+            });
+
+            if (getUserProfileByResult && getUserProfileByResult.id) {
+                return resolve({
+                    message: 'User profile was successfully retrieved',
+                    data: getUserProfileByResult,
+                    code: 200
+                });
+            }
+
+            return reject({
+                message: 'User profile not found',
+                code: 404
+            });
         });
     }
 }

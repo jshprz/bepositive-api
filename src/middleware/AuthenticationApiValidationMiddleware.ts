@@ -28,7 +28,7 @@ export const verifyApiValidation = [
 ];
 
 export const loginApiValidation = [
-    check('email').not().isEmpty().withMessage('email property is required.'),
+    check('user').not().isEmpty().withMessage('user property is required.'),
     check('password').not().isEmpty().withMessage('password property is required.').isLength({ min: 8 }).withMessage('password length atleast 8 characters.')
 ];
 

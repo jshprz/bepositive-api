@@ -460,7 +460,7 @@ class FeedFacade {
 
                         // Get the user profile data of the original post.
                         if (feed.content.originalPost.actor) {
-                            const originalPostUserProfileData = await this._userProfileRepository.getUserProfileByUserId(feed.content.originalPost.actor.userId).catch((error) => {
+                            const originalPostUserProfileData = await this._userProfileRepository.getUserProfileBy(feed.content.originalPost.actor.userId, 'user_id').catch((error) => {
                                 throw error;
                             });
 
@@ -508,7 +508,7 @@ class FeedFacade {
 
             // Get the user profile data every post in the feed.
             if (feed.actor) {
-                const userProfileData = await this._userProfileRepository.getUserProfileByUserId(feed.actor.userId).catch((error) => {
+                const userProfileData = await this._userProfileRepository.getUserProfileBy(feed.actor.userId, 'user_id').catch((error) => {
                     throw error;
                 });
                 if (!userProfileData.id) {
