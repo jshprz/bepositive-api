@@ -308,6 +308,31 @@ class UserController {
         try {
             const { username, email, phoneNumber, name, password } = req.body;
 
+            const getUserProfileByForEmail = await this._userAccount.getUserProfileBy(email, 'email').catch(() => {});
+            const getUserProfileByForPhoneNumber = await this._userAccount.getUserProfileBy(phoneNumber, 'phone_number').catch(() => {});
+
+            if (getUserProfileByForEmail) {
+                // We don't allow other users to use existing email during the registration process.
+                if (getUserProfileByForEmail.data.email === email) {
+                    return res.status(409).json({
+                        message: 'User already exists',
+                        error: 'Conflict',
+                        status: 409
+                    });
+                }
+            }
+
+            if (getUserProfileByForPhoneNumber) {
+                // We don't allow other users to use existing phone number during the registration process.
+                if (getUserProfileByForPhoneNumber.data.phoneNumber === phoneNumber) {
+                    return res.status(409).json({
+                        message: 'User already exists',
+                        error: 'Conflict',
+                        status: 409
+                    });
+                }
+            }
+
             const registerResult = await this._userAccount.register({
                 username,
                 email,
