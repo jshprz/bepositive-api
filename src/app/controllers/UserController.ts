@@ -463,10 +463,13 @@ class UserController {
         }
 
         try {
+            const { email } = req.body;
+            const userProfile = await this._userAccount.getUserProfileBy(req.body.email, 'email');
+            req.body.email = userProfile.data.username;
             await this._userAccount.resendAccountConfirmationCode(req.body.email);
 
             return res.status(200).json({
-                message: `The verification code has been re-sent to this email: ${req.body.email}`,
+                message: `The verification code has been re-sent to this email: ${email}`,
                 payload: {},
                 status: 200
             });
