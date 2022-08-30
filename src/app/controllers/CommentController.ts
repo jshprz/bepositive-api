@@ -41,11 +41,19 @@ class CommentController {
             });
         }
 
+        if (errors.classification) {
+            return res.status(400).json({
+                message: errors.classification.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
         try {
             const userCognitoSub: string = req.body.userCognitoSub;
-            const { postId, content } = req.body;
+            const { postId, content, classification } = req.body;
 
-            const addCommentResult = await this._commentFacade.addComment({ userCognitoSub, postId, content });
+            const addCommentResult = await this._commentFacade.addComment({ userCognitoSub, postId, content, classification });
 
             return res.status(addCommentResult.code).json({
                 message: addCommentResult.message,
@@ -88,9 +96,18 @@ class CommentController {
             });
         }
 
+        if (errors.classification) {
+            return res.status(400).json({
+                message: errors.classification.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
         try {
             const postId: string = req.params.postId;
-            const comments = await this._commentFacade.getCommentsByPostId(postId, req.body.userCognitoSub);
+            const classification: string = req.body.classification;
+            const comments = await this._commentFacade.getCommentsByPostId(postId, classification, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp for all comments/replies under the post
             // We do this as format convention for createdAt and updatedAt

@@ -1,12 +1,14 @@
 import { check } from "express-validator";
 
 export const addCommentApiValidation = [
-  check('postId').not().isEmpty().withMessage('post id parameter is required.').isString().withMessage('post id parameter should be a type of string.'),
-  check('content').not().isEmpty().withMessage('content parameter is required.')
+    check('postId').not().isEmpty().withMessage('post id parameter is required.').isString().withMessage('post id parameter should be a type of string.'),
+    check('content').not().isEmpty().withMessage('content parameter is required.'),
+    check('classification').not().isEmpty().withMessage('classification property is required').isIn(['REGULAR_POST', 'SHARED_POST']).withMessage("classification property should only be 'REGULAR_POST' or 'SHARED_POST'.")
 ]
 
 export const getCommentsApiValidation = [
-  check('postId').not().isEmpty().withMessage('post id parameter is required.').isString().withMessage('post id parameter should be a type of string.')
+  check('postId').not().isEmpty().withMessage('post id parameter is required.').isString().withMessage('post id parameter should be a type of string.'),
+  check('classification').not().isEmpty().withMessage('classification property is required').isIn(['REGULAR_POST', 'SHARED_POST']).withMessage("classification property should only be 'REGULAR_POST' or 'SHARED_POST'.")
 ];
 
 export const updateCommentOrReplyApiValidation = [

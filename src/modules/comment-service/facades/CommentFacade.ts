@@ -12,6 +12,7 @@ import type {
     getCommentRepliesByCommentIdReturnType,
     postType,
     commentType,
+    sharedPostType
 } from '../../types';
 
 import CommentRepository from "../infras/repositories/CommentRepository";
@@ -27,42 +28,76 @@ class CommentFacade {
 
     /**
      * Validate the post id and add a comment.
-     * @param commentAttr: {userCognitoSub: string, postId: string, content: string}
+     * @param commentAttr: { userCognitoSub: string, postId: string, content: string, classification: string }
      * @returns Promise<{
      *         message: string,
      *         data: {},
      *         status: number
      *     }>
      */
-    addComment(commentAttr: {userCognitoSub: string, postId: string, content: string}): Promise<{
+    addComment(commentAttr: { userCognitoSub: string, postId: string, content: string, classification: string }): Promise<{
         message: string,
         data: {},
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-           const post: postType | void = await this._postRepository.getPostById(commentAttr.postId).catch((error) => {
-               this._log.error({
-                   function: 'getPostById()',
-                   message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
-                   payload: {
-                       commentAttr
-                   }
-               });
 
-               if (error.message.includes('invalid input syntax for type uuid')) {
-                   return reject({
-                       message: 'Post not found.',
-                       code: 404
-                   });
-               }
+            let regularPost: postType | void;
+            let sharedPost: sharedPostType | void;
 
-               return reject({
-                   message: Error.DATABASE_ERROR.GET,
-                   code: 500
-               });
-           });
+            if (commentAttr.classification === 'REGULAR_POST') {
+                regularPost = await this._postRepository.getPostById(commentAttr.postId).catch((error) => {
+                    this._log.error({
+                        function: 'getPostById()',
+                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        payload: {
+                            commentAttr
+                        }
+                    });
 
-           if (!post || (post && (!post.content.postId || post.content.postId == ''))) {
+                    if (error.message.includes('invalid input syntax for type uuid')) {
+                        return reject({
+                            message: 'Post not found.',
+                            code: 404
+                        });
+                    }
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
+            }
+
+            if (commentAttr.classification === 'SHARED_POST') {
+                // we're dealing with a shared post
+                sharedPost = await this._postRepository.getSharedPostById(commentAttr.postId).catch((error) => {
+                    this._log.error({
+                        function: 'getSharedPostById()',
+                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        payload: {
+                            commentAttr
+                        }
+                    });
+
+                    if (error.message.includes('invalid input syntax for type uuid')) {
+                        return reject({
+                            message: 'Shared post not found.',
+                            code: 404
+                        });
+                    }
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
+            }
+
+           if ((!regularPost && !sharedPost)
+               || (regularPost && (!regularPost.content.postId || regularPost.content.postId === ''))
+               || (sharedPost && sharedPost.id === '') || (sharedPost && !sharedPost.id)
+           ) {
                return reject({
                    message: 'Post not found.',
                    code: 404
@@ -95,6 +130,7 @@ class CommentFacade {
     /**
      * Get all the comments and replies under a post .
      * @param postId: string
+     * @param classification: string
      * @param loggedInUserId: string
      * @returns Promise<{
      *         message: string,
@@ -102,31 +138,78 @@ class CommentFacade {
      *         code: number
      *     }>
      */
-    getCommentsByPostId(postId: string, loggedInUserId: string): Promise<{
+    getCommentsByPostId(postId: string, classification: string, loggedInUserId: string): Promise<{
         message: string,
         data: commentType[],
         code: number
     }> {
         return new Promise(async (resolve, reject) => {
-            const post: void | postType = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
-                this._log.error({
-                    function: 'getCommentsByPostId()',
-                    message: error.toString(),
-                    payload: { postId }
-                });
+            let regularPost: postType | void;
+            let sharedPost: sharedPostType | void;
 
-                return reject({
-                    message: Error.DATABASE_ERROR.GET,
-                    code: 500
-                });
-            });
+            if (classification === 'REGULAR_POST') {
+                regularPost = await this._postRepository.getPostById(postId).catch((error) => {
+                    this._log.error({
+                        function: 'getPostById()',
+                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        payload: {
+                            postId,
+                            classification,
+                            loggedInUserId
+                        }
+                    });
 
-            if (post && !post.content.postId) {
+                    if (error.message.includes('invalid input syntax for type uuid')) {
+                        return reject({
+                            message: 'Post not found.',
+                            code: 404
+                        });
+                    }
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
+            }
+
+            if (classification === 'SHARED_POST') {
+                // we're dealing with a shared post
+                sharedPost = await this._postRepository.getSharedPostById(postId).catch((error) => {
+                    this._log.error({
+                        function: 'getSharedPostById()',
+                        message: `\n error: Database operation error \n details: ${error.detail || error.message} \n query: ${error.query}`,
+                        payload: {
+                            postId,
+                            classification,
+                            loggedInUserId
+                        }
+                    });
+
+                    if (error.message.includes('invalid input syntax for type uuid')) {
+                        return reject({
+                            message: 'Shared post not found.',
+                            code: 404
+                        });
+                    }
+
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
+            }
+
+            if ((!regularPost && !sharedPost)
+                || (regularPost && (!regularPost.content.postId || regularPost.content.postId === ''))
+                || (sharedPost && sharedPost.id === '') || (sharedPost && !sharedPost.id)
+            ) {
                 return reject({
                     message: 'Post not found.',
                     code: 404
                 });
             }
+
             const comments: getCommentsByPostIdReturnType[] | void = await this._commentRepository.getCommentsByPostId(postId).catch((error: QueryFailedError) => {
                 this._log.error({
                     function: 'getCommentsByPostId()',
