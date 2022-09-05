@@ -1,9 +1,9 @@
-import {getRepository, QueryFailedError, UpdateResult} from 'typeorm';
-import { Posts } from "../../../../database/postgresql/models/Posts";
-import { PostShares } from "../../../../database/postgresql/models/PostShares";
-import { FlaggedPosts } from "../../../../database/postgresql/models/FlaggedPosts";
-import type { postType, sharedPostType } from '../../../types';
-import IPostRepository from "./IPostRepository";
+import { getRepository, QueryFailedError, UpdateResult } from 'typeorm';
+import { Posts } from "../../database/postgresql/models/Posts";
+import { PostShares } from "../../database/postgresql/models/PostShares";
+import { FlaggedPosts } from "../../database/postgresql/models/FlaggedPosts";
+import type { postType, sharedPostType } from '../../modules/content-service/types';
+import IPostRepository from "./interfaces/IPostRepository";
 
 class PostRepository implements IPostRepository {
     private readonly _model;

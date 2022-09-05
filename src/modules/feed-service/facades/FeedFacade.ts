@@ -3,14 +3,15 @@ import Logger from '../../../config/Logger';
 import Error from "../../../config/Error";
 import { Client } from '@googlemaps/google-maps-services-js';
 
-import IUserProfileRepository from "../../../infras/repositories/IUserProfileRepository"; // External
-import IPostLikeRepository from "../../content-service/infras/repositories/IPostLikeRepository"; // External
-import IPostRepository from "../../content-service/infras/repositories/IPostRepository"; // External
-import IPostShareRepository from "../../content-service/infras/repositories/IPostShareRepository"; // External
+import IUserProfileRepository from "../../../infras/repositories/interfaces/IUserProfileRepository"; // External
+import IPostLikeRepository from "../../../infras/repositories/interfaces/IPostLikeRepository"; // External
+import IPostRepository from "../../../infras/repositories/interfaces/IPostRepository"; // External
+import IPostShareRepository from "../../../infras/repositories/interfaces/IPostShareRepository"; // External
 import IAdvertisementRepository from "../../advertisement-service/infras/repositories/IAdvertisementRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type { feedTypes, postType, getPostLikeType, advertisementFeedTypes, advertisementType } from '../../types';
+import type { feedTypes, advertisementFeedTypes, advertisementType } from '../../types';
+import type { postType, getPostLikeType } from '../../content-service/types';
 import IAwsS3 from "../../../infras/aws/IAwsS3";
 
 class FeedFacade {

@@ -1,7 +1,7 @@
-import IHashtagRepository from "./IHashtagRepository";
-import { Hashtags } from "../../../../database/postgresql/models/Hashtags";
+import IHashtagRepository from "./interfaces/IHashtagRepository";
+import { Hashtags } from "../../database/postgresql/models/Hashtags";
 import { getRepository } from "typeorm";
-import type { getHashtagType } from "../../../types";
+import type { getHashtagType } from "../../modules/types";
 
 class HashtagRepository implements IHashtagRepository {
 

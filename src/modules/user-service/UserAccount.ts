@@ -1,19 +1,18 @@
 import IAwsCognito from "../../infras/aws/IAwsCognito";
 import IAwsS3 from "../../infras/aws/IAwsS3";
-import IUserRelationshipRepository from "../../infras/repositories/IUserRelationshipRepository";
-import IUserProfileRepository from "../../infras/repositories/IUserProfileRepository";
+import IUserRelationshipRepository from "../../infras/repositories/interfaces/IUserRelationshipRepository";
+import IUserProfileRepository from "../../infras/repositories/interfaces/IUserProfileRepository";
 import Logger from "../../config/Logger";
-import type {userProfileType, userRelationshipTypes} from "./types";
+import type { userProfileType, userRelationshipTypes } from "./types";
 import { QueryFailedError } from "typeorm";
 import Error from "../../config/Error";
-import {AttributeType, ListUsersResponse} from "aws-sdk/clients/cognitoidentityserviceprovider";
+import { ListUsersResponse } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import moment from "moment";
 import { ManagedUpload } from "aws-sdk/lib/s3/managed_upload";
 import SendData = ManagedUpload.SendData;
-import IUserAccount from "./IUserAccount";
 import { ISignUpResult } from "amazon-cognito-identity-js";
 
-class UserAccount implements IUserAccount {
+class UserAccount {
 
     private _log;
 

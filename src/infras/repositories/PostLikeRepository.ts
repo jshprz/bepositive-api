@@ -1,7 +1,7 @@
 import { getRepository, DeleteResult, QueryFailedError } from "typeorm";
-import { PostLikes } from "../../../../database/postgresql/models/PostLikes";
-import IPostLikeRepository from "./IPostLikeRepository";
-import type { getPostLikeType } from "../../../types";
+import { PostLikes } from "../../database/postgresql/models/PostLikes";
+import IPostLikeRepository from "./interfaces/IPostLikeRepository";
+import type { getPostLikeType } from "../../modules/content-service/types";
 
 class PostLikeRepository implements IPostLikeRepository {
     private readonly _model;

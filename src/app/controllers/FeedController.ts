@@ -9,9 +9,9 @@ import ResponseMutator from "../../utils/ResponseMutator";
 import type { timestampsType } from '../../modules/types';
 
 import UserProfileRepository from "../../infras/repositories/UserProfileRepository"; // External
-import PostLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository"; // External
-import PostRepository from "../../modules/content-service/infras/repositories/PostRepository"; // External
-import PostShareRepository from "../../modules/content-service/infras/repositories/PostShareRepository"; // External
+import PostLikeRepository from "../../infras/repositories/PostLikeRepository"; // External
+import PostRepository from "../../infras/repositories/PostRepository"; // External
+import PostShareRepository from "../../infras/repositories/PostShareRepository"; // External
 
 import AdAwsS3 from "../../modules/advertisement-service/infras/aws/AwsS3"; // External
 import AdvertisementRepository from "../../modules/advertisement-service/infras/repositories/AdvertisementRepository";

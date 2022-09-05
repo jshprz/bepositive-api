@@ -1,4 +1,4 @@
-import IUserProfileRepository from "./IUserProfileRepository";
+import IUserProfileRepository from "./interfaces/IUserProfileRepository";
 import { getConnection, getRepository, InsertResult, QueryFailedError, UpdateResult } from "typeorm";
 import { UserProfiles } from "../../database/postgresql/models/UserProfiles";
 import type { userProfileType } from "../../modules/user-service/types";
@@ -105,7 +105,7 @@ class UserProfileRepository implements IUserProfileRepository {
             .execute();
     }
 
-     /*
+    /**
      * Update the user privacy setting.
      * @param userId: string
      * @param isPublic: boolean

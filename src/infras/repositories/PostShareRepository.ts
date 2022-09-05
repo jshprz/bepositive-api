@@ -1,9 +1,8 @@
 import { getRepository, UpdateResult, QueryFailedError } from "typeorm";
-import { PostShares } from "../../../../database/postgresql/models/PostShares";
-import IPostShareRepository from "./IPostShareRepository";
-import type { getByIdAndUserCognitoSubReturnTypes } from '../../../types';
-import { sharedPostType } from "../../../types";
-import {Posts} from "../../../../database/postgresql/models/Posts";
+import { PostShares } from "../../database/postgresql/models/PostShares";
+import IPostShareRepository from "./interfaces/IPostShareRepository";
+import type { getByIdAndUserCognitoSubReturnTypes } from '../../modules/content-service/types';
+import { sharedPostType } from "../../modules/content-service/types";
 
 class PostShareRepository implements IPostShareRepository {
 

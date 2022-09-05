@@ -1,9 +1,8 @@
 import IAwsCognito from "../../infras/aws/IAwsCognito";
 import Logger from "../../config/Logger";
 import Error from "../../config/Error";
-import IPassword from "./IPassword";
 
-class Password  implements IPassword {
+class Password {
     private _log;
 
     constructor(private _awsCognito: IAwsCognito) {

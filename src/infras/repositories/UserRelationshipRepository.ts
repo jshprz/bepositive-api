@@ -1,6 +1,6 @@
 import { getRepository, QueryFailedError } from 'typeorm';
 import { UserRelationships } from "../../database/postgresql/models/UserRelationships";
-import IUserRelationshipRepository from "./IUserRelationshipRepository";
+import IUserRelationshipRepository from "./interfaces/IUserRelationshipRepository";
 import type { userRelationshipTypes } from '../../modules/user-service/types';
 
 class UserRelationshipRepository implements IUserRelationshipRepository {

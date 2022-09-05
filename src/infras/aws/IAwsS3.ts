@@ -16,6 +16,7 @@ type s3HeadObjectParamsType = {
 interface IAwsS3 {
     upload(params: s3UploadParamsType): ManagedUpload;
     headObject(params: s3HeadObjectParamsType): any;
+    presignedPutUrl(s3FilenameKey: string, contentType: string, acl: string): Promise<string>;
 }
 
 export default IAwsS3;

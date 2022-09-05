@@ -1,6 +1,6 @@
 import { UpdateResult } from "typeorm";
-import { PostShares } from "../../../../database/postgresql/models/PostShares";
-import type { getByIdAndUserCognitoSubReturnTypes, sharedPostType } from '../../../types';
+import { PostShares } from "../../../database/postgresql/models/PostShares";
+import type { getByIdAndUserCognitoSubReturnTypes, sharedPostType } from '../../../modules/content-service/types';
 
 interface IPostShareRepository {
     create(item: { userId: string, postId: string, shareCaption: string }): PostShares;

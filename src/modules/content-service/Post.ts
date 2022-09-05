@@ -1,22 +1,23 @@
-import IAwsS3 from "../infras/aws/IAwsS3";
-import IPostRepository from "../infras/repositories/IPostRepository";
-import IPostLikeRepository from "../infras/repositories/IPostLikeRepository";
-import IHashtagRepository from "../infras/repositories/IHashtagRepository";
-import IPostHashtagRepository from "../infras/repositories/IPostHashtagRepository";
-import Logger from '../../../config/Logger';
-import Error from '../../../config/Error';
+import IAwsS3 from "../../infras/aws/IAwsS3";
+import IPostRepository from "../../infras/repositories/interfaces/IPostRepository";
+import IPostLikeRepository from "../../infras/repositories/interfaces/IPostLikeRepository";
+import IHashtagRepository from "../../infras/repositories/interfaces/IHashtagRepository";
+import IPostHashtagRepository from "../../infras/repositories/interfaces/IPostHashtagRepository";
+import Logger from '../../config/Logger';
+import Error from '../../config/Error';
 import { Client } from '@googlemaps/google-maps-services-js';
 
-import IUserRelationshipRepository from "../../../infras/repositories/IUserRelationshipRepository"; // External
-import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
+import IUserRelationshipRepository from "../../infras/repositories/interfaces/IUserRelationshipRepository"; // External
+import IFeedRepository from "../feed-service/infras/repositories/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type {feedRawType, getPostLikeType, postType, sharedPostType} from '../../types';
+import type { getPostLikeType, postType, sharedPostType } from './types';
+import type { feedRawType } from '../types';
 
-import IPostShareRepository from "../infras/repositories/IPostShareRepository";
-import IUserProfileRepository from "../../../infras/repositories/UserProfileRepository"; // External
+import IPostShareRepository from "../../infras/repositories/interfaces/IPostShareRepository";
+import IUserProfileRepository from "../../infras/repositories/UserProfileRepository"; // External
 
-class PostFacade {
+class Post {
     private _log;
     private _googleapis;
 
@@ -834,7 +835,7 @@ class PostFacade {
                         code: 200
                     });
                 }
-           } else {
+            } else {
                 const unlikeResult = await this._unlikePost(postId, userCognitoSub).catch((error) => {
                     return reject(error);
                 });
@@ -846,7 +847,7 @@ class PostFacade {
                         code: 200
                     });
                 }
-           }
+            }
         });
     }
 
@@ -863,23 +864,23 @@ class PostFacade {
      */
     private _likePost(postId: string, userCognitoSub: string, classification: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
-           await this._postLikeRepository.create(userCognitoSub, postId, classification).save().catch((error: QueryFailedError) => {
-               this._log.error({
-                   function: '_likePost()',
-                   message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                   payload: {
-                       postId,
-                       userCognitoSub
-                   }
-               });
+            await this._postLikeRepository.create(userCognitoSub, postId, classification).save().catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: '_likePost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        postId,
+                        userCognitoSub
+                    }
+                });
 
-               return reject({
-                   message: Error.DATABASE_ERROR.CREATE,
-                   code: 500
-               });
-           });
+                return reject({
+                    message: Error.DATABASE_ERROR.CREATE,
+                    code: 500
+                });
+            });
 
-           resolve(true);
+            resolve(true);
         });
     }
 
@@ -983,145 +984,145 @@ class PostFacade {
      * }>
      */
     flagPost(userId: string, postId: string, classification: string, reason: string): Promise<{
-            message: string,
-            data: {},
-            code: number
-        }> {
-            return new Promise(async (resolve, reject) => {
-                let post: postType | sharedPostType | void;
-                if (classification === "REGULAR_POST") {
-                    post = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
-                        this._log.error({
-                            function: 'flagPost()',
-                            message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                            payload: {
-                                userId,
-                                postId,
-                                classification,
-                                reason
-                            }
-                        });
-
-                        if (error.message.includes('invalid input syntax for type uuid')) {
-                            return reject({
-                                message: 'Post not found.',
-                                code: 404
-                            });
+        message: string,
+        data: {},
+        code: number
+    }> {
+        return new Promise(async (resolve, reject) => {
+            let post: postType | sharedPostType | void;
+            if (classification === "REGULAR_POST") {
+                post = await this._postRepository.getPostById(postId).catch((error: QueryFailedError) => {
+                    this._log.error({
+                        function: 'flagPost()',
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                        payload: {
+                            userId,
+                            postId,
+                            classification,
+                            reason
                         }
-
-                        return reject({
-                            message: Error.DATABASE_ERROR.GET,
-                            code: 500
-                        });
                     });
 
-                    if (!post || (post && (!post.content.postId || post.content.postId == ''))) {
+                    if (error.message.includes('invalid input syntax for type uuid')) {
                         return reject({
                             message: 'Post not found.',
                             code: 404
                         });
                     }
 
-                    // do not permit users to report their own posts
-                    if (post && post.actor.userId === userId) {
-                        return reject({
-                            message: 'Reporting of own posts is not permitted.',
-                            code: 401
-                        });
-                    }
-                } else {
-                    // get shared post
-                    post = await this._postRepository.getSharedPostById(postId
-                        ).catch((error: QueryFailedError) => {
-                        this._log.error({
-                            function: 'flagPost()',
-                            message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                            payload: {
-                                userId,
-                                postId,
-                                classification,
-                                reason
-                            }
-                        });
+                    return reject({
+                        message: Error.DATABASE_ERROR.GET,
+                        code: 500
+                    });
+                });
 
-                        if (error.message.includes('invalid input syntax for type uuid')) {
-                            return reject({
-                                message: 'Shared post not found.',
-                                code: 404
-                            });
+                if (!post || (post && (!post.content.postId || post.content.postId == ''))) {
+                    return reject({
+                        message: 'Post not found.',
+                        code: 404
+                    });
+                }
+
+                // do not permit users to report their own posts
+                if (post && post.actor.userId === userId) {
+                    return reject({
+                        message: 'Reporting of own posts is not permitted.',
+                        code: 401
+                    });
+                }
+            } else {
+                // get shared post
+                post = await this._postRepository.getSharedPostById(postId
+                ).catch((error: QueryFailedError) => {
+                    this._log.error({
+                        function: 'flagPost()',
+                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                        payload: {
+                            userId,
+                            postId,
+                            classification,
+                            reason
                         }
-
-                        return reject({
-                            message: Error.DATABASE_ERROR.GET,
-                            code: 500
-                        });
                     });
 
-                    if (!post || (post && (!post.id || post.id == ''))) {
+                    if (error.message.includes('invalid input syntax for type uuid')) {
                         return reject({
                             message: 'Shared post not found.',
                             code: 404
                         });
                     }
 
-                    // do not permit users to report their own posts
-                    if (post && post.userId === userId) {
-                        return reject({
-                            message: 'Reporting of own posts is not permitted.',
-                            code: 401
-                        });
-                    }
-                }
-
-
-                await this._postRepository.flagPost(userId, postId, classification, reason).save().catch((error: QueryFailedError) => {
-                    this._log.error({
-                        function: 'flagPost()',
-                        message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                        payload: {userId, postId, classification, reason}
-                    });
-
                     return reject({
-                        message: error.message,
+                        message: Error.DATABASE_ERROR.GET,
                         code: 500
                     });
                 });
 
-                return resolve({
-                    message: 'The post was reported successfully.',
-                    data: {},
-                    code: 200
+                if (!post || (post && (!post.id || post.id == ''))) {
+                    return reject({
+                        message: 'Shared post not found.',
+                        code: 404
+                    });
+                }
+
+                // do not permit users to report their own posts
+                if (post && post.userId === userId) {
+                    return reject({
+                        message: 'Reporting of own posts is not permitted.',
+                        code: 401
+                    });
+                }
+            }
+
+
+            await this._postRepository.flagPost(userId, postId, classification, reason).save().catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'flagPost()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {userId, postId, classification, reason}
+                });
+
+                return reject({
+                    message: error.message,
+                    code: 500
                 });
             });
-        }
 
-        /**
-         * Get list of posts by hashtag
-         * @param hashtagId: string
-         * @param pagination: {page: number, size: number}
-         * @returns Promise<{
-         *             message: string,
-         *             data: {
-         *                 hashtagInfo: {
-         *                     id: string,
-         *                     name: string
-         *                 },
-         *                 posts: postType[]
-         *             },
-         *             code: number
-         *         }>
-         */
-        getPostsByHashtag(hashtagId: string, pagination: {page: number, size: number}): Promise<{
-            message: string,
-            data: {
-                hashtagInfo: {
-                    id: string,
-                    name: string
-                },
-                posts: postType[]
+            return resolve({
+                message: 'The post was reported successfully.',
+                data: {},
+                code: 200
+            });
+        });
+    }
+
+    /**
+     * Get list of posts by hashtag
+     * @param hashtagId: string
+     * @param pagination: {page: number, size: number}
+     * @returns Promise<{
+     *             message: string,
+     *             data: {
+     *                 hashtagInfo: {
+     *                     id: string,
+     *                     name: string
+     *                 },
+     *                 posts: postType[]
+     *             },
+     *             code: number
+     *         }>
+     */
+    getPostsByHashtag(hashtagId: string, pagination: {page: number, size: number}): Promise<{
+        message: string,
+        data: {
+            hashtagInfo: {
+                id: string,
+                name: string
             },
-            code: number
-        }> {
+            posts: postType[]
+        },
+        code: number
+    }> {
 
         const posts: postType[] = [];
 
@@ -1204,7 +1205,7 @@ class PostFacade {
             }
         });
 
-        }
+    }
 }
 
-export default PostFacade;
+export default Post;

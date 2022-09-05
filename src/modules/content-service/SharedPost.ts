@@ -1,15 +1,16 @@
-import IPostShareRepository from "../infras/repositories/IPostShareRepository";
-import IPostRepository from "../infras/repositories/IPostRepository";
+import IPostShareRepository from "../../infras/repositories/interfaces/IPostShareRepository";
+import IPostRepository from "../../infras/repositories/interfaces/IPostRepository";
 
-import IUserRelationshipRepository from "../../../infras/repositories/IUserRelationshipRepository"; // External
-import IFeedRepository from "../../feed-service/infras/repositories/IFeedRepository"; // External
+import IUserRelationshipRepository from "../../infras/repositories/interfaces/IUserRelationshipRepository"; // External
+import IFeedRepository from "../feed-service/infras/repositories/IFeedRepository"; // External
 
-import Logger from "../../../config/Logger";
-import Error from '../../../config/Error';
+import Logger from "../../config/Logger";
+import Error from '../../config/Error';
 import { QueryFailedError } from "typeorm";
-import {feedRawType, getByIdAndUserCognitoSubReturnTypes, postType, sharedPostType} from "../../types";
+import { getByIdAndUserCognitoSubReturnTypes, postType, sharedPostType } from "./types";
+import type { feedRawType } from '../types';
 
-class PostShareFacade {
+class SharedPost {
     private _log;
 
     constructor(
@@ -168,23 +169,23 @@ class PostShareFacade {
     }> {
         return new Promise(async (resolve, reject) => {
             const sharedPost: sharedPostType | void = await this._postShareRepository.get(postId).catch((error: string & QueryFailedError) => {
-               this._log.error({
-                   function: 'getSharedPostById()',
-                   message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                   payload: {postId}
-               });
+                this._log.error({
+                    function: 'getSharedPostById()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {postId}
+                });
 
-               if (error === 'SHARED_POST_NOT_FOUND' || error.message.includes('invalid input syntax for type uuid')) {
-                   return reject({
+                if (error === 'SHARED_POST_NOT_FOUND' || error.message.includes('invalid input syntax for type uuid')) {
+                    return reject({
                         message: 'Shared post not found',
                         code: 404
-                   });
-               }
+                    });
+                }
 
-               return reject({
-                   message: Error.DATABASE_ERROR.GET,
-                   code: 500
-               });
+                return reject({
+                    message: Error.DATABASE_ERROR.GET,
+                    code: 500
+                });
             });
 
             if (!sharedPost) {
@@ -387,4 +388,4 @@ class PostShareFacade {
     }
 }
 
-export default PostShareFacade;
+export default SharedPost;

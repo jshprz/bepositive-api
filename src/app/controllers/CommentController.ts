@@ -1,6 +1,6 @@
 import CommentRepository from "../../modules/comment-service/infras/repositories/CommentRepository";
 
-import PostRepository from "../../modules/content-service/infras/repositories/PostRepository"; // External
+import PostRepository from "../../infras/repositories/PostRepository"; // External
 
 import CommentFacade from "../../modules/comment-service/facades/CommentFacade";
 

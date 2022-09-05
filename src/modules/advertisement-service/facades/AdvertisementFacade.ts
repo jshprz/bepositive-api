@@ -9,7 +9,7 @@ import SendData = ManagedUpload.SendData;
 import moment from "moment";
 import { QueryFailedError } from "typeorm";
 import type { advertisementType } from '../../types';
-import IPostLikeRepository from "../../content-service/infras/repositories/IPostLikeRepository";
+import IPostLikeRepository from "../../../infras/repositories/interfaces/IPostLikeRepository";
 
 class AdvertisementFacade {
 

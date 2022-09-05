@@ -9,7 +9,7 @@ import uniqid from 'uniqid';
 import ResponseMutator from "../../utils/ResponseMutator";
 import type { timestampsType } from '../../modules/types';
 import multer from "multer";
-import PostLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository";
+import PostLikeRepository from "../../infras/repositories/PostLikeRepository";
 
 class AdvertisementController {
     private _advertisementFacade;

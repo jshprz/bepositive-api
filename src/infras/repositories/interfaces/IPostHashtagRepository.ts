@@ -1,5 +1,5 @@
-import { PostsHashtags } from "../../../../database/postgresql/models/PostsHashtags";
-import type { postsHashtagsType } from '../../../types';
+import { PostsHashtags } from "../../../database/postgresql/models/PostsHashtags";
+import type { postsHashtagsType } from '../../../modules/types';
 
 interface IPostHashtagRepository {
     create(hashtagId: string, postId: string): PostsHashtags;

@@ -27,13 +27,7 @@ export type getHashtagType = {
   updatedAt: Date | number
 }
 
-export type getPostLikeType = {
-  id: string,
-  postId: string,
-  userId: string,
-  createdAt: Date | number,
-  updatedAt: Date | number
-}
+
 
 export type getCommentLikeType = {
   id: string,
@@ -43,15 +37,7 @@ export type getCommentLikeType = {
   updatedAt: Date | number
 }
 
-export type getByIdAndUserCognitoSubReturnTypes = {
-  id: string,
-  postId: string,
-  userId: string,
-  shareCaption: string,
-  createdAt: Date,
-  updatedAt: Date,
-  deletedAt: Date
-};
+
 
 export type getCommentsByPostIdReturnType = {
   id: string,
@@ -122,38 +108,7 @@ export type commentType = {
   replies: any[]
 };
 
-export type postType = {
-  content: {
-    classification: string,
-    postId: string,
-    caption: string,
-    googleMapsPlaceId: string,
-    locationDetails: string,
-    attachments: ({
-      key: string,
-      url: string,
-      type: string,
-      height: string,
-      width: string
-    }[] & {
-      key: string,
-      type: string
-    }[]) | null,
-    isLiked: boolean,
-    createdAt: Date | number,
-    updatedAt: Date | number,
-  },
-  actor: {
-    userId: string,
-    name: string,
-    avatar: {
-      url: string,
-      type: string,
-      height: string,
-      width: string
-    }
-  }
-};
+
 
 export type advertisementType = {
   content: {
@@ -225,14 +180,7 @@ export type advertisementFeedTypes = {
   }
 } | null;
 
-export type sharedPostType = {
-  id: string,
-  postId: string,
-  userId: string,
-  shareCaption: string,
-  createdAt: Date | number,
-  updatedAt: Date | number
-};
+
 
 export type feedTypes = {
   content: {

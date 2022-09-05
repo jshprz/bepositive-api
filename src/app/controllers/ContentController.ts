@@ -1,16 +1,16 @@
-import AwsS3 from "../../modules/content-service/infras/aws/AwsS3";
-import PostRepository from "../../modules/content-service/infras/repositories/PostRepository";
-import PostShareRepository from "../../modules/content-service/infras/repositories/PostShareRepository";
-import PostLikeRepository from "../../modules/content-service/infras/repositories/PostLikeRepository";
-import HashtagRepository from "../../modules/content-service/infras/repositories/HashtagRepository";
-import PostHashtagRepository from "../../modules/content-service/infras/repositories/PostHashtagRepository";
+import AwsS3 from "../../infras/aws/AwsS3";
+import PostRepository from "../../infras/repositories/PostRepository";
+import PostShareRepository from "../../infras/repositories/PostShareRepository";
+import PostLikeRepository from "../../infras/repositories/PostLikeRepository";
+import HashtagRepository from "../../infras/repositories/HashtagRepository";
+import PostHashtagRepository from "../../infras/repositories/PostHashtagRepository";
 
 import UserRelationshipRepository from "../../infras/repositories/UserRelationshipRepository"; // External
 import FeedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
 import UserProfileRepository from "../../infras/repositories/UserProfileRepository"; // External
 
-import PostFacade from "../../modules/content-service/facades/PostFacade";
-import PostShareFacade from "../../modules/content-service/facades/PostShareFacade";
+import Post from "../../modules/content-service/Post";
+import SharedPost from "../../modules/content-service/SharedPost";
 
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
@@ -26,7 +26,7 @@ class ContentController {
     private _utilResponseMutator;
 
     constructor() {
-        this._postFacade = new PostFacade(
+        this._postFacade = new Post(
             new AwsS3(), new PostRepository(),
             new PostShareRepository(),
             new PostLikeRepository(),
@@ -36,7 +36,7 @@ class ContentController {
             new HashtagRepository(),
             new PostHashtagRepository()
         );
-        this._postShareFacade = new PostShareFacade(
+        this._postShareFacade = new SharedPost(
             new PostShareRepository(),
             new PostRepository(),
             new UserRelationshipRepository(),

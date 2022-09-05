@@ -1,7 +1,7 @@
 import { UpdateResult } from "typeorm";
-import { Posts } from "../../../../database/postgresql/models/Posts";
-import { FlaggedPosts } from "../../../../database/postgresql/models/FlaggedPosts";
-import type { postType, sharedPostType } from "../../../types";
+import { Posts } from "../../../database/postgresql/models/Posts";
+import { FlaggedPosts } from "../../../database/postgresql/models/FlaggedPosts";
+import type { postType, sharedPostType } from "../../../modules/content-service/types";
 
 interface IPostRepository {
     create(item: {userCognitoSub: string, caption: string, files: {key: string, type: string}[], googleMapsPlaceId: string }): Posts;

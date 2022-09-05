@@ -1,6 +1,6 @@
 import { DeleteResult } from "typeorm";
-import { PostLikes } from "../../../../database/postgresql/models/PostLikes";
-import type { getPostLikeType } from "../../../types";
+import { PostLikes } from "../../../database/postgresql/models/PostLikes";
+import type { getPostLikeType } from "../../../modules/content-service/types";
 
 interface IPostLikeRepository {
     create(userCognitoSub: string, postId: string, classification: string): PostLikes;

@@ -3,17 +3,16 @@ import ICommentLikeRepository from "../infras/repositories/ICommentLikeRepositor
 import Logger from '../../../config/Logger';
 import Error from '../../../config/Error';
 
-import IPostRepository from "../../content-service/infras/repositories/IPostRepository"; // External
+import IPostRepository from "../../../infras/repositories/interfaces/IPostRepository"; // External
 
 import { QueryFailedError } from "typeorm";
 import type {
     getCommentByIdResult,
     getCommentsByPostIdReturnType,
     getCommentRepliesByCommentIdReturnType,
-    postType,
     commentType,
-    sharedPostType
 } from '../../types';
+import { postType, sharedPostType } from "../../content-service/types";
 
 import CommentRepository from "../infras/repositories/CommentRepository";
 import UserProfileRepository from "../../../infras/repositories/UserProfileRepository";

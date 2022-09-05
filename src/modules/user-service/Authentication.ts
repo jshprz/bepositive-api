@@ -1,5 +1,5 @@
 import IAwsCognito from '../../infras/aws/IAwsCognito';
-import IAccessTokenRepository from "../../infras/repositories/IAccessTokenRepository";
+import IAccessTokenRepository from "../../infras/repositories/interfaces/IAccessTokenRepository";
 import Logger from '../../config/Logger';
 import Error from "../../config/Error";
 import { Request } from 'express';
@@ -7,9 +7,8 @@ import { QueryFailedError } from "typeorm";
 import { CognitoUserSession } from "amazon-cognito-identity-js";
 import { InitiateAuthResponse } from "aws-sdk/clients/cognitoidentityserviceprovider";
 import { AWSError } from "aws-sdk";
-import IAuthentication from "./IAuthentication";
 
-class Authentication implements IAuthentication {
+class Authentication {
 
     private _log;
 
