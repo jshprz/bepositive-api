@@ -2,13 +2,13 @@ import IPostShareRepository from "../../infras/repositories/interfaces/IPostShar
 import IPostRepository from "../../infras/repositories/interfaces/IPostRepository";
 
 import IUserRelationshipRepository from "../../infras/repositories/interfaces/IUserRelationshipRepository"; // External
-import IFeedRepository from "../feed-service/infras/repositories/IFeedRepository"; // External
+import IFeedRepository from "../../infras/repositories/interfaces/IFeedRepository"; // External
 
 import Logger from "../../config/Logger";
 import Error from '../../config/Error';
 import { QueryFailedError } from "typeorm";
 import { getByIdAndUserCognitoSubReturnTypes, postType, sharedPostType } from "./types";
-import type { feedRawType } from '../types';
+import type { feedRawType } from '../feed-service/types';
 
 class SharedPost {
     private _log;

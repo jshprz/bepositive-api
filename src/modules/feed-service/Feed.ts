@@ -1,20 +1,21 @@
-import IFeedRepository from "../infras/repositories/IFeedRepository";
-import Logger from '../../../config/Logger';
-import Error from "../../../config/Error";
+import IFeedRepository from "../../infras/repositories/interfaces/IFeedRepository";
+import Logger from '../../config/Logger';
+import Error from "../../config/Error";
 import { Client } from '@googlemaps/google-maps-services-js';
 
-import IUserProfileRepository from "../../../infras/repositories/interfaces/IUserProfileRepository"; // External
-import IPostLikeRepository from "../../../infras/repositories/interfaces/IPostLikeRepository"; // External
-import IPostRepository from "../../../infras/repositories/interfaces/IPostRepository"; // External
-import IPostShareRepository from "../../../infras/repositories/interfaces/IPostShareRepository"; // External
-import IAdvertisementRepository from "../../advertisement-service/infras/repositories/IAdvertisementRepository"; // External
+import IUserProfileRepository from "../../infras/repositories/interfaces/IUserProfileRepository"; // External
+import IPostLikeRepository from "../../infras/repositories/interfaces/IPostLikeRepository"; // External
+import IPostRepository from "../../infras/repositories/interfaces/IPostRepository"; // External
+import IPostShareRepository from "../../infras/repositories/interfaces/IPostShareRepository"; // External
+import IAdvertisementRepository from "../advertisement-service/infras/repositories/IAdvertisementRepository"; // External
 
 import { QueryFailedError } from "typeorm";
-import type { feedTypes, advertisementFeedTypes, advertisementType } from '../../types';
-import type { postType, getPostLikeType } from '../../content-service/types';
-import IAwsS3 from "../../../infras/aws/IAwsS3";
+import type { feedTypes  } from '../feed-service/types';
+import type { advertisementFeedTypes, advertisementType } from '../types';
+import type { postType, getPostLikeType } from '../content-service/types';
+import IAwsS3 from "../../infras/aws/IAwsS3";
 
-class FeedFacade {
+class Feed {
     private _log;
     private _googleapis;
 
@@ -267,12 +268,12 @@ class FeedFacade {
         });
     }
 
-     /**
-      * Build the ads to be injected in the feed (append ad data, append ad location details, ad media files complete URL, ad like status, and ad user information).
-      * @param ad: advertisementFeedTypes
-      * @returns Promise<advertisementFeedTypes>
-      */
-      private _adsforFeedBuilder(ad: advertisementType, loggedInUserId: string = ''): Promise<advertisementFeedTypes> {
+    /**
+     * Build the ads to be injected in the feed (append ad data, append ad location details, ad media files complete URL, ad like status, and ad user information).
+     * @param ad: advertisementFeedTypes
+     * @returns Promise<advertisementFeedTypes>
+     */
+    private _adsforFeedBuilder(ad: advertisementType, loggedInUserId: string = ''): Promise<advertisementFeedTypes> {
         return new Promise(async (resolve, reject) => {
             try {
                 const newAd: advertisementFeedTypes = {
@@ -532,7 +533,7 @@ class FeedFacade {
      *         code: number
      *     }>
      */
-     getAdsforFeed(userCognitoSub: string): Promise<{
+    getAdsforFeed(userCognitoSub: string): Promise<{
         message: string,
         data: advertisementFeedTypes[],
         code: number
@@ -637,47 +638,47 @@ class FeedFacade {
 
         return new Promise(async (resolve) => {
 
-             if (feed && feed.length > 0 && adsFeed && adsFeed.length > 0) {
-                 let postCount = 0;
+            if (feed && feed.length > 0 && adsFeed && adsFeed.length > 0) {
+                let postCount = 0;
 
-                 for (let i = 0; i < feed.length; i++) {
+                for (let i = 0; i < feed.length; i++) {
 
-                     postCount += 1;
-                     newFeed.push(feed[i]);
+                    postCount += 1;
+                    newFeed.push(feed[i]);
 
-                     if (postCount === index) {
+                    if (postCount === index) {
 
-                         const adIndex = (Math.floor((i)/index));
+                        const adIndex = (Math.floor((i)/index));
 
-                         // for cases when advertisements are not enough in numbers
-                         if (adsFeed[adIndex] != undefined) {
-                             const updateAdViewCountResult = await this._advertisementRepository.updateAdViewCount(adsFeed[adIndex]!.content.advertisementId).catch((error: QueryFailedError) => {
-                                 this._log.error({
-                                     function: 'arrangeFeed() - updateAdViewCount',
-                                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                                     payload: {
-                                         feed,
-                                         adsFeed
-                                     }
-                                 });
-                             });
+                        // for cases when advertisements are not enough in numbers
+                        if (adsFeed[adIndex] != undefined) {
+                            const updateAdViewCountResult = await this._advertisementRepository.updateAdViewCount(adsFeed[adIndex]!.content.advertisementId).catch((error: QueryFailedError) => {
+                                this._log.error({
+                                    function: 'arrangeFeed() - updateAdViewCount',
+                                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                                    payload: {
+                                        feed,
+                                        adsFeed
+                                    }
+                                });
+                            });
 
-                             if (updateAdViewCountResult) {
-                                 newFeed.push(adsFeed[adIndex]);
-                                 postCount = 0;
-                             }
-                         }
-                     }
-                 }
-             }
+                            if (updateAdViewCountResult) {
+                                newFeed.push(adsFeed[adIndex]);
+                                postCount = 0;
+                            }
+                        }
+                    }
+                }
+            }
 
-             return resolve({
-                 message: 'Feed successfully retrieved.',
-                 data: newFeed,
-                 code: 200
-             });
-         });
+            return resolve({
+                message: 'Feed successfully retrieved.',
+                data: newFeed,
+                code: 200
+            });
+        });
     }
 }
 
-export default FeedFacade;
+export default Feed;

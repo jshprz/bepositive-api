@@ -8,11 +8,11 @@ import Error from '../../config/Error';
 import { Client } from '@googlemaps/google-maps-services-js';
 
 import IUserRelationshipRepository from "../../infras/repositories/interfaces/IUserRelationshipRepository"; // External
-import IFeedRepository from "../feed-service/infras/repositories/IFeedRepository"; // External
+import IFeedRepository from "../../infras/repositories/interfaces/IFeedRepository"; // External
 
 import { QueryFailedError } from "typeorm";
 import type { getPostLikeType, postType, sharedPostType } from './types';
-import type { feedRawType } from '../types';
+import type { feedRawType } from '../feed-service/types';
 
 import IPostShareRepository from "../../infras/repositories/interfaces/IPostShareRepository";
 import IUserProfileRepository from "../../infras/repositories/UserProfileRepository"; // External

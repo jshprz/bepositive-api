@@ -1,8 +1,8 @@
 import { getRepository, QueryFailedError } from 'typeorm';
-import { UserFeeds } from "../../../../database/postgresql/models/UserFeeds";
-import { Posts } from "../../../../database/postgresql/models/Posts";
-import IFeedRepository from "./IFeedRepository";
-import type { feedTypes, feedRawType } from '../../../types';
+import { UserFeeds } from "../../database/postgresql/models/UserFeeds";
+import { Posts } from "../../database/postgresql/models/Posts";
+import IFeedRepository from "./interfaces/IFeedRepository";
+import type { feedTypes, feedRawType } from '../../modules/feed-service/types';
 
 class FeedRepository implements IFeedRepository {
     private readonly _model;

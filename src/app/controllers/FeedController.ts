@@ -1,5 +1,5 @@
-import FeedRepository from "../../modules/feed-service/infras/repositories/FeedRepository";
-import FeedFacade from "../../modules/feed-service/facades/FeedFacade";
+import FeedRepository from "../../infras/repositories/FeedRepository";
+import Feed from "../../modules/feed-service/Feed";
 
 import {Request, Response} from "express";
 import { validationResult } from "express-validator";
@@ -21,13 +21,13 @@ import AwsS3 from "../../infras/aws/AwsS3";
 
 class FeedController {
 
-    private _feedFacade;
+    private _feed;
     private _utilResponseMutator;
     private _advertisementFacade;
     private _log;
 
     constructor() {
-        this._feedFacade = new FeedFacade(
+        this._feed = new Feed(
             new FeedRepository(),
             new PostLikeRepository(),
             new UserProfileRepository(),
@@ -68,8 +68,8 @@ class FeedController {
                 size: Number(req.query.size)
             };
 
-            const getFeedResult = await this._feedFacade.getFeed(userCognitoSub, pagination);
-            const adsforFeed= await this._feedFacade.getAdsforFeed(userCognitoSub);
+            const getFeedResult = await this._feed.getFeed(userCognitoSub, pagination);
+            const adsforFeed= await this._feed.getAdsforFeed(userCognitoSub);
 
             for (const feed of getFeedResult.data) {
 
@@ -116,7 +116,7 @@ class FeedController {
                 }
             }
 
-            const arrangeFeedResult = await this._feedFacade.combinePostAndSharedFeedWithAdvertisementFeed(getFeedResult.data, adsforFeed.data);
+            const arrangeFeedResult = await this._feed.combinePostAndSharedFeedWithAdvertisementFeed(getFeedResult.data, adsforFeed.data);
 
             return res.status(getFeedResult.code).json({
                 message: getFeedResult.message,
@@ -181,8 +181,8 @@ class FeedController {
             };
 
             const popularityThreshold = 1;
-            const trendingFeed = await this._feedFacade.getTrendingFeed(pagination, popularityThreshold, userCognitoSub);
-            const adsforFeed = await this._feedFacade.getAdsforFeed(userCognitoSub);
+            const trendingFeed = await this._feed.getTrendingFeed(pagination, popularityThreshold, userCognitoSub);
+            const adsforFeed = await this._feed.getAdsforFeed(userCognitoSub);
 
             for (const feed of trendingFeed.data) {
 
@@ -229,7 +229,7 @@ class FeedController {
                 }
             }
 
-            const arrangeFeedResult = await this._feedFacade.combinePostAndSharedFeedWithAdvertisementFeed(trendingFeed.data, adsforFeed.data);
+            const arrangeFeedResult = await this._feed.combinePostAndSharedFeedWithAdvertisementFeed(trendingFeed.data, adsforFeed.data);
 
             return res.status(trendingFeed.code).json({
                 message: trendingFeed.message,

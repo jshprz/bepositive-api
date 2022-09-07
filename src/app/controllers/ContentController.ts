@@ -6,7 +6,7 @@ import HashtagRepository from "../../infras/repositories/HashtagRepository";
 import PostHashtagRepository from "../../infras/repositories/PostHashtagRepository";
 
 import UserRelationshipRepository from "../../infras/repositories/UserRelationshipRepository"; // External
-import FeedRepository from "../../modules/feed-service/infras/repositories/FeedRepository"; // External
+import FeedRepository from "../../infras/repositories/FeedRepository"; // External
 import UserProfileRepository from "../../infras/repositories/UserProfileRepository"; // External
 
 import Post from "../../modules/content-service/Post";
@@ -21,12 +21,12 @@ import ResponseMutator from "../../utils/ResponseMutator";
 import type { timestampsType } from '../../modules/types';
 
 class ContentController {
-    private _postFacade;
+    private _post;
     private _postShareFacade;
     private _utilResponseMutator;
 
     constructor() {
-        this._postFacade = new Post(
+        this._post = new Post(
             new AwsS3(), new PostRepository(),
             new PostShareRepository(),
             new PostLikeRepository(),
@@ -78,7 +78,7 @@ class ContentController {
 
             const hashtagNames: string[] = this._getHashtagsInCaption(caption);
 
-            const createdHashtagIds = await this._postFacade.createHashtag(hashtagNames);
+            const createdHashtagIds = await this._post.createHashtag(hashtagNames);
 
             if (Array.isArray(files)) {
                 // We append which folder inside S3 bucket the file will be uploaded.
@@ -88,9 +88,9 @@ class ContentController {
                 });
             }
 
-            const createPostResult = await this._postFacade.createPost({userCognitoSub, caption, files, googleMapsPlaceId});
+            const createPostResult = await this._post.createPost({userCognitoSub, caption, files, googleMapsPlaceId});
 
-            await this._postFacade.createPostsHashtags(createdHashtagIds.data, createPostResult.data.postId);
+            await this._post.createPostsHashtags(createdHashtagIds.data, createPostResult.data.postId);
 
             return res.status(createPostResult.code).json({
                 message: createPostResult.message,
@@ -167,7 +167,7 @@ class ContentController {
             // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
             const userCognitoSub: string = req.params.userId || req.body.userCognitoSub;
 
-            const posts = await this._postFacade.getPostsByUser(userCognitoSub, req.body.userCognitoSub);
+            const posts = await this._post.getPostsByUser(userCognitoSub, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
@@ -216,7 +216,7 @@ class ContentController {
             // We'll first consider if a userId param is provided, which means that our intention is to retrieve the profile of another user.
             // Otherwise, the userCognitoSub of the currently logged-in user will be used for the query.
             const userId: string = req.params.userId || req.body.userCognitoSub;
-            const getFavoritePostsByUserIdResult = await this._postFacade.getFavoritePostsByUserId(userId, req.body.userCognitoSub);
+            const getFavoritePostsByUserIdResult = await this._post.getFavoritePostsByUserId(userId, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
@@ -272,7 +272,7 @@ class ContentController {
 
         try {
             const id: string = req.params.id;
-            const post = await this._postFacade.getPostById(id, req.body.userCognitoSub);
+            const post = await this._post.getPostById(id, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
@@ -342,7 +342,7 @@ class ContentController {
             const id: string = req.params.id;
             const caption: string = String(req.body.caption);
 
-            const updatePostResult = await this._postFacade.updatePost(req.body.userCognitoSub, id, caption);
+            const updatePostResult = await this._post.updatePost(req.body.userCognitoSub, id, caption);
 
             return res.status(updatePostResult.code).json({
                 message: updatePostResult.message,
@@ -403,7 +403,7 @@ class ContentController {
             } = {message: '', data: {}, code: 0};
 
             if (classification === 'REGULAR_POST') {
-                const removeRegularPost = await this._postFacade.removePost(req.body.userCognitoSub, postId);
+                const removeRegularPost = await this._post.removePost(req.body.userCognitoSub, postId);
                 responseData = removeRegularPost;
             }
             if (classification === 'SHARED_POST') {
@@ -636,7 +636,7 @@ class ContentController {
             const userCognitoSub: string = req.body.userCognitoSub;
             const classification: string = req.body.classification;
 
-            const likeOrUnlikePostResult = await this._postFacade.likeOrUnlikePost(postId, userCognitoSub, like, classification);
+            const likeOrUnlikePostResult = await this._post.likeOrUnlikePost(postId, userCognitoSub, like, classification);
 
             return res.status(likeOrUnlikePostResult.code).json({
                 message: likeOrUnlikePostResult.message,
@@ -704,7 +704,7 @@ class ContentController {
             const reason: string = String(req.body.reason);
             const classification: string = req.body.classification ? req.body.classification : "REGULAR_POST";
 
-            const flagPostResult = await this._postFacade.flagPost(req.body.userCognitoSub, postId, classification, reason);
+            const flagPostResult = await this._post.flagPost(req.body.userCognitoSub, postId, classification, reason);
 
             return res.status(flagPostResult.code).json({
                 message: flagPostResult.message,
@@ -775,7 +775,7 @@ class ContentController {
                 size: Number(req.query.size)
             };
 
-            const getPostsByHashtagResult = await this._postFacade.getPostsByHashtag(hashtagId, pagination);
+            const getPostsByHashtagResult = await this._post.getPostsByHashtag(hashtagId, pagination);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt

@@ -1,5 +1,5 @@
-import { UserFeeds } from "../../../../database/postgresql/models/UserFeeds";
-import type { feedTypes, feedRawType } from '../../../types';
+import { UserFeeds } from "../../../database/postgresql/models/UserFeeds";
+import type { feedTypes, feedRawType } from '../../../modules/feed-service/types';
 
 interface IFeedRepository {
     create(userId: string, postId: string, isRegularPost: boolean): UserFeeds;
