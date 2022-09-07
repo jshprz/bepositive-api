@@ -1,9 +1,9 @@
 
 import { getRepository, QueryFailedError, UpdateResult} from 'typeorm';
-import { Advertisements } from "../../../../database/postgresql/models/Advertisements";
-import { FlaggedPosts } from '../../../../database/postgresql/models/FlaggedPosts';
-import { advertisementType } from '../../../types';
-import IAdvertisementRepository from "./IAdvertisementRepository";
+import { Advertisements } from "../../database/postgresql/models/Advertisements";
+import { FlaggedPosts } from '../../database/postgresql/models/FlaggedPosts';
+import { advertisementType } from '../../modules/advertisement-service/types';
+import IAdvertisementRepository from "./interfaces/IAdvertisementRepository";
 
 class AdvertisementRepository implements IAdvertisementRepository {
 

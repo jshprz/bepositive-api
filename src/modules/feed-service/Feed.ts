@@ -7,11 +7,11 @@ import IUserProfileRepository from "../../infras/repositories/interfaces/IUserPr
 import IPostLikeRepository from "../../infras/repositories/interfaces/IPostLikeRepository"; // External
 import IPostRepository from "../../infras/repositories/interfaces/IPostRepository"; // External
 import IPostShareRepository from "../../infras/repositories/interfaces/IPostShareRepository"; // External
-import IAdvertisementRepository from "../advertisement-service/infras/repositories/IAdvertisementRepository"; // External
+import IAdvertisementRepository from "../../infras/repositories/interfaces/IAdvertisementRepository"; // External
 
 import { QueryFailedError } from "typeorm";
 import type { feedTypes  } from '../feed-service/types';
-import type { advertisementFeedTypes, advertisementType } from '../types';
+import type { advertisementFeedTypes, advertisementType } from '../advertisement-service/types';
 import type { postType, getPostLikeType } from '../content-service/types';
 import IAwsS3 from "../../infras/aws/IAwsS3";
 

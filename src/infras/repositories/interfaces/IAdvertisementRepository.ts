@@ -1,8 +1,8 @@
 
 import { UpdateResult } from "typeorm";
-import { Advertisements } from "../../../../database/postgresql/models/Advertisements";
-import { FlaggedPosts } from "../../../../database/postgresql/models/FlaggedPosts";
-import { advertisementType } from "../../../types";
+import { Advertisements } from "../../../database/postgresql/models/Advertisements";
+import { FlaggedPosts } from "../../../database/postgresql/models/FlaggedPosts";
+import { advertisementType } from "../../../modules/advertisement-service/types";
 
 interface IAdvertisementRepository {
     create(item: { userCognitoSub: string, name: string, link: string, caption: string, files: {key: string, type: string}[], googleMapsPlaceId:string, isSponsored: boolean }): Advertisements;

@@ -1,17 +1,14 @@
 
-import IAwsS3 from "../../advertisement-service/infras/aws/IAwsS3";
-import IAdvertisementRepository from "../infras/repositories/IAdvertisementRepository";
-import Logger from '../../../config/Logger';
-import Error from '../../../config/Error';
+import IAwsS3 from "../../infras/aws/IAwsS3";
+import IAdvertisementRepository from "../../infras/repositories/interfaces/IAdvertisementRepository";
+import Logger from '../../config/Logger';
+import Error from '../../config/Error';
 import { Client } from '@googlemaps/google-maps-services-js';
-import {ManagedUpload} from "aws-sdk/lib/s3/managed_upload";
-import SendData = ManagedUpload.SendData;
-import moment from "moment";
 import { QueryFailedError } from "typeorm";
-import type { advertisementType } from '../../types';
-import IPostLikeRepository from "../../../infras/repositories/interfaces/IPostLikeRepository";
+import type { advertisementType } from '../advertisement-service/types';
+import IPostLikeRepository from "../../infras/repositories/interfaces/IPostLikeRepository";
 
-class AdvertisementFacade {
+class Advertisement {
 
     private _log;
     private _googleapis;
@@ -90,9 +87,9 @@ class AdvertisementFacade {
     }
 
     /**
-    * Get all the advertisements.
-    *
-    * @returns Promise<{
+     * Get all the advertisements.
+     *
+     * @returns Promise<{
      *         message: string,
      *         data: postType[],
      *         code: number
@@ -157,7 +154,7 @@ class AdvertisementFacade {
                                 type: '',
                                 height: '',
                                 width: ''
-                              },
+                            },
                         }
                     };
 
@@ -280,8 +277,8 @@ class AdvertisementFacade {
                     function: 'updateAdvertisement()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
-                      id,
-                      caption
+                        id,
+                        caption
                     }
                 });
 
@@ -335,7 +332,7 @@ class AdvertisementFacade {
                     function: 'removeAdvertisement()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
-                     id
+                        id
                     }
                 });
 
@@ -364,7 +361,7 @@ class AdvertisementFacade {
                     function: 'removeAdvertisement()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
-                      id
+                        id
                     }
                 });
 
@@ -392,7 +389,7 @@ class AdvertisementFacade {
      *   code: number
      * }>
      */
-     updateAdViewCount(id: string): Promise<{
+    updateAdViewCount(id: string): Promise<{
         message: string,
         data: {},
         code: number
@@ -403,7 +400,7 @@ class AdvertisementFacade {
                     function: 'updateAdViewCount()',
                     message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                     payload: {
-                      id
+                        id
                     }
                 });
 
@@ -814,4 +811,4 @@ class AdvertisementFacade {
     }
 }
 
-export default AdvertisementFacade;
+export default Advertisement;

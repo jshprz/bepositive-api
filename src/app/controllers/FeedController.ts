@@ -12,10 +12,8 @@ import UserProfileRepository from "../../infras/repositories/UserProfileReposito
 import PostLikeRepository from "../../infras/repositories/PostLikeRepository"; // External
 import PostRepository from "../../infras/repositories/PostRepository"; // External
 import PostShareRepository from "../../infras/repositories/PostShareRepository"; // External
+import AdvertisementRepository from "../../infras/repositories/AdvertisementRepository"; // External
 
-import AdAwsS3 from "../../modules/advertisement-service/infras/aws/AwsS3"; // External
-import AdvertisementRepository from "../../modules/advertisement-service/infras/repositories/AdvertisementRepository";
-import AdvertisementFacade from "../../modules/advertisement-service/facades/AdvertisementFacade";
 import AwsS3 from "../../infras/aws/AwsS3";
 
 
@@ -23,7 +21,6 @@ class FeedController {
 
     private _feed;
     private _utilResponseMutator;
-    private _advertisementFacade;
     private _log;
 
     constructor() {
@@ -37,7 +34,6 @@ class FeedController {
             new AwsS3()
         );
         this._utilResponseMutator = new ResponseMutator();
-        this._advertisementFacade = new AdvertisementFacade(new AdAwsS3(), new AdvertisementRepository(), new PostLikeRepository());
         this._log = Logger.createLogger('FeedController.ts');
 
     }

@@ -57,3 +57,18 @@ export type getByIdAndUserCognitoSubReturnTypes = {
     updatedAt: Date,
     deletedAt: Date
 };
+
+export type postsHashtagsType = {
+    id: string,
+    postId: string,
+    hashtagId: string,
+    createdAt: Date | number,
+    updatedAt: Date | number
+}
+
+export type getHashtagType = {
+    id: string,
+    name: string,
+    createdAt: Date | number,
+    updatedAt: Date | number
+}

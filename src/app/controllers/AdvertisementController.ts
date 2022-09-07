@@ -1,7 +1,7 @@
 
-import AwsS3 from "../../modules/advertisement-service/infras/aws/AwsS3";
-import AdvertisementRepository from "../../modules/advertisement-service/infras/repositories/AdvertisementRepository";
-import AdvertisementFacade from "../../modules/advertisement-service/facades/AdvertisementFacade";
+import AwsS3 from "../../infras/aws/AwsS3";
+import AdvertisementRepository from "../../infras/repositories/AdvertisementRepository";
+import Advertisement from "../../modules/advertisement-service/Advertisement";
 import { Request, Response } from "express";
 import { validationResult } from "express-validator";
 import { config } from "../../config";
@@ -12,12 +12,12 @@ import multer from "multer";
 import PostLikeRepository from "../../infras/repositories/PostLikeRepository";
 
 class AdvertisementController {
-    private _advertisementFacade;
+    private _advertisement;
     private _utilResponseMutator;
     private _upload;
 
     constructor() {
-        this._advertisementFacade = new AdvertisementFacade(
+        this._advertisement = new Advertisement(
             new AwsS3(), new AdvertisementRepository(), new PostLikeRepository()
         );
         this._utilResponseMutator = new ResponseMutator();
@@ -89,7 +89,7 @@ class AdvertisementController {
                 });
             }
 
-            const createAdResult = await this._advertisementFacade.createAdvertisement({userCognitoSub, name, link, caption, files, googleMapsPlaceId, isSponsored});
+            const createAdResult = await this._advertisement.createAdvertisement({userCognitoSub, name, link, caption, files, googleMapsPlaceId, isSponsored});
 
             return res.status(createAdResult.code).json({
                 message: createAdResult.message,
@@ -125,7 +125,7 @@ class AdvertisementController {
 
     async getAllAdvertisements(req: Request, res: Response) {
         try {
-            const advertisements = await this._advertisementFacade.getAllAdvertisements();
+            const advertisements = await this._advertisement.getAllAdvertisements();
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
@@ -182,7 +182,7 @@ class AdvertisementController {
 
         try {
             const id: string = req.params.id;
-            const advertisement = await this._advertisementFacade.getAdvertisementById(id);
+            const advertisement = await this._advertisement.getAdvertisementById(id);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
@@ -255,7 +255,7 @@ class AdvertisementController {
             const id: string = String(req.params.id);
             const caption: string = String(req.body.caption);
 
-            const updateAdvertisementResult = await this._advertisementFacade.updateAdvertisement(id, caption);
+            const updateAdvertisementResult = await this._advertisement.updateAdvertisement(id, caption);
 
             return res.status(updateAdvertisementResult.code).json({
                 message: updateAdvertisementResult.message,
@@ -301,7 +301,7 @@ class AdvertisementController {
         try {
             const id: string = req.params.id;
 
-            const removeAdvertisementResult = await this._advertisementFacade.removeAdvertisement(id);
+            const removeAdvertisementResult = await this._advertisement.removeAdvertisement(id);
 
             return res.status(removeAdvertisementResult.code).json({
                 message: removeAdvertisementResult.message,
@@ -347,7 +347,7 @@ class AdvertisementController {
         try {
             const id: string = String(req.params.id);
 
-            const updateAdvertisementResult = await this._advertisementFacade.updateAdViewCount(id);
+            const updateAdvertisementResult = await this._advertisement.updateAdViewCount(id);
 
             return res.status(updateAdvertisementResult.code).json({
                 message: updateAdvertisementResult.message,
@@ -402,7 +402,7 @@ class AdvertisementController {
             const like = req.body.like;
             const userCognitoSub: string = req.body.userCognitoSub;
 
-            const likeOrUnlikeAdvertisementResult = await this._advertisementFacade.likeOrUnlikeAdvertisement(advertisementId, userCognitoSub, like);
+            const likeOrUnlikeAdvertisementResult = await this._advertisement.likeOrUnlikeAdvertisement(advertisementId, userCognitoSub, like);
 
             return res.status(likeOrUnlikeAdvertisementResult.code).json({
                 message: likeOrUnlikeAdvertisementResult.message,
@@ -461,7 +461,7 @@ class AdvertisementController {
             const advertisementId: string = String(req.params.id);
             const reason: string = String(req.body.reason);
 
-            const flagAdvertisementResult = await this._advertisementFacade.flagAdvertisement(req.body.userCognitoSub, advertisementId, reason);
+            const flagAdvertisementResult = await this._advertisement.flagAdvertisement(req.body.userCognitoSub, advertisementId, reason);
 
             return res.status(flagAdvertisementResult.code).json({
                 message: flagAdvertisementResult.message,
@@ -525,7 +525,7 @@ class AdvertisementController {
             // file
             file.key = `${config.ADVERTISEMENT_AVATAR_FOLDER_PATH}/${uniqid()}_${file.key}`;
 
-            const uploadAdvAvatarResult = await this._advertisementFacade.uploadAdvertisementAvatar(advertisementId, file);
+            const uploadAdvAvatarResult = await this._advertisement.uploadAdvertisementAvatar(advertisementId, file);
 
             return res.status(uploadAdvAvatarResult.code).json({
                 message: uploadAdvAvatarResult.message,
