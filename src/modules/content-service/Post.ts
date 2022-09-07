@@ -33,7 +33,7 @@ class Post {
         private _postHashtagRepository: IPostHashtagRepository
     ) {
 
-        this._log = Logger.createLogger('PostFacade.ts');
+        this._log = Logger.createLogger('Post.ts');
         this._googleapis = new Client({});
     }
 

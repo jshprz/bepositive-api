@@ -1,4 +1,4 @@
-import type { getCommentRepliesByCommentIdReturnType } from '../../../types';
+import type { getCommentRepliesByCommentIdReturnType } from '../../../modules/comment-service/types';
 
 interface ICommentReplyRepository {
     get(commentId: string): Promise<getCommentRepliesByCommentIdReturnType>;

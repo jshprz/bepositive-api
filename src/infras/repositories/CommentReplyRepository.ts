@@ -1,6 +1,6 @@
-import ICommentReplyRepository from "./ICommentReplyRepository";
-import { CommentReplies } from "../../../../database/postgresql/models/CommentReplies";
-import {getCommentRepliesByCommentIdReturnType} from "../../../types";
+import ICommentReplyRepository from "./interfaces/ICommentReplyRepository";
+import { CommentReplies } from "../../database/postgresql/models/CommentReplies";
+import { getCommentRepliesByCommentIdReturnType } from "../../modules/comment-service/types";
 import {getRepository, QueryFailedError} from "typeorm";
 
 class CommentReplyRepository implements ICommentReplyRepository {

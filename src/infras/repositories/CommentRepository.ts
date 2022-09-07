@@ -1,8 +1,8 @@
-import { Comments } from "../../../../database/postgresql/models/Comments";
-import { CommentReplies } from "../../../../database/postgresql/models/CommentReplies";
-import ICommentRepository from "./ICommentRepository";
-import {getManager, getRepository, QueryFailedError, UpdateResult} from 'typeorm';
-import type { getCommentByIdResult, getCommentRepliesByCommentIdReturnType, getCommentsByPostIdReturnType } from '../../../types';
+import { Comments } from "../../database/postgresql/models/Comments";
+import { CommentReplies } from "../../database/postgresql/models/CommentReplies";
+import ICommentRepository from "./interfaces/ICommentRepository";
+import { getManager, getRepository, QueryFailedError, UpdateResult } from 'typeorm';
+import type { getCommentByIdResult, getCommentRepliesByCommentIdReturnType, getCommentsByPostIdReturnType } from '../../modules/comment-service/types';
 
 class CommentRepository implements ICommentRepository {
     private readonly _model;

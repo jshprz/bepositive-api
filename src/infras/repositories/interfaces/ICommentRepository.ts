@@ -1,7 +1,7 @@
 import { UpdateResult } from "typeorm";
-import { CommentReplies } from "../../../../database/postgresql/models/CommentReplies";
-import { Comments } from "../../../../database/postgresql/models/Comments";
-import type { getCommentByIdResult, getCommentsByPostIdReturnType, getCommentRepliesByCommentIdReturnType } from '../../../types';
+import { CommentReplies } from "../../../database/postgresql/models/CommentReplies";
+import { Comments } from "../../../database/postgresql/models/Comments";
+import type { getCommentByIdResult, getCommentsByPostIdReturnType, getCommentRepliesByCommentIdReturnType } from '../../../modules/comment-service/types';
 
 interface ICommentRepository {
     create(item: {userCognitoSub: string, postId: string, content: string}): Comments;

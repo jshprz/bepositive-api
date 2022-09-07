@@ -1,24 +1,25 @@
-import CommentRepository from "../../modules/comment-service/infras/repositories/CommentRepository";
+import CommentRepository from "../../infras/repositories/CommentRepository";
 
 import PostRepository from "../../infras/repositories/PostRepository"; // External
 
-import CommentFacade from "../../modules/comment-service/facades/CommentFacade";
+import Comment from "../../modules/comment-service/Comment";
 
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 
 import ResponseMutator from "../../utils/ResponseMutator";
-import type { getCommentRepliesByCommentIdReturnType, timestampsType } from '../../modules/types';
+import type { getCommentRepliesByCommentIdReturnType } from '../../modules/comment-service/types';
+import type { timestampsType } from '../../modules/types';
 
 import UserProfileRepository from "../../infras/repositories/UserProfileRepository"; // External
-import CommentLikeRepository from "../../modules/comment-service/infras/repositories/CommentLikeRepository";
+import CommentLikeRepository from "../../infras/repositories/CommentLikeRepository";
 
 class CommentController {
-    private _commentFacade;
+    private _comment;
     private _utilResponseMutator;
 
     constructor() {
-        this._commentFacade = new CommentFacade(new CommentRepository(), new PostRepository(), new CommentLikeRepository(), new UserProfileRepository());
+        this._comment = new Comment(new CommentRepository(), new PostRepository(), new CommentLikeRepository(), new UserProfileRepository());
         this._utilResponseMutator = new ResponseMutator();
     }
 
@@ -53,7 +54,7 @@ class CommentController {
             const userCognitoSub: string = req.body.userCognitoSub;
             const { postId, content, classification } = req.body;
 
-            const addCommentResult = await this._commentFacade.addComment({ userCognitoSub, postId, content, classification });
+            const addCommentResult = await this._comment.addComment({ userCognitoSub, postId, content, classification });
 
             return res.status(addCommentResult.code).json({
                 message: addCommentResult.message,
@@ -107,7 +108,7 @@ class CommentController {
         try {
             const postId: string = req.params.postId;
             const classification: string = String(req.query.classification);
-            const comments = await this._commentFacade.getCommentsByPostId(postId, classification, req.body.userCognitoSub);
+            const comments = await this._comment.getCommentsByPostId(postId, classification, req.body.userCognitoSub);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp for all comments/replies under the post
             // We do this as format convention for createdAt and updatedAt
@@ -209,7 +210,7 @@ class CommentController {
             const id: string = req.params.id;
             const { content, type } = req.body;
 
-            const result = await this._commentFacade.updateCommentOrReply(id, req.body.userCognitoSub, content, type);
+            const result = await this._comment.updateCommentOrReply(id, req.body.userCognitoSub, content, type);
 
             return res.status(result.code).json({
                 message: result.message,
@@ -266,7 +267,7 @@ class CommentController {
             const id: string = req.params.id;
             const type: string = req.body.type;
 
-            const result = await this._commentFacade.removeCommentOrReply(id, req.body.userCognitoSub, type);
+            const result = await this._comment.removeCommentOrReply(id, req.body.userCognitoSub, type);
 
             return res.status(result.code).json({
                 message: result.message,
@@ -345,7 +346,7 @@ class CommentController {
             const { commentId, postId, like, classification, commentType } = req.body;
             const userCognitoSub: string = req.body.userCognitoSub;
 
-            const likeOrUnlikeCommentResult = await this._commentFacade.likeOrUnlikeCommentOrReply(commentId, postId, userCognitoSub, like, classification, commentType);
+            const likeOrUnlikeCommentResult = await this._comment.likeOrUnlikeCommentOrReply(commentId, postId, userCognitoSub, like, classification, commentType);
 
             return res.status(likeOrUnlikeCommentResult.code).json({
                 message: likeOrUnlikeCommentResult.message,
@@ -405,7 +406,7 @@ class CommentController {
             const content: string = req.body.content;
             const userCognitoSub: string = req.body.userCognitoSub;
 
-            const replyToCommentResult = await this._commentFacade.replyToComment({ commentId, userCognitoSub, content});
+            const replyToCommentResult = await this._comment.replyToComment({ commentId, userCognitoSub, content});
 
             return res.status(replyToCommentResult.code).json({
                 message: replyToCommentResult.message,

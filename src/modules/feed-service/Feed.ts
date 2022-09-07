@@ -28,7 +28,7 @@ class Feed {
         private _advertisementRepository: IAdvertisementRepository,
         private _awsS3: IAwsS3,
     ) {
-        this._log = Logger.createLogger('FeedFacade.ts');
+        this._log = Logger.createLogger('Feed.ts');
         this._googleapis = new Client({});
     }
 

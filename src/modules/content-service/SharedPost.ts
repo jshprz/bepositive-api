@@ -19,7 +19,7 @@ class SharedPost {
         private _userRelationshipRepository: IUserRelationshipRepository,
         private _feedRepository: IFeedRepository
     ) {
-        this._log = Logger.createLogger('PostShareFacade.ts');
+        this._log = Logger.createLogger('SharedPost.ts');
     }
 
     /**

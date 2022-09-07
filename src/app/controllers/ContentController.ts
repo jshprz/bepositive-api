@@ -22,7 +22,7 @@ import type { timestampsType } from '../../modules/types';
 
 class ContentController {
     private _post;
-    private _postShareFacade;
+    private _sharedPost;
     private _utilResponseMutator;
 
     constructor() {
@@ -36,7 +36,7 @@ class ContentController {
             new HashtagRepository(),
             new PostHashtagRepository()
         );
-        this._postShareFacade = new SharedPost(
+        this._sharedPost = new SharedPost(
             new PostShareRepository(),
             new PostRepository(),
             new UserRelationshipRepository(),
@@ -407,7 +407,7 @@ class ContentController {
                 responseData = removeRegularPost;
             }
             if (classification === 'SHARED_POST') {
-                const removeSharedPost = await this._postShareFacade.removeSharedPost(req.body.userCognitoSub, postId);
+                const removeSharedPost = await this._sharedPost.removeSharedPost(req.body.userCognitoSub, postId);
                 responseData = removeSharedPost;
             }
 
@@ -465,7 +465,7 @@ class ContentController {
             const userId: string = req.body.userCognitoSub;
             const postId: string = req.params.id;
 
-            const sharedPost = await this._postShareFacade.createSharedPost(postId, {userId, postId, shareCaption});
+            const sharedPost = await this._sharedPost.createSharedPost(postId, {userId, postId, shareCaption});
 
             return res.status(sharedPost.code).json({
                 message: sharedPost.message,
@@ -509,7 +509,7 @@ class ContentController {
 
         try {
             const sharedPostId: string = req.params.id;
-            const sharedPost = await this._postShareFacade.getSharedPostById(sharedPostId);
+            const sharedPost = await this._sharedPost.getSharedPostById(sharedPostId);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
@@ -573,7 +573,7 @@ class ContentController {
             const userCognitoSub: string = req.body.userCognitoSub;
             const shareCaption: string = req.body.shareCaption;
 
-            const updateSharedPostResult = await this._postShareFacade.updateSharedPost(sharedPostId, userCognitoSub, shareCaption);
+            const updateSharedPostResult = await this._sharedPost.updateSharedPost(sharedPostId, userCognitoSub, shareCaption);
 
             return res.status(updateSharedPostResult.code).json({
                message: updateSharedPostResult.message,

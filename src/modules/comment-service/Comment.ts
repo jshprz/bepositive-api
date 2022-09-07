@@ -1,9 +1,9 @@
-import ICommentRepository from "../infras/repositories/ICommentRepository";
-import ICommentLikeRepository from "../infras/repositories/ICommentLikeRepository";
-import Logger from '../../../config/Logger';
-import Error from '../../../config/Error';
+import ICommentRepository from "../../infras/repositories/interfaces/ICommentRepository";
+import ICommentLikeRepository from "../../infras/repositories/interfaces/ICommentLikeRepository";
+import Logger from '../../config/Logger';
+import Error from '../../config/Error';
 
-import IPostRepository from "../../../infras/repositories/interfaces/IPostRepository"; // External
+import IPostRepository from "../../infras/repositories/interfaces/IPostRepository"; // External
 
 import { QueryFailedError } from "typeorm";
 import type {
@@ -11,18 +11,18 @@ import type {
     getCommentsByPostIdReturnType,
     getCommentRepliesByCommentIdReturnType,
     commentType,
-} from '../../types';
-import { postType, sharedPostType } from "../../content-service/types";
+} from '../comment-service/types';
+import { postType, sharedPostType } from "../content-service/types";
 
-import CommentRepository from "../infras/repositories/CommentRepository";
-import UserProfileRepository from "../../../infras/repositories/UserProfileRepository";
+import CommentRepository from "../../infras/repositories/CommentRepository";
+import UserProfileRepository from "../../infras/repositories/UserProfileRepository";
 
-class CommentFacade {
+class Comment {
     private _log;
 
     constructor(private _commentRepository: ICommentRepository, private _postRepository: IPostRepository, private _commentLikeRepository: ICommentLikeRepository, private _userProfileRepository: UserProfileRepository) {
 
-        this._log = Logger.createLogger('CommentFacade.ts');
+        this._log = Logger.createLogger('Comment.ts');
     }
 
     /**
@@ -93,36 +93,36 @@ class CommentFacade {
                 });
             }
 
-           if ((!regularPost && !sharedPost)
-               || (regularPost && (!regularPost.content.postId || regularPost.content.postId === ''))
-               || (sharedPost && sharedPost.id === '') || (sharedPost && !sharedPost.id)
-           ) {
-               return reject({
-                   message: 'Post not found.',
-                   code: 404
-               });
-           }
+            if ((!regularPost && !sharedPost)
+                || (regularPost && (!regularPost.content.postId || regularPost.content.postId === ''))
+                || (sharedPost && sharedPost.id === '') || (sharedPost && !sharedPost.id)
+            ) {
+                return reject({
+                    message: 'Post not found.',
+                    code: 404
+                });
+            }
 
-           await this._commentRepository.create(commentAttr).save().catch((error: QueryFailedError) => {
-               this._log.error({
-                   function: 'addComment()',
-                   message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                   payload: {
-                       commentAttr
-                   }
-               });
+            await this._commentRepository.create(commentAttr).save().catch((error: QueryFailedError) => {
+                this._log.error({
+                    function: 'addComment()',
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        commentAttr
+                    }
+                });
 
-               return reject({
-                   message: Error.DATABASE_ERROR.CREATE,
-                   code: 500
-               });
-           });
+                return reject({
+                    message: Error.DATABASE_ERROR.CREATE,
+                    code: 500
+                });
+            });
 
-           return resolve({
-               message: 'Comment added successfully.',
-               data: {},
-               code: 200
-           });
+            return resolve({
+                message: 'Comment added successfully.',
+                data: {},
+                code: 200
+            });
         });
     }
 
@@ -407,7 +407,7 @@ class CommentFacade {
      *         code: number
      *     }>
      */
-     getCommentRepliesByCommentId(commentId: string): Promise<{
+    getCommentRepliesByCommentId(commentId: string): Promise<{
         message: string,
         data: getCommentRepliesByCommentIdReturnType[],
         code: number
@@ -527,7 +527,7 @@ class CommentFacade {
      *         code: number
      *     }>
      */
-     removeCommentOrReply(id: string, userId: string, type: string): Promise<{
+    removeCommentOrReply(id: string, userId: string, type: string): Promise<{
         message: string,
         data: {},
         code: number
@@ -597,7 +597,7 @@ class CommentFacade {
      *         code: number
      *     }>
      */
-     likeOrUnlikeCommentOrReply(commentId: string, postId: string, userCognitoSub: string, like: boolean, classification: string, commentType: string): Promise<{
+    likeOrUnlikeCommentOrReply(commentId: string, postId: string, userCognitoSub: string, like: boolean, classification: string, commentType: string): Promise<{
         message: string,
         data: {isLiked: boolean},
         code: number
@@ -745,7 +745,7 @@ class CommentFacade {
                         code: 200
                     });
                 }
-           } else {
+            } else {
                 const unlikeResult = await this._unlikeComment(commentId, userCognitoSub).catch((error) => {
                     return reject(error);
                 });
@@ -756,7 +756,7 @@ class CommentFacade {
                         code: 200
                     });
                 }
-           }
+            }
         });
     }
     /**
@@ -773,20 +773,20 @@ class CommentFacade {
      */
     private _likeComment(commentId: string, postId: string, userCognitoSub: string, classification: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
-           await this._commentLikeRepository.create(commentId, postId, userCognitoSub, classification).save().catch((error: QueryFailedError) => {
-               this._log.error({
-                   message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
-                   payload: {
-                       commentId,
-                       userCognitoSub
-                   }
-               });
-               return reject({
-                   message: Error.DATABASE_ERROR.CREATE,
-                   code: 500
-               });
-           });
-           resolve(true);
+            await this._commentLikeRepository.create(commentId, postId, userCognitoSub, classification).save().catch((error: QueryFailedError) => {
+                this._log.error({
+                    message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
+                    payload: {
+                        commentId,
+                        userCognitoSub
+                    }
+                });
+                return reject({
+                    message: Error.DATABASE_ERROR.CREATE,
+                    code: 500
+                });
+            });
+            resolve(true);
         });
     }
     /**
@@ -886,4 +886,4 @@ class CommentFacade {
 
 }
 
-export default CommentFacade;
+export default Comment;

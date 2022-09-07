@@ -1,7 +1,7 @@
 import { getRepository, DeleteResult } from "typeorm";
-import { CommentLikes } from "../../../../database/postgresql/models/CommentLikes";
-import { CommentReplies } from "../../../../database/postgresql/models/CommentReplies";
-import ICommentLikeRepository from "./ICommentLikeRepository";
+import { CommentLikes } from "../../database/postgresql/models/CommentLikes";
+import { CommentReplies } from "../../database/postgresql/models/CommentReplies";
+import ICommentLikeRepository from "./interfaces/ICommentLikeRepository";
 
 class CommentLikeRepository implements ICommentLikeRepository {
     private readonly _model;

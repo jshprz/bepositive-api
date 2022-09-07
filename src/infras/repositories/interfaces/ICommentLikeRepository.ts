@@ -1,5 +1,5 @@
 import { DeleteResult } from "typeorm";
-import { CommentLikes } from "../../../../database/postgresql/models/CommentLikes";
+import { CommentLikes } from "../../../database/postgresql/models/CommentLikes";
 
 interface ICommentLikeRepository {
     create(commentId: string, postId: string, userCognitoSub: string, classification: string): CommentLikes;
