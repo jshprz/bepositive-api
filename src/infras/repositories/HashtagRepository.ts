@@ -23,62 +23,19 @@ class HashtagRepository implements IHashtagRepository {
         return this._model;
     }
 
-
     /**
-     * Get a hashtag record by its name.
-     * @param hashtagName: string
+     * Get a hashtag record by db field name.
+     * @param input: string
+     * @param field: string
      * @returns Promise<getHashtagType>
      */
-    async get(hashtagName: string): Promise<getHashtagType> {
+    async getBy(input: string, field: string): Promise<getHashtagType> {
 
         return new Promise(async (resolve, reject) => {
             const hashtag = await getRepository(Hashtags)
                 .createQueryBuilder('hashtags')
                 .select('hashtags')
-                .where('name = :hashtagName', { hashtagName })
-                .getOne()
-                .catch((error) => {
-                    return reject(error);
-                });
-
-            const tempHashtag = {
-                id: '',
-                name: '',
-                createdAt: 0,
-                updatedAt: 0
-            }
-
-            if (hashtag) {
-                if (hashtag.name === hashtagName) {
-                    const newHashtag = {
-                        id: hashtag.id || '',
-                        name: hashtag.name || '',
-                        createdAt: hashtag.created_at || 0,
-                        updatedAt: hashtag.updated_at || 0
-                    }
-
-                    return resolve(newHashtag);
-                }
-
-                return resolve(tempHashtag);
-            } else {
-                return resolve(tempHashtag);
-            }
-        });
-    }
-
-    /**
-     * Get a hashtag record by id.
-     * @param hashtagId: string
-     * @returns Promise<getHashtagType>
-     */
-    async getById(hashtagId: string): Promise<getHashtagType> {
-
-        return new Promise(async (resolve, reject) => {
-            const hashtag = await getRepository(Hashtags)
-                .createQueryBuilder('hashtags')
-                .select('hashtags')
-                .where('id = :hashtagId', { hashtagId })
+                .where(`${field} = :input`, { input })
                 .getOne()
                 .catch((error) => {
                     return reject(error);

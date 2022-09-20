@@ -741,7 +741,7 @@ class ContentController {
         }
     }
 
-    async getPostsByHashtag(req: Request, res: Response) {
+    async getPostsByHashtagId(req: Request, res: Response) {
         const errors = validationResult(req).mapped();
 
         if (errors.hashtagId) {
@@ -775,7 +775,91 @@ class ContentController {
                 size: Number(req.query.size)
             };
 
-            const getPostsByHashtagResult = await this._post.getPostsByHashtag(hashtagId, pagination);
+            const getPostsByHashtagResult = await this._post.getPostsByHashtag(hashtagId, 'id', pagination);
+
+            // Change the createdAt and updatedAt datetime format to unix timestamp
+            // We do this as format convention for createdAt and updatedAt
+            getPostsByHashtagResult.data.posts.forEach((post) => {
+                const timestamps = {
+                    createdAt: post.content.createdAt,
+                    updatedAt: post.content.updatedAt
+                }
+                const unixTimestamps = this._utilResponseMutator.mutateApiResponseTimestamps<timestampsType>(timestamps);
+
+                post.content.createdAt = unixTimestamps.createdAt;
+                post.content.updatedAt = unixTimestamps.updatedAt;
+            });
+
+            return res.status(getPostsByHashtagResult.code).json({
+                message: getPostsByHashtagResult.message,
+                payload: getPostsByHashtagResult.data,
+                status: getPostsByHashtagResult.code
+            });
+
+        } catch (error: any) {
+            if (error.code && error.code === 500) {
+                return res.status(500).json({
+                    message: error.message,
+                    error: 'Internal server error',
+                    status: 500
+                });
+            } else if (error.code && error.code === 401) {
+                return res.status(401).json({
+                    message: error.message,
+                    error: 'Unauthorized',
+                    status: 401
+                });
+            } else if (error.code && error.code === 404) {
+                return res.status(404).json({
+                    message: error.message,
+                    error: 'Not found',
+                    status: 404
+                });
+            } else {
+                return res.status(520).json({
+                    message: error.message,
+                    error: 'Unknown server error',
+                    status: 520
+                });
+            }
+        }
+    }
+
+    async getPostsByHashtagName(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.hashtagName) {
+            return res.status(400).json({
+                message: errors.hashtagName.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.page) {
+            return res.status(400).json({
+                message: errors.page.msg,
+                error: 'bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.size) {
+            return res.status(400).json({
+                message: errors.size.msg,
+                error: 'bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const hashtagName: string = req.params.hashtagName;
+            const pagination = {
+                page: Number(req.query.page),
+                size: Number(req.query.size)
+            };
+
+            const getPostsByHashtagResult = await this._post.getPostsByHashtag(hashtagName, 'name', pagination);
 
             // Change the createdAt and updatedAt datetime format to unix timestamp
             // We do this as format convention for createdAt and updatedAt
