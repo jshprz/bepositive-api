@@ -29,6 +29,7 @@ router.get('/share/get/:id', [authMiddleWare, ...getSharedPostByIdApiValidation]
 router.patch('/share/update/:id', [authMiddleWare, ...updateSharedPost], (req: Request, res: Response) => contentController.updateSharedPost(req, res));
 router.post('/like', [authMiddleWare, ...likeOrUnlikePostApiValidation], (req: Request, res: Response) => contentController.likeOrUnlikePost(req, res));
 router.patch('/flag/:id', [authMiddleWare, ...flagPostApiValidation], (req: Request, res: Response) => contentController.flagPost(req, res));
-router.get('/hashtag/posts/:hashtagId?', [authMiddleWare, ...getPostsByHashtagApiValidation], (req: Request, res: Response) => contentController.getPostsByHashtag(req, res));
+router.get('/hashtag/id/posts/:hashtagId?', [authMiddleWare, ...getPostsByHashtagApiValidation], (req: Request, res: Response) => contentController.getPostsByHashtagId(req, res));
+router.get('/hashtag/name/posts/:hashtagName?', [authMiddleWare, ...getPostsByHashtagApiValidation], (req: Request, res: Response) => contentController.getPostsByHashtagName(req, res));
 
 export default router;

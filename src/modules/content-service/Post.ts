@@ -176,9 +176,9 @@ class Post {
 
         return new Promise(async (resolve, reject) => {
             for (const hashtagName of hashtagNames) {
-                const getHashtagByName = await this._hashtagRepository.get(hashtagName);
+                const getHashtagByName = await this._hashtagRepository.getBy(hashtagName, 'name').catch(() => {});
 
-                if (getHashtagByName.id === '') {
+                if (!getHashtagByName) {
                     const createdHashtag = await this._hashtagRepository.create(hashtagName).save().catch((error) => {
                         this._log.error({
                             function: 'createHashtag()',
@@ -1112,7 +1112,7 @@ class Post {
      *             code: number
      *         }>
      */
-    getPostsByHashtag(hashtagId: string, pagination: {page: number, size: number}): Promise<{
+    getPostsByHashtag(hashtagLookup: string, hashtagLookupBy: string, pagination: {page: number, size: number}): Promise<{
         message: string,
         data: {
             hashtagInfo: {
@@ -1127,12 +1127,13 @@ class Post {
         const posts: postType[] = [];
 
         return new Promise(async (resolve, reject) => {
-            const hashtag = await this._hashtagRepository.getById(hashtagId).catch((error) => {
+            const hashtag = await this._hashtagRepository.getBy(hashtagLookup, hashtagLookupBy).catch((error) => {
                 this._log.error({
                     function: 'getPostsByHashtag()',
                     message: error,
                     payload: {
-                        hashtagId
+                        hashtagLookup,
+                        hashtagLookupBy
                     }
                 });
 
@@ -1148,12 +1149,13 @@ class Post {
                     name: hashtag.name
                 };
 
-                const postsHashtags = await this._postHashtagRepository.getByHashtagId(hashtagId, pagination).catch((error: QueryFailedError) => {
+                const postsHashtags = await this._postHashtagRepository.getByHashtagId(hashtag.id, pagination).catch((error: QueryFailedError) => {
                     this._log.error({
                         function: 'getPostsByHashtag()',
                         message: `\n error: Database operation error \n details: ${error.message} \n query: ${error.query}`,
                         payload: {
-                            hashtagId
+                            hashtagLookup,
+                            hashtagLookupBy
                         }
                     });
 

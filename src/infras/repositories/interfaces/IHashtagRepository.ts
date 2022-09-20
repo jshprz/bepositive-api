@@ -3,8 +3,7 @@ import type { getHashtagType } from "../../../modules/content-service/types";
 
 interface IHashtagRepository {
     create(hashtagName: string): Hashtags;
-    get(hashtagName: string): Promise<getHashtagType>;
-    getById(hashtagId: string): Promise<getHashtagType>;
+    getBy(input: string, field: string): Promise<getHashtagType>;
 }
 
 export default IHashtagRepository;
