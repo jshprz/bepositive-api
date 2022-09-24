@@ -2,6 +2,7 @@ import IUserProfileRepository from "./interfaces/IUserProfileRepository";
 import { getConnection, getRepository, InsertResult, QueryFailedError, UpdateResult } from "typeorm";
 import { UserProfiles } from "../../database/postgresql/models/UserProfiles";
 import type { userProfileType } from "../../modules/user-service/types";
+import { searchUserType } from "../../modules/search-service/types";
 
 class UserProfileRepository implements IUserProfileRepository {
     constructor() {}
@@ -118,6 +119,37 @@ class UserProfileRepository implements IUserProfileRepository {
         .set({is_public: isPublic})
         .where('user_id = :userId', {userId})
         .execute();
+    }
+
+    /**
+     * Search user by name.
+     * @param searchText: string
+     * @returns Promise<searchUserType[]>
+     */
+    search(searchText: string): Promise<searchUserType[]> {
+
+        return new Promise(async (resolve, reject) => {
+
+            const searchResult = await getRepository(UserProfiles).find({
+                where: `"name" ILIKE '%${searchText}%'`,
+                take: 20
+            }).catch((error) => {
+                return reject(error);
+            });
+
+            if (searchResult) {
+                const newSearchResult = searchResult.map((user) => {
+                    return {
+                        classification: 'user',
+                        userId: user.user_id || '',
+                        name: user.name || '',
+                        avatar: user.avatar || '',
+                        profileTitle: user.profile_title || '',
+                    }
+                });
+                return resolve(newSearchResult);
+            }
+        });
     }
 }
 

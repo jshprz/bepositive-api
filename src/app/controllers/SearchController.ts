@@ -1,9 +1,9 @@
 // Infras
-import UserProfileRepository from '../../modules/search-service/infras/UserProfileRepository';
-import HashtagRepository from "../../modules/search-service/infras/HashtagRepository";
+import UserProfileRepository from '../../infras/repositories/UserProfileRepository';
+import HashtagRepository from "../../infras/repositories/HashtagRepository";
 
 // Facades
-import SearchFacade from "../../modules/search-service/facades/SearchFacade";
+import Search from "../../modules/search-service/Search";
 
 import { Request, Response } from 'express';
 import { validationResult } from "express-validator";
@@ -13,7 +13,7 @@ class SearchController {
     private _searchFacade;
 
     constructor() {
-        this._searchFacade = new SearchFacade(
+        this._searchFacade = new Search(
             new UserProfileRepository(),
             new HashtagRepository()
         );

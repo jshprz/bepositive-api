@@ -2,6 +2,7 @@ import IHashtagRepository from "./interfaces/IHashtagRepository";
 import { Hashtags } from "../../database/postgresql/models/Hashtags";
 import { getRepository } from "typeorm";
 import type { getHashtagType } from "../../modules/content-service/types";
+import { searchHashtagType } from "../../modules/search-service/types";
 
 class HashtagRepository implements IHashtagRepository {
 
@@ -52,6 +53,36 @@ class HashtagRepository implements IHashtagRepository {
                 return resolve(newHashtag);
             } else {
                 return reject(`Unable to retrieve hashtag: ${hashtag}`);
+            }
+        });
+    }
+
+    /**
+     * Search hashtag by name.
+     * @param searchText: string
+     * @returns Promise<searchHashtagType[]>
+     */
+    search(searchText: string): Promise<searchHashtagType[]> {
+
+        return new Promise(async (resolve, reject) => {
+
+            const searchResult = await getRepository(Hashtags).find({
+                where: `"name" ILIKE '%${searchText}%'`,
+                take: 20
+            }).catch((error) => {
+                return reject(error);
+            });
+
+            if (searchResult) {
+                const newSearchResult = searchResult.map((hashtag) => {
+                    return {
+                        classification: 'hashtag',
+                        hashtagId: hashtag.id || '',
+                        name: hashtag.name || ''
+                    }
+                });
+
+                return resolve(newSearchResult);
             }
         });
     }

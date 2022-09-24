@@ -1,12 +1,12 @@
-import IUserProfileRepository from "../infras/IUserProfileRepository";
-import IHashtagRepository from "../infras/IHashtagRepository";
+import IUserProfileRepository from "../../infras/repositories/interfaces/IUserProfileRepository";
+import IHashtagRepository from "../../infras/repositories/interfaces/IHashtagRepository";
 
-import Logger from "../../../config/Logger";
+import Logger from "../../config/Logger";
 import { QueryFailedError } from "typeorm";
-import Error from "../../../config/Error";
-import {searchHashtagType, searchUserType} from "../../types";
+import Error from "../../config/Error";
+import { searchHashtagType, searchUserType } from "./types";
 
-class SearchFacade {
+class Search {
 
     private _log;
 
@@ -137,4 +137,4 @@ class SearchFacade {
     }
 }
 
-export default SearchFacade;
+export default Search;
