@@ -1127,7 +1127,7 @@ class Post {
         const posts: postType[] = [];
 
         return new Promise(async (resolve, reject) => {
-            const hashtag = await this._hashtagRepository.getBy(hashtagLookup, hashtagLookupBy).catch((error) => {
+            const hashtag = await this._hashtagRepository.getBy(hashtagLookup.toLowerCase(), hashtagLookupBy).catch((error) => {
                 this._log.error({
                     function: 'getPostsByHashtag()',
                     message: error,
