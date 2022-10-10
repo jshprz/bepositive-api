@@ -17,6 +17,7 @@ export type userProfileType = {
     phoneNumber: string,
     isPublic: boolean,
     isFollowed: boolean,
+    isAdmin: boolean,
     createdAt: Date | number,
     updatedAt: Date | number
 }
