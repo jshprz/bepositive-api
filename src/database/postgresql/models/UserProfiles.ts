@@ -63,6 +63,9 @@ export class UserProfiles extends BaseEntity {
     @Column({type: "boolean", default: true})
     is_public?: boolean
 
+    @Column({type: "boolean", default: false})
+    is_admin?: boolean
+
     @CreateDateColumn({type: 'timestamptz'})
     created_at?: Date;
 

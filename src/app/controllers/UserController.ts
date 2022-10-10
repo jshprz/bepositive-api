@@ -141,6 +141,98 @@ class UserController {
         }
     }
 
+    async adminLogin(req: Request, res: Response) {
+        const errors = validationResult(req).mapped();
+
+        if (errors.user) {
+            return res.status(400).json({
+                message: errors.user.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        if (errors.password) {
+            return res.status(400).json({
+                message: errors.password.msg,
+                error: 'Bad request error',
+                status: 400
+            });
+        }
+
+        try {
+            const fieldName = this.getUsernameAlias(req.body.user);
+            const getUserprofileBy = await this._userAccount.getUserProfileBy(req.body.user, fieldName);
+
+            const userCredentials = {
+                user: getUserprofileBy.data.username,
+                password: req.body.password
+            }
+
+            const signin = await this._authentication.normalLogin(userCredentials);
+
+            const accessToken: string = signin.accessToken.jwtToken;
+            const refreshToken: string = signin.refreshToken.token;
+            const accessTokenExpiration: number = signin.accessToken.payload.exp;
+            const userCognitoSub: string = signin.idToken.payload.sub;
+
+            // BEP-150: Make the backend accessible for admin users only
+            if (!getUserprofileBy.data.isAdmin) {
+                return res.status(403).json({
+                    message: 'User is not an administrator.',
+                    error: 'Forbidden',
+                    status: 403
+                });
+            }
+
+            // Creates accessToken record within the access_tokens table.
+            await this._authentication.createAccessTokenItem(accessToken, userCognitoSub);
+
+            return res.status(200).json({
+                message: 'Successfully logged in',
+                payload: {
+                    accessToken,
+                    refreshToken,
+                    accessTokenExpiration
+                },
+                status: 200
+            });
+        } catch (error: any) {
+
+            const response = {
+                message: '',
+                error: '',
+                status: 500
+            }
+
+            if (error.code && (error.code === 'NotAuthorizedException' || error.code === 401 || error.code === 404)) {
+
+                response.message = (error.code === 404)? 'Incorrect username or password.' : error.message;
+                response.error = 'Unauthorized';
+                response.status = 401;
+
+            } else if (error.code && (error.code === 'UserNotConfirmedException' || error.code === 403)) {
+
+                response.message = error.message;
+                response.error = 'Forbidden';
+                response.status = 403;
+
+            } else {
+
+                response.message = error.message;
+                response.error = 'Internal server error';
+                response.status = 500;
+
+            }
+
+            return res.status(response.status).json({
+                message: response.message.toString(),
+                error: response.error,
+                status: response.status
+            });
+        }
+    }
+
     async logout(req: Request, res: Response) {
         try {
             const userCognitoSub: string = req.body.userCognitoSub;
