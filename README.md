@@ -3,7 +3,7 @@
 This serves as the back-end for the Bepositive application, a social media application similar to Instagram.
 
 ## Requirements
-1. Node version v14.17.3
+1. Node version v18^
 
 ## Project structure
 
