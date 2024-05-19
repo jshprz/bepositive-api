@@ -37,25 +37,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Set environment variables
-        run: eb setenv 
-          NODE_ENV=development
-          PORT=3000
-          APP_NAME=BepositiveDev
-          AWS_COGNITO_APP_CLIENT_ID=79202gnuk299lkimt13jtlohh8
-          AWS_COGNITO_POOL_ID=ap-southeast-2_D3bJyRm1S
-          AWS_REGION=ap-southeast-2
-          AWS_S3_BUCKET=bepositive-dev
-          AWS_S3_BUCKET_URL=https://bepositive-dev.s3.ap-southeast-2.amazonaws.com
-          AWS_SES_ACCESS_KEY=AKIAY5YQZUVFLIY23X5M
-          AWS_SES_SECRET_KEY=BG7/1DhSPrtfQAioXyyFvrx+hBmK9V1ZGTOHJZaYKpw5
-          EMAIL_DEFAULT_SENDER=no-reply@devmail-bepositive.email
-          GOOGLE_MAPS_API_KEY=AIzaSyBkBfxMJm2c_Zpwa5gx9lpAFRdWJVahSSk
-          POSTGRES_DATABASE=bepositive_db
-          POSTGRES_HOST=bp-dev-db-cluster-provisioned-instance-1.cyfmba7wz4ia.ap-southeast-2.rds.amazonaws.com
-          POSTGRES_PASSWORD=q)Au9%DU
-          POSTGRES_PORT=5432
-          POSTGRES_USERNAME=bpdev
-          --region ap-southeast-2 --timeout 60
+        run: eb setenv NODE_ENV=development PORT=3000 APP_NAME=BepositiveDev AWS_COGNITO_APP_CLIENT_ID=79202gnuk299lkimt13jtlohh8 AWS_COGNITO_POOL_ID=ap-southeast-2_D3bJyRm1S AWS_REGION=ap-southeast-2 AWS_S3_BUCKET=bepositive-dev AWS_S3_BUCKET_URL=https://bepositive-dev.s3.ap-southeast-2.amazonaws.com AWS_SES_ACCESS_KEY=AKIAY5YQZUVFLIY23X5M AWS_SES_SECRET_KEY=BG7/1DhSPrtfQAioXyyFvrx+hBmK9V1ZGTOHJZaYKpw5 EMAIL_DEFAULT_SENDER=no-reply@devmail-bepositive.email GOOGLE_MAPS_API_KEY=AIzaSyBkBfxMJm2c_Zpwa5gx9lpAFRdWJVahSSk POSTGRES_DATABASE=bepositive_db POSTGRES_HOST=bp-dev-db-cluster-provisioned-instance-1.cyfmba7wz4ia.ap-southeast-2.rds.amazonaws.com POSTGRES_PASSWORD=q)Au9%DU POSTGRES_PORT=5432 POSTGRES_USERNAME=bpdev --region ap-southeast-2 --timeout 60
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
