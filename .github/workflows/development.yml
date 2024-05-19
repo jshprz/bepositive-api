@@ -39,7 +39,7 @@ jobs:
       - name: Set environment variables
         run: eb setenv 
           NODE_ENV=development
-          PORT=3000
+          PORT=8081
           APP_NAME=BepositiveDev
           AWS_COGNITO_APP_CLIENT_ID=79202gnuk299lkimt13jtlohh8
           AWS_COGNITO_POOL_ID=ap-southeast-2_D3bJyRm1S
