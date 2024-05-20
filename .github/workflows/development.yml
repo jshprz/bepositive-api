@@ -31,7 +31,7 @@ jobs:
           pip3 install awsebcli --upgrade
 
       - name: Initialize Elastic Beanstalk
-        run: eb init -p node.js bpdev --region ap-southeast-2
+        run: eb init -p node.js bp-dev-app --region ap-southeast-2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -61,7 +61,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           
       - name: Deploy to Elastic Beanstalk
-        run: eb deploy BPDevEnv --region ap-southeast-2 --timeout 60
+        run: eb deploy bp-dev-app-env-v1 --region ap-southeast-2 --timeout 60
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
