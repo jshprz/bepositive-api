@@ -51,7 +51,7 @@ jobs:
           EMAIL_DEFAULT_SENDER=no-reply@devmail-bepositive.email
           GOOGLE_MAPS_API_KEY=AIzaSyBkBfxMJm2c_Zpwa5gx9lpAFRdWJVahSSk
           POSTGRES_DATABASE=bepositive_db
-          POSTGRES_HOST="bp-dev-db-cluster-provisioned-instance-1.cyfmba7wz4ia.ap-southeast-2.rds.amazonaws.com"
+          POSTGRES_HOST="bp-dev-rds-instance-1.cyfmba7wz4ia.ap-southeast-2.rds.amazonaws.com"
           POSTGRES_PASSWORD="q)Au9%DU"
           POSTGRES_PORT=5432
           POSTGRES_USERNAME=bpdev
