@@ -1,0 +1,73 @@
+name: Deploy to AWS Elastic Beanstalk (Staging Environment)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Install Elastic Beanstalk CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3-pip -y
+          pip3 install awsebcli --upgrade
+
+      - name: Initialize Elastic Beanstalk
+        run: eb init -p node.js bp-staging-app --region ap-southeast-2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+
+      - name: Set environment variables
+        run: eb setenv 
+          NODE_ENV=staging
+          PORT=8081
+          APP_NAME=BepositiveStaging
+          AWS_COGNITO_APP_CLIENT_ID=${{ secrets.STAGING_AWS_COGNITO_APP_CLIENT_ID }}
+          AWS_COGNITO_POOL_ID=${{ secrets.STAGING_AWS_COGNITO_POOL_ID }}
+          AWS_REGION=ap-southeast-2
+          AWS_S3_BUCKET=${{ secrets.STAGING_AWS_S3_BUCKET }}
+          AWS_S3_BUCKET_URL=${{ secrets.STAGING_AWS_S3_BUCKET_URL }}
+          AWS_SES_ACCESS_KEY=${{ secrets.STAGING_AWS_SES_ACCESS_KEY }}
+          AWS_SES_SECRET_KEY=${{ secrets.STAGING_AWS_SES_SECRET_KEY }}
+          EMAIL_DEFAULT_SENDER=no-reply-staging@stgmail-bepositive.email
+          GOOGLE_MAPS_API_KEY=${{ secrets.STAGING_GOOGLE_MAPS_API_KEY }}
+          POSTGRES_DATABASE=${{ secrets.STAGING_POSTGRES_DATABASE }}
+          POSTGRES_HOST="${{ secrets.STAGING_POSTGRES_HOST }}"
+          POSTGRES_PASSWORD="${{ secrets.STAGING_POSTGRES_PASSWORD }}"
+          POSTGRES_PORT=${{ secrets.STAGING_POSTGRES_PORT }}
+          POSTGRES_USERNAME=${{ secrets.STAGING_POSTGRES_USERNAME }}
+          --region ap-southeast-2 --timeout 60
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+
+      - name: Test print
+        run: ls
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          
+      - name: Deploy to Elastic Beanstalk
+        run: eb deploy bp-staging-app-env-v1 --region ap-southeast-2 --timeout 60
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
