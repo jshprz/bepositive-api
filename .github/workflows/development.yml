@@ -51,8 +51,8 @@ jobs:
           EMAIL_DEFAULT_SENDER=no-reply@devmail-bepositive.email
           GOOGLE_MAPS_API_KEY=${{ secrets.DEV_GOOGLE_MAPS_API_KEY }}
           POSTGRES_DATABASE=${{ secrets.DEV_POSTGRES_DATABASE }}
-          POSTGRES_HOST=${{ secrets.DEV_POSTGRES_HOST }}
-          POSTGRES_PASSWORD=${{ secrets.DEV_POSTGRES_PASSWORD }}
+          POSTGRES_HOST="${{ secrets.DEV_POSTGRES_HOST }}"
+          POSTGRES_PASSWORD="${{ secrets.DEV_POSTGRES_PASSWORD }}"
           POSTGRES_PORT=${{ secrets.DEV_POSTGRES_PORT }}
           POSTGRES_USERNAME=${{ secrets.DEV_POSTGRES_USERNAME }}
           --region ap-southeast-2 --timeout 60
