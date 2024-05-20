@@ -3,7 +3,7 @@ name: Deploy to AWS Elastic Beanstalk (Staging Environment)
 on:
   push:
     branches:
-      - main
+      - staging
 
 jobs:
   deploy:
@@ -56,12 +56,6 @@ jobs:
           POSTGRES_PORT=${{ secrets.STAGING_POSTGRES_PORT }}
           POSTGRES_USERNAME=${{ secrets.STAGING_POSTGRES_USERNAME }}
           --region ap-southeast-2 --timeout 60
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
-
-      - name: Test print
-        run: ls
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}

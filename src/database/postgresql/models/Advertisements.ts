@@ -10,7 +10,7 @@ export class Advertisements extends BaseEntity {
   @Column({type: "text", nullable: true})
   avatar?: string;
 
-  @Column({type: "varchar", length: 50, nullable: false})
+  @Column({type: "varchar", length: 50, nullable: true})
   name?: string;
 
   @Column({type: "text", nullable: true})
